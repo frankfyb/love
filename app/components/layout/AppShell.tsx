@@ -46,7 +46,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           setCurrentPage(p);
           router.push(`/${p === 'home' ? '' : p}`);
         }}
-        onLoginOpen={() => setIsLoginOpen(true)}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 min-h-[calc(100vh-60px)]">

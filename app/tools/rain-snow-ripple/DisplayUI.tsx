@@ -105,7 +105,7 @@ export default function RainSnowRippleDisplayUI({ config }: { config: AppConfig 
       update() { this.y += this.speed; this.x += Math.sin((this.y + this.offset) * 0.01) + this.wind * 0.5; if (this.y > height) { this.y = -5; this.x = Math.random() * width; } if (this.x > width) this.x = 0; if (this.x < 0) this.x = width; }
     }
 
-    class FallingItem { x: number; y: number; content: string; speed: number; size: number; swing: number; swingOffset: number;
+    class FallingItem { x!: number; y!: number; content!: string; speed!: number; size!: number; swing!: number; swingOffset!: number;
       constructor(options: string[]) { this.swingOffset = Math.random() * 100; this.reset(options, true); }
       reset(options: string[], initial = false) { this.x = Math.random() * width; this.y = initial ? Math.random() * height : -50; this.content = options[Math.floor(Math.random() * options.length)] || '❤'; this.speed = (Math.random() * 0.5 + 0.5) * config.fallingSpeed; this.size = config.fallingSize * (Math.random() * 0.4 + 0.8); this.swing = Math.random() * 0.5 + 0.2; }
       update(options: string[]) { this.y += this.speed; this.x += Math.sin(this.y * 0.02 + this.swingOffset) * this.swing; if (this.y > height + 50) { this.reset(options); } }
