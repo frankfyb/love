@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Tailwind 配置文件路径已移至 tailwindcss 指令内部，此处无需 @config */
+
+/* 自定义全局样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fdf2f8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #f472b6;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ec4899;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
