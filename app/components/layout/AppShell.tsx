@@ -4,8 +4,6 @@ import type { PageKey } from '@/types';
 import { useRouter, usePathname } from 'next/navigation';
 import Navbar from './Navbar';
 import Modal from '@/components/common/Modal';
-import LoginContent from '@/components/business/LoginContent';
-
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -64,9 +62,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
 
-      <Modal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} title="欢迎回来">
+      {/* <Modal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} title="欢迎回来">
         <LoginContent onLogin={() => setIsLoginOpen(false)} />
-      </Modal>
+      </Modal> */}
     </div>
   );
 }
