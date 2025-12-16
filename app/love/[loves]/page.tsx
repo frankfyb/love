@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useState, useEffect } from 'react';
-import { getToolFullConfig } from '@/config/toolsRegistry';
+import { getToolFullConfig, getToolKeyList } from '@/config/toolsRegistry';
 import { useWorks } from '@/hooks/useWorks';
 import Modal from '@/components/common/Modal';
 import { 
@@ -18,12 +18,14 @@ import {
 // ================= UI Components =================
 
 const Toast = ({ message, show, onClose }: { message: string, show: boolean, onClose: () => void }) => {
-  useEffect(() => {
+  const onCloseRef = React.useRef(onClose);
+  React.useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
+  React.useEffect(() => {
     if (show) {
-      const timer = setTimeout(onClose, 2000);
+      const timer = setTimeout(() => onCloseRef.current(), 2000);
       return () => clearTimeout(timer);
     }
-  }, [show, onClose]);
+  }, [show]);
 
   if (!show) return null;
 
@@ -39,7 +41,7 @@ const Toast = ({ message, show, onClose }: { message: string, show: boolean, onC
 
 export default function ToolPage({ params }: { params: Promise<{ loves: string }> }) {
   const { loves } = (React as any).use(params);
-  const toolKey = loves as any;
+  const toolKey = decodeURIComponent(loves) as any;
   const [isOpen, setIsOpen] = useState(true);
   const tool = useMemo(() => {
     try { return getToolFullConfig(toolKey); } catch { return null; }
@@ -72,7 +74,19 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
     } catch {}
   }, [tool]);
 
-  const handleConfigChange = (key: string, value: any) => setConfig((prev: any) => ({ ...prev, [key]: value }));
+  const handleConfigChange = (key: string, value: any) => {
+    // 对于 Christmas Avatar 工具，我们需要特殊处理 stickers 状态
+    if (toolKey === 'christmas-avatar' && key === 'stickers') {
+      // 这里可以添加 stickers 状态的处理逻辑
+      setConfig((prev: any) => ({ ...prev, [key]: value }));
+      return;
+    }
+    // 避免不必要的状态更新
+    setConfig((prev: any) => {
+      if (prev[key] === value) return prev;
+      return { ...prev, [key]: value };
+    });
+  };
 
   const saveCurrentTemplate = () => {
     // Custom prompt could be better, but keeping prompt for simplicity of input
@@ -227,13 +241,13 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
 
       {/* Main Content */}
       <div className="absolute inset-0 z-0">
-        <DisplayUI config={config} isPanelOpen={isOpen} />
+        <DisplayUI config={config} isPanelOpen={isOpen} onConfigChange={handleConfigChange} />
       </div>
 
       <div 
-        className={`absolute top-0 left-0 h-full z-40 transition-transform duration-500 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`absolute top-0 left-0 h-full z-0 transition-transform duration-500 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <ConfigUI config={config} onChange={handleConfigChange} isOpen={isOpen} setIsOpen={setIsOpen} />
+          <ConfigUI config={config} onChange={handleConfigChange} isOpen={isOpen} setIsOpen={setIsOpen} />
       </div>
     </main>
   );

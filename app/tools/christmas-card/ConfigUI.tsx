@@ -1,15 +1,30 @@
 'use client';
 import React from 'react';
-import { CONFIG_METADATA, AppConfig } from './config';
+import { AppConfig, AppConfigKey, ConfigInputType, CONFIG_METADATA } from './config';
+
+export interface ConfigMetaItem {
+  key: AppConfigKey;
+  label: string;
+  type: ConfigInputType;
+  description?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+}
 
 type Props = {
   config: AppConfig;
-  onChange: (key: keyof AppConfig, value: any) => void;
+  metaList?: ConfigMetaItem[]; // Made optional
+  onChange: (key: AppConfigKey, value: any) => void;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
+  onReset?: () => void;
 };
 
-export default function ChristmasCardConfigUI({ config, onChange, isOpen, setIsOpen }: Props) {
+export default function ChristmasCardConfigUI({ config, metaList, onChange, isOpen, setIsOpen, onReset }: Props) {
+  // Use provided metaList or fallback to imported CONFIG_METADATA
+  const effectiveMetaList = metaList || CONFIG_METADATA;
+
   return (
     <>
       <button
@@ -32,13 +47,20 @@ export default function ChristmasCardConfigUI({ config, onChange, isOpen, setIsO
       </button>
 
       <aside className={`fixed top-0 left-0 z-50 h-full w-[300px] bg-slate-900/90 backdrop-blur-xl border-r border-white/30 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-8 pb-4">
-          <h2 className="bg-gradient-to-r from-emerald-400 to-amber-300 bg-clip-text text-2xl font-bold text-transparent">节日工坊</h2>
-          <p className="text-xs text-slate-400 mt-1">Custom Christmas Capsule</p>
+        <div className="p-8 pb-4 flex justify-between items-start">
+          <div>
+            <h2 className="bg-gradient-to-r from-emerald-400 to-amber-300 bg-clip-text text-2xl font-bold text-transparent">节日工坊</h2>
+            <p className="text-xs text-slate-400 mt-1">Standardized Config Panel</p>
+          </div>
+          {onReset && (
+            <button onClick={onReset} className="text-xs text-slate-500 hover:text-white underline" title="重置为默认配置">
+              重置
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto px-8 pb-10 space-y-7 custom-scrollbar">
-          {CONFIG_METADATA.map((meta: any) => (
+          {effectiveMetaList.map((meta) => (
             <div key={meta.key}>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-slate-200">{meta.label}</label>

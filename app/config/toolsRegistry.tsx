@@ -17,13 +17,21 @@ const WarmTextCardConfigUI = dynamic(() => import('@/tools/warm-text-card/Config
 import { DEFAULT_CONFIG as birthdayDefaultConfig } from '@/tools/birthday-romance/config';
 const BirthdayRomanceDisplayUI = dynamic(() => import('@/tools/birthday-romance/DisplayUI'), { loading: () => <Loading /> });
 const BirthdayRomanceConfigUI = dynamic(() => import('@/tools/birthday-romance/ConfigUI'), { loading: () => <Loading /> });
+import { DEFAULT_CONFIG as christmasAvatarDefault } from '@/tools/christmas-avatar/config';
+const ChristmasAvatarDisplayUI = dynamic(() => import('@/tools/christmas-avatar/DisplayUI'), { loading: () => <Loading /> });
+const ChristmasAvatarConfigUI = dynamic(() => import('@/tools/christmas-avatar/ConfigUI'), { loading: () => <Loading /> });
 
-
+import { DEFAULT_CONFIG as birthdayRomanceV2Default } from '@/tools/birthday-romance-v2';
+const BirthdayRomanceV2DisplayUI = dynamic(() => import('@/tools/birthday-romance-v2').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+const BirthdayRomanceV2ConfigUI = dynamic(() => import('@/tools/birthday-romance-v2').then(mod => mod.ConfigUI), { loading: () => <Loading /> });
+import { DEFAULT_CONFIG as axuyuantreeDefault } from '@/tools/axuyuantree/index';
+const AxuyuantreeDisplayUI = dynamic(() => import('@/tools/axuyuantree').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+const AxuyuantreeConfigUI = dynamic(() => import('@/tools/axuyuantree').then(mod => mod.ConfigUI), { loading: () => <Loading /> });  
 // ========================== 类型定义（强化类型约束）==========================
 /**
  * 工具基础配置项类型
  */
-type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'birthday-romance';
+type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'birthday-romance' | 'christmas-avatar' | 'christmas-card-advanced' | 'birthday-romance-v2' | 'axuyuantree';
 
 interface ToolBasicConfig {
   // 工具显示名称
@@ -71,6 +79,24 @@ const toolRegistry= {
     DisplayUI: BirthdayRomanceDisplayUI,
     ConfigUI: BirthdayRomanceConfigUI,
     defaultConfig: birthdayDefaultConfig,
+  },
+  'christmas-avatar': {
+    name: '圣诞头像工坊',
+    DisplayUI: ChristmasAvatarDisplayUI,
+    ConfigUI: ChristmasAvatarConfigUI,
+    defaultConfig: christmasAvatarDefault,
+  },
+  'birthday-romance-v2': {
+    name: '生日浪漫生成器 V2',
+    DisplayUI: BirthdayRomanceV2DisplayUI,
+    ConfigUI: BirthdayRomanceV2ConfigUI,
+    defaultConfig: birthdayRomanceV2Default,
+  },
+  'axuyuantree': {
+    name: '许愿元树',
+    DisplayUI: AxuyuantreeDisplayUI,
+    ConfigUI: AxuyuantreeConfigUI,
+    defaultConfig: axuyuantreeDefault,
   },
 };
 
