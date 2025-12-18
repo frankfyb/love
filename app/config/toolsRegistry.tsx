@@ -24,14 +24,33 @@ const ChristmasAvatarConfigUI = dynamic(() => import('@/tools/christmas-avatar/C
 import { DEFAULT_CONFIG as birthdayRomanceV2Default } from '@/tools/birthday-romance-v2';
 const BirthdayRomanceV2DisplayUI = dynamic(() => import('@/tools/birthday-romance-v2').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 const BirthdayRomanceV2ConfigUI = dynamic(() => import('@/tools/birthday-romance-v2').then(mod => mod.ConfigUI), { loading: () => <Loading /> });
+
 import { DEFAULT_CONFIG as axuyuantreeDefault } from '@/tools/axuyuantree/index';
 const AxuyuantreeDisplayUI = dynamic(() => import('@/tools/axuyuantree').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
-const AxuyuantreeConfigUI = dynamic(() => import('@/tools/axuyuantree').then(mod => mod.ConfigUI), { loading: () => <Loading /> });  
+const AxuyuantreeConfigUI = dynamic(() => import('@/tools/axuyuantree').then(mod => mod.ConfigUI), { loading: () => <Loading /> });
+
+// 新增的四个平安夜工具
+import { DEFAULT_CONFIG as eveGoodnightAppleDefault } from '@/tools/eve-goodnight-apple/index';
+const EveGoodnightAppleDisplayUI = dynamic(() => import('@/tools/eve-goodnight-apple').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+const EveGoodnightAppleConfigUI = dynamic(() => import('@/tools/eve-goodnight-apple').then(mod => mod.ConfigUI), { loading: () => <Loading /> });
+
+import { DEFAULT_CONFIG as eveMultiAppleBlessingDefault } from '@/tools/eve-multi-apple-blessing/index';
+const EveMultiAppleBlessingDisplayUI = dynamic(() => import('@/tools/eve-multi-apple-blessing').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+const EveMultiAppleBlessingConfigUI = dynamic(() => import('@/tools/eve-multi-apple-blessing').then(mod => mod.ConfigUI), { loading: () => <Loading /> });
+
+import { DEFAULT_CONFIG as eveSantaWalkDefault } from '@/tools/eve-santa-walk/index';
+const EveSantaWalkDisplayUI = dynamic(() => import('@/tools/eve-santa-walk').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+const EveSantaWalkConfigUI = dynamic(() => import('@/tools/eve-santa-walk').then(mod => mod.ConfigUI), { loading: () => <Loading /> });
+
+import { DEFAULT_CONFIG as eveWishFireworksDefault } from '@/tools/eve-wish-fireworks/index';
+const EveWishFireworksDisplayUI = dynamic(() => import('@/tools/eve-wish-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+const EveWishFireworksConfigUI = dynamic(() => import('@/tools/eve-wish-fireworks').then(mod => mod.ConfigUI), { loading: () => <Loading /> });
+
 // ========================== 类型定义（强化类型约束）==========================
 /**
  * 工具基础配置项类型
  */
-type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'birthday-romance' | 'christmas-avatar' | 'christmas-card-advanced' | 'birthday-romance-v2' | 'axuyuantree';
+type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'birthday-romance' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks';
 
 interface ToolBasicConfig {
   // 工具显示名称
@@ -97,6 +116,30 @@ const toolRegistry= {
     DisplayUI: AxuyuantreeDisplayUI,
     ConfigUI: AxuyuantreeConfigUI,
     defaultConfig: axuyuantreeDefault,
+  },
+  'eve-goodnight-apple': {
+    name: '晚安平安果',
+    DisplayUI: EveGoodnightAppleDisplayUI,
+    ConfigUI: EveGoodnightAppleConfigUI,
+    defaultConfig: eveGoodnightAppleDefault,
+  },
+  'eve-multi-apple-blessing': {
+    name: '多重苹果祝福',
+    DisplayUI: EveMultiAppleBlessingDisplayUI,
+    ConfigUI: EveMultiAppleBlessingConfigUI,
+    defaultConfig: eveMultiAppleBlessingDefault,
+  },
+  'eve-santa-walk': {
+    name: '圣诞老人漫步',
+    DisplayUI: EveSantaWalkDisplayUI,
+    ConfigUI: EveSantaWalkConfigUI,
+    defaultConfig: eveSantaWalkDefault,
+  },
+  'eve-wish-fireworks': {
+    name: '许愿烟花',
+    DisplayUI: EveWishFireworksDisplayUI,
+    ConfigUI: EveWishFireworksConfigUI,
+    defaultConfig: eveWishFireworksDefault,
   },
 };
 

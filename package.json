@@ -9,17 +9,18 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/hands": "^0.4.1675469240",
+    "@react-three/fiber": "^9.0.0",
+    "@tsparticles/engine": "^3.0.0",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.0.0",
+    "framer-motion": "^12.23.26",
+    "lucide-react": "^0.446.0",
     "next": "16.0.8",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "@react-three/fiber": "^9.0.0",
-    "three": "^0.160.0",
-    "lucide-react": "^0.446.0",
-    "@mediapipe/hands": "^0.4.1675469240",
-    "@mediapipe/camera_utils": "^0.3.1675466862",
-    "@tsparticles/react": "^3.0.0",
-    "@tsparticles/slim": "^3.0.0",
-    "@tsparticles/engine": "^3.0.0"
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

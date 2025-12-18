@@ -91,6 +91,42 @@ export const TOOL_METADATA: ToolMetadata[] = [
     sort: 5,
     cover: '',
   },
+  {
+    id: 'eve-goodnight-apple',
+    toolName: '晚安平安果',
+    isActive: true,
+    description: '在宁静夜晚送上一颗温暖的平安果，伴你入梦',
+    tag: ['节日专属', '表白专属'],
+    sort: 6,
+    cover: '',
+  },
+  {
+    id: 'eve-multi-apple-blessing',
+    toolName: '多重苹果祝福',
+    isActive: true,
+    description: '打开礼盒，收获多重惊喜祝福',
+    tag: ['节日专属', '表白专属'],
+    sort: 7,
+    cover: '',
+  },
+  {
+    id: 'eve-santa-walk',
+    toolName: '圣诞老人漫步',
+    isActive: true,
+    description: '与圣诞老人互动，收获节日惊喜',
+    tag: ['节日专属', '视觉特效'],
+    sort: 8,
+    cover: '',
+  },
+  {
+    id: 'eve-wish-fireworks',
+    toolName: '许愿烟花',
+    isActive: true,
+    description: '点燃烟花，许下心中美好愿望',
+    tag: ['节日专属', '视觉特效'],
+    sort: 9,
+    cover: '',
+  },
 ];
 
 /** 分类-工具关联配置 */
@@ -101,6 +137,10 @@ export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
   { id: 'rel4', toolId: 'ai-poetry', categoryId: 'ai' },
   { id: 'rel5', toolId: 'warm-text-card', categoryId: 'memory' },
   { id: 'rel6', toolId: 'axuyuantree', categoryId: 'festival' },
+  { id: 'rel7', toolId: 'eve-goodnight-apple', categoryId: 'festival' },
+  { id: 'rel8', toolId: 'eve-multi-apple-blessing', categoryId: 'festival' },
+  { id: 'rel9', toolId: 'eve-santa-walk', categoryId: 'festival' },
+  { id: 'rel10', toolId: 'eve-wish-fireworks', categoryId: 'festival' },
 ];
 
 // ====================== 3. 辅助函数（适配数组标签） ======================
