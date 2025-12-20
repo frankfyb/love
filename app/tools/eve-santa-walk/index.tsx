@@ -38,8 +38,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   giftImage: 'https://cdn-icons-png.flaticon.com/512/4213/4213650.png', // 苹果/礼物贴纸
 };
 
-// 配置元数据
-export const CONFIG_METADATA = [
+// 保留原有的 CONFIG_METADATA 以保持向后兼容性
+export const CONFIG_METADATA: Array<any> = [
   {
     group: '场景氛围',
     items: [
@@ -68,6 +68,95 @@ export const CONFIG_METADATA = [
     ]
   }
 ];
+
+// 添加通用配置元数据
+export const eveSantaWalkConfigMetadata = {
+  panelTitle: '圣诞老人漫步',
+  panelSubtitle: 'Design Your Romance',
+  configSchema: {
+    bgImage: {
+      label: '背景图片',
+      type: 'input' as const,
+      category: 'scene' as const,
+    },
+    bgOverlayOpacity: {
+      label: '夜色浓度',
+      type: 'slider' as const,
+      min: 0,
+      max: 0.8,
+      step: 0.1,
+      category: 'scene' as const,
+    },
+    effectType: {
+      label: '浪漫特效',
+      type: 'select' as const,
+      options: [
+        { label: '❄️ 漫天飘雪', value: 'snow' },
+        { label: '🕯️ 暖光烛火', value: 'candle' },
+        { label: '无特效', value: 'none' },
+      ],
+      category: 'visual' as const,
+    },
+    particleCount: {
+      label: '粒子数量',
+      type: 'slider' as const,
+      min: 50,
+      max: 200,
+      step: 10,
+      category: 'visual' as const,
+    },
+    santaImage: {
+      label: '圣诞老人形象',
+      type: 'input' as const,
+      category: 'scene' as const,
+    },
+    santaSpeed: {
+      label: '行走/呼吸速度',
+      type: 'slider' as const,
+      min: 0.5,
+      max: 3,
+      step: 0.1,
+      category: 'visual' as const,
+    },
+    blessingText: {
+      label: '祝福语',
+      type: 'input' as const,
+      category: 'content' as const,
+    },
+    giftContent: {
+      label: '礼物名称',
+      type: 'input' as const,
+      category: 'content' as const,
+    },
+    giftImage: {
+      label: '礼物/苹果贴纸',
+      type: 'input' as const,
+      category: 'scene' as const,
+    }
+  },
+  tabs: [
+    { id: 'scene' as const, label: '场景' },
+    { id: 'visual' as const, label: '视觉' },
+    { id: 'content' as const, label: '内容' },
+  ],
+  mobileSteps: [
+    { 
+      id: 1, 
+      label: '场景', 
+      fields: ['bgImage' as const, 'bgOverlayOpacity' as const, 'effectType' as const]
+    },
+    { 
+      id: 2, 
+      label: '角色', 
+      fields: ['santaImage' as const, 'santaSpeed' as const, 'particleCount' as const]
+    },
+    { 
+      id: 3, 
+      label: '祝福', 
+      fields: ['blessingText' as const, 'giftContent' as const, 'giftImage' as const]
+    },
+  ],
+};
 
 // ============================================================================
 // 2. 配置面板组件 (ConfigUI)
@@ -174,7 +263,7 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: ConfigUIProps)
               <div key={idx} className="space-y-4">
                 <h3 className="text-sm font-bold text-red-300 uppercase tracking-wider">{group.group}</h3>
                 <div className="space-y-4">
-                  {group.items.map((item) => (
+                  {group.items.map((item: any) => (
                     <div key={item.key} className="space-y-1">
                       <label className="text-xs text-white/70 block">{item.label}</label>
                       {renderInput(item)}
@@ -209,7 +298,7 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: ConfigUIProps)
               <div key={idx} className="space-y-3">
                 <h3 className="text-xs font-bold text-red-300/80 uppercase">{group.group}</h3>
                 <div className="grid grid-cols-1 gap-3">
-                  {group.items.slice(0, 3).map((item) => (
+                  {group.items.slice(0, 3).map((item: any) => (
                     <div key={item.key} className="space-y-1">
                        <div className="flex justify-between">
                          <label className="text-xs text-white/70">{item.label}</label>

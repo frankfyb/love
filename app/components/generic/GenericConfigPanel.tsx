@@ -2,175 +2,15 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Settings2, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, 
-  Upload, Music, Video, Type, Palette, Sparkles, Image as ImageIcon, 
-  Menu, X, Clock, Calendar, Check, Share2, Heart, Star, Smile, 
-  Cloud, Gift, Wind, Move, Zap, Layers, Box, Plus, Trash2, Tag,
-  LayoutTemplate, Smartphone
+  Settings2, ChevronDown, ChevronUp, ChevronLeft, 
+  Upload, Type, Palette, Sparkles, Image as ImageIcon, 
+  Menu, X, Gift, Wind, Box, Smartphone, LayoutTemplate
 } from 'lucide-react';
 
 // ============================================================================
-// 1. 类型定义与全能配置接口
+// 1. 类型导入
 // ============================================================================
-
-type ControlType = 
-  | 'select' | 'radio' | 'switch' | 'color' | 'slider' 
-  | 'input' | 'textarea' | 'file' | 'time' | 'date' 
-  | 'multi-select' | 'sticker-grid' | 'readonly' 
-  | 'list';
-
-type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay';
-
-interface ConfigItemMetadata {
-  label: string;
-  type: ControlType;
-  options?: { label: string; value: string | number; icon?: React.ReactNode }[];
-  min?: number;
-  max?: number;
-  step?: number;
-  placeholder?: string;
-  category: CategoryType;
-  description?: string;
-  condition?: (config: AppConfig) => boolean;
-}
-
-export interface AppConfig {
-  themePreset: string;
-  bgCustomUrl: string | null;
-  bgOverlayOpacity: number;
-  musicUrl: string | null;
-  mainTitle: string;
-  subTitle: string;
-  fontStyle: string;
-  fontScale: number;
-  customMessages: string;
-  effectType: string;
-  particleShape: string;
-  primaryColor: string;
-  secondaryColor: string;
-  visibleWidgets: string[];
-  particleDensity: number;
-  particleSize: number;
-  speed: number;
-  gravity: number;
-  wind: number;
-  interactionMode: string;
-  triggerCount: number;
-  giftList: string;
-  autoPlay: boolean;
-}
-
-export const DEFAULT_CONFIG: AppConfig = {
-  themePreset: 'night_firework',
-  bgCustomUrl: null,
-  bgOverlayOpacity: 0.2,
-  musicUrl: null,
-  mainTitle: '2025 Happy New Year',
-  subTitle: '愿新的一年，烟火向星辰，所愿皆成真',
-  fontStyle: 'serif',
-  fontScale: 1.2,
-  customMessages: '平安,喜乐,健康,暴富,Love,✨,❤️',
-  effectType: 'firework',
-  particleShape: 'star',
-  primaryColor: '#ffd700',
-  secondaryColor: '#ff4d4f',
-  visibleWidgets: ['countdown'],
-  particleDensity: 80,
-  particleSize: 4,
-  speed: 1.5,
-  gravity: 0.1,
-  wind: 0,
-  interactionMode: 'ripple',
-  triggerCount: 5,
-  giftList: '现金红包,大餐一顿,清空购物车,拥抱一个,520红包',
-  autoPlay: true,
-};
-
-export const CONFIG_METADATA: Record<keyof AppConfig, ConfigItemMetadata> = {
-  themePreset: {
-    label: '场景主题',
-    type: 'select',
-    options: [
-      { label: '璀璨烟火 (夜空)', value: 'night_firework', icon: <Sparkles className="w-3 h-3 text-yellow-400"/> },
-      { label: '静谧森林 (绿意)', value: 'forest', icon: <Cloud className="w-3 h-3 text-green-400"/> },
-      { label: '暖阳午后 (橙黄)', value: 'warm', icon: <Smile className="w-3 h-3 text-orange-400"/> },
-      { label: '冰雪奇缘 (蓝白)', value: 'snow_winter', icon: <Wind className="w-3 h-3 text-blue-300"/> },
-      { label: '极简白白 (灰白)', value: 'minimal', icon: <Box className="w-3 h-3 text-gray-400"/> },
-      { label: '自定义图片', value: 'custom', icon: <ImageIcon className="w-3 h-3"/> },
-    ],
-    category: 'scene',
-  },
-  bgCustomUrl: { label: '背景图链接', type: 'input', category: 'scene', condition: c => c.themePreset === 'custom', placeholder: '输入图片URL...' },
-  bgOverlayOpacity: { label: '夜色/遮罩浓度', type: 'slider', min: 0, max: 0.9, step: 0.1, category: 'scene' },
-  musicUrl: { label: '背景音乐', type: 'file', category: 'scene' },
-  mainTitle: { label: '主标题', type: 'input', category: 'content' },
-  subTitle: { label: '祝福寄语', type: 'textarea', category: 'content' },
-  fontStyle: {
-    label: '字体风格',
-    type: 'select',
-    options: [
-      { label: '优雅衬线 (Serif)', value: 'serif' },
-      { label: '现代黑体 (Sans)', value: 'sans' },
-      { label: '艺术手写 (Cursive)', value: 'cursive' },
-    ],
-    category: 'content',
-  },
-  fontScale: { label: '字号缩放', type: 'slider', min: 0.5, max: 2.5, step: 0.1, category: 'content' },
-  customMessages: { label: '飘落/弹幕文案', type: 'list', category: 'content', placeholder: '输入文案回车添加...', description: '用于雨滴文字或随机弹幕，自动以逗号分隔' },
-  effectType: {
-    label: '核心特效',
-    type: 'select',
-    options: [
-      { label: '烟花绽放', value: 'firework', icon: <Zap className="w-3 h-3"/> },
-      { label: '漫天飘雪', value: 'snow', icon: <Wind className="w-3 h-3"/> },
-      { label: '细腻雨丝', value: 'rain', icon: <Cloud className="w-3 h-3"/> },
-      { label: '浮动气泡', value: 'bubble', icon: <Smile className="w-3 h-3"/> },
-      { label: '无特效', value: 'none', icon: <X className="w-3 h-3"/> },
-    ],
-    category: 'visual',
-  },
-  particleShape: {
-    label: '粒子/涟漪形状',
-    type: 'sticker-grid',
-    options: [
-      { label: '圆形', value: 'circle', icon: <div className="w-3 h-3 rounded-full bg-current"/> },
-      { label: '爱心', value: 'heart', icon: <Heart className="w-4 h-4"/> },
-      { label: '星星', value: 'star', icon: <Star className="w-4 h-4"/> },
-      { label: '雪花', value: 'snow', icon: <Sparkles className="w-4 h-4"/> },
-    ],
-    category: 'visual',
-  },
-  primaryColor: { label: '主色调', type: 'color', category: 'visual' },
-  secondaryColor: { label: '辅助色', type: 'color', category: 'visual' },
-  visibleWidgets: {
-    label: '显示组件',
-    type: 'multi-select',
-    options: [
-      { label: '倒计时', value: 'countdown' },
-      { label: '播放器', value: 'music' },
-      { label: '天气', value: 'weather' },
-    ],
-    category: 'visual',
-  },
-  particleDensity: { label: '粒子密度/数量', type: 'slider', min: 0, max: 200, step: 10, category: 'physics' },
-  particleSize: { label: '粒子大小', type: 'slider', min: 1, max: 20, step: 1, category: 'physics' },
-  speed: { label: '运动速度', type: 'slider', min: 0.1, max: 5, step: 0.1, category: 'physics' },
-  gravity: { label: '重力系数', type: 'slider', min: -0.2, max: 1, step: 0.05, category: 'physics', description: '负值为上浮，正值为下落' },
-  wind: { label: '风力影响', type: 'slider', min: -2, max: 2, step: 0.1, category: 'physics' },
-  interactionMode: {
-    label: '互动模式',
-    type: 'radio',
-    options: [
-      { label: '纯展示', value: 'none' },
-      { label: '点击涟漪', value: 'ripple' },
-      { label: '盲盒抽奖', value: 'blindbox' },
-    ],
-    category: 'gameplay',
-  },
-  triggerCount: { label: '盲盒解锁次数', type: 'slider', min: 1, max: 20, step: 1, category: 'gameplay', condition: c => c.interactionMode === 'blindbox' },
-  giftList: { label: '盲盒礼物池', type: 'list', category: 'gameplay', condition: c => c.interactionMode === 'blindbox', placeholder: '输入礼物名称回车添加...' },
-  autoPlay: { label: '自动循环播放', type: 'switch', category: 'gameplay' },
-};
+import type { GenericControlType, CategoryType, GenericConfigItemMetadata, ToolConfigMetadata } from '@/types/genericConfig';
 
 // ============================================================================
 // 2. 高颜值玻璃态组件库 (Glassmorphism Components)
@@ -282,7 +122,7 @@ const CustomSelectControl = ({ value, onChange, options }: any) => {
             >
               {opt.icon && <span className={`opacity-80 scale-90 ${value === opt.value ? 'text-pink-500' : 'text-gray-400'}`}>{opt.icon}</span>}
               {opt.label}
-              {value === opt.value && <Check className="w-3.5 h-3.5 ml-auto text-pink-500" />}
+              {value === opt.value && <X className="w-3.5 h-3.5 ml-auto text-pink-500" />}
             </button>
           ))}
         </div>
@@ -327,14 +167,14 @@ const ListBuilderControl = ({ value, onChange, placeholder }: any) => {
           disabled={!inputValue.trim()}
           className="px-3.5 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl shadow-lg hover:shadow-pink-500/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
         >
-          <Plus className="w-4 h-4" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
       <div className="bg-white/30 dark:bg-black/20 backdrop-blur-sm rounded-xl p-3 border border-white/40 dark:border-white/5 min-h-[80px]">
         <div className="flex justify-between items-center mb-2.5">
           <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1">
-            <Tag className="w-3 h-3"/> 已添加 ({items.length})
+            <Box className="w-3 h-3"/> 已添加 ({items.length})
           </span>
           <span className="text-[10px] text-gray-400 bg-white/40 px-2 py-0.5 rounded-full">逗号分隔</span>
         </div>
@@ -472,7 +312,7 @@ const MultiSelectControl = ({ value, onChange, options }: any) => {
                 : 'bg-white/40 border-white/60 text-gray-600 hover:bg-white/70 hover:border-pink-200 dark:bg-white/5 dark:border-white/10'}
             `}
           >
-            {isActive && <Check className="w-3 h-3" />}
+            {isActive && <X className="w-3 h-3" />}
             {opt.label}
           </button>
         );
@@ -488,10 +328,13 @@ const FileControl = ({ label }: any) => (
   </button>
 );
 
-const FieldRenderer = ({ 
+// ============================================================================
+// 3. 字段渲染器
+// ============================================================================
+const FieldRenderer = <T,>({ 
   itemKey, configValue, allConfig, metadata, onChange 
 }: { 
-  itemKey: string; configValue: any; allConfig: AppConfig; metadata: ConfigItemMetadata; onChange: (key: string, val: any) => void 
+  itemKey: keyof T; configValue: any; allConfig: T; metadata: GenericConfigItemMetadata<T>; onChange: (key: keyof T, val: any) => void 
 }) => {
   if (metadata.condition && !metadata.condition(allConfig)) return null;
 
@@ -530,11 +373,24 @@ const FieldRenderer = ({
 };
 
 // ============================================================================
-// 3. 配置面板 (ConfigUI) - 适配移动端和PC端的全能容器
+// 4. 通用配置面板组件
 // ============================================================================
+interface GenericConfigPanelProps<T> {
+  config: T;
+  configMetadata: ToolConfigMetadata<T>;
+  onChange: (key: keyof T, val: any) => void;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
 
-export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppConfig; onChange: any; isOpen: boolean; setIsOpen: any }) {
-  const [activeTab, setActiveTab] = useState<CategoryType>('scene');
+export function GenericConfigPanel<T>({
+  config,
+  configMetadata,
+  onChange,
+  isOpen,
+  setIsOpen
+}: GenericConfigPanelProps<T>) {
+  const [activeTab, setActiveTab] = useState<CategoryType>(configMetadata.tabs[0]?.id || 'base');
   const [isMobile, setIsMobile] = useState(false);
   const [mobileStep, setMobileStep] = useState(1);
   const [mobileExpanded, setMobileExpanded] = useState(true);
@@ -548,24 +404,15 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppC
   }, []);
 
   // 移动端步骤定义
-  const mobileSteps = [
-    { id: 1, label: '背景', icon: <ImageIcon className="w-4 h-4"/>, fields: ['themePreset'] },
-    { id: 2, label: '个性', icon: <Type className="w-4 h-4"/>, fields: ['mainTitle', 'primaryColor'] },
-    { id: 3, label: '特效', icon: <Sparkles className="w-4 h-4"/>, fields: ['effectType'] },
-  ];
-
-  // PC 端 Tabs
-  const tabs: { id: CategoryType; label: string; icon: any }[] = [
-    { id: 'scene', label: '场景', icon: <LayoutTemplate className="w-4 h-4"/> },
-    { id: 'content', label: '内容', icon: <Type className="w-4 h-4"/> },
-    { id: 'visual', label: '视觉', icon: <Palette className="w-4 h-4"/> },
-    { id: 'physics', label: '物理', icon: <Wind className="w-4 h-4"/> },
-    { id: 'gameplay', label: '玩法', icon: <Gift className="w-4 h-4"/> },
+  const mobileSteps = configMetadata.mobileSteps || [
+    { id: 1, label: '基础', icon: <Settings2 className="w-4 h-4"/>, fields: [] },
+    { id: 2, label: '样式', icon: <Palette className="w-4 h-4"/>, fields: [] },
+    { id: 3, label: '特效', icon: <Sparkles className="w-4 h-4"/>, fields: [] },
   ];
 
   const activeFields = useMemo(() => 
-    Object.keys(CONFIG_METADATA).filter(k => CONFIG_METADATA[k as keyof AppConfig].category === activeTab), 
-  [activeTab]);
+    Object.keys(configMetadata.configSchema).filter(k => configMetadata.configSchema[k as keyof T].category === activeTab), 
+  [activeTab, configMetadata]);
 
   // --- 移动端渲染逻辑 ---
   if (isMobile) {
@@ -622,11 +469,11 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppC
           {mobileExpanded && (
             <div className="p-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
               {mobileSteps.find(s => s.id === mobileStep)?.fields.map(key => (
-                 <FieldRenderer
-                    key={key}
+                 <FieldRenderer<T>
+                    key={key as string}
                     itemKey={key}
-                    metadata={CONFIG_METADATA[key as keyof AppConfig]}
-                    configValue={config[key as keyof AppConfig]}
+                    metadata={configMetadata.configSchema[key]}
+                    configValue={config[key]}
                     allConfig={config}
                     onChange={onChange}
                   />
@@ -641,8 +488,8 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppC
                    上一步
                  </button>
                  <button 
-                   onClick={() => setMobileStep(prev => Math.min(3, prev + 1))}
-                   disabled={mobileStep === 3}
+                   onClick={() => setMobileStep(prev => Math.min(mobileSteps.length, prev + 1))}
+                   disabled={mobileStep === mobileSteps.length}
                    className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-pink-500/30 disabled:opacity-50"
                  >
                    下一步
@@ -684,9 +531,11 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppC
           <div>
             <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-pink-500 animate-pulse" />
-              配置工坊
+              {configMetadata.panelTitle || '配置工坊'}
             </h2>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 tracking-wider uppercase opacity-70">Design Your Romance</p>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 tracking-wider uppercase opacity-70">
+              {configMetadata.panelSubtitle || 'Design Your Romance'}
+            </p>
           </div>
           <button onClick={() => setIsOpen(false)} className="p-2.5 hover:bg-white/40 rounded-full transition-colors group border border-transparent hover:border-white/40">
             <ChevronLeft className="w-5 h-5 text-gray-400 group-hover:text-pink-500 transition-colors" />
@@ -696,18 +545,18 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppC
         {/* Tab Navigation - 悬浮胶囊式 */}
         <div className="px-6 pt-6 pb-2 shrink-0">
           <div className="flex p-1.5 bg-gray-100/50 dark:bg-white/5 rounded-2xl border border-white/40 backdrop-blur-sm">
-            {tabs.map(tab => {
+            {configMetadata.tabs.map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => setActiveTab(tab.id as CategoryType)}
                   className={`
                     flex-1 flex flex-col items-center gap-1.5 py-2.5 rounded-xl transition-all duration-300 relative
                     ${isActive ? 'bg-white shadow-md text-pink-500 scale-100' : 'text-gray-400 hover:text-gray-600 hover:bg-white/40'}
                   `}
                 >
-                  <div className={`${isActive ? 'text-pink-500' : 'text-gray-400'} transition-colors`}>{tab.icon}</div>
+                  <div className={`${isActive ? 'text-pink-500' : 'text-gray-400'} transition-colors`}>{tab.icon || <LayoutTemplate className="w-4 h-4"/>}</div>
                   <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>
                   {isActive && <span className="absolute -bottom-1 w-1 h-1 bg-pink-500 rounded-full" />}
                 </button>
@@ -719,11 +568,11 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppC
         {/* Content - 隐形滚动条 */}
         <div className="flex-1 overflow-y-auto p-8 custom-scrollbar pb-32 space-y-2">
           {activeFields.map(key => (
-            <FieldRenderer
-              key={key}
-              itemKey={key}
-              metadata={CONFIG_METADATA[key as keyof AppConfig]}
-              configValue={config[key as keyof AppConfig]}
+            <FieldRenderer<T>
+              key={key as string}
+              itemKey={key as keyof T}
+              metadata={configMetadata.configSchema[key as keyof T]}
+              configValue={config[key as keyof T]}
               allConfig={config}
               onChange={onChange}
             />
@@ -734,153 +583,11 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: { config: AppC
         {/* Footer - 悬浮按钮 */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/90 via-white/60 to-transparent dark:from-black/90 pointer-events-none">
           <button className="pointer-events-auto w-full py-3.5 bg-gray-900 text-white dark:bg-white dark:text-black rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all text-sm flex items-center justify-center gap-2 group border border-white/20 backdrop-blur-xl">
-             <Share2 className="w-4 h-4 group-hover:rotate-12 transition-transform" /> 
+             <Gift className="w-4 h-4 group-hover:rotate-12 transition-transform" /> 
              生成预览 / 导出
           </button>
         </div>
       </div>
     </>
-  );
-}
-
-// ============================================================================
-// 4. 展示组件 (DisplayUI)
-// ============================================================================
-
-export function DisplayUI({ config, isPanelOpen }: { config: AppConfig; isPanelOpen: boolean }) {
-  const [gameData, setGameData] = useState({ clickCount: 0, gift: null as string | null });
-
-  const bgStyles: Record<string, string> = {
-    night_firework: 'linear-gradient(to bottom, #0f2027, #203a43, #2c5364)',
-    forest: 'linear-gradient(to top, #134e5e, #71b280)',
-    warm: 'linear-gradient(to top, #fad0c4 0%, #ffd1ff 100%)',
-    snow_winter: 'linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%)',
-    minimal: 'bg-gray-50',
-    custom: config.bgCustomUrl ? `url(${config.bgCustomUrl})` : '#333'
-  };
-
-  const handleInteraction = (e: React.MouseEvent) => {
-    if (config.interactionMode === 'ripple') {
-       const el = document.createElement('div');
-       el.innerHTML = config.particleShape === 'heart' ? '❤️' : config.particleShape === 'star' ? '⭐' : '⚪';
-       el.style.cssText = `position:absolute;left:${e.clientX}px;top:${e.clientY}px;pointer-events:none;font-size:24px;animation:ping 0.8s ease-out forwards;`;
-       document.body.appendChild(el);
-       setTimeout(() => el.remove(), 800);
-    }
-    if (config.interactionMode === 'blindbox' && !gameData.gift) {
-      const newCount = gameData.clickCount + 1;
-      setGameData(prev => ({ ...prev, clickCount: newCount }));
-      if (newCount >= config.triggerCount) {
-        const gifts = config.giftList.split(/,|\n/).filter(g => g.trim());
-        const result = gifts[Math.floor(Math.random() * gifts.length)] || '神秘大奖';
-        setGameData(prev => ({ ...prev, gift: result }));
-      }
-    }
-  };
-
-  useEffect(() => { setGameData({ clickCount: 0, gift: null }); }, [config.interactionMode, config.triggerCount]);
-
-  return (
-    <div 
-      className={`absolute inset-0 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] overflow-hidden ${isPanelOpen ? 'pl-[420px]' : ''}`}
-      onClick={handleInteraction}
-    >
-      <div className="absolute inset-0 bg-cover bg-center transition-all duration-700" style={{ background: bgStyles[config.themePreset] || bgStyles.night_firework }} />
-      <div className="absolute inset-0 pointer-events-none" style={{ background: `rgba(0,0,0,${config.bgOverlayOpacity})` }} />
-
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {config.effectType !== 'none' && Array.from({ length: 15 }).map((_, i) => (
-          <div 
-            key={i}
-            className="absolute animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: '-10%',
-              fontSize: `${config.particleSize * 4}px`,
-              color: i % 2 === 0 ? config.primaryColor : config.secondaryColor,
-              animationDuration: `${5 / config.speed}s`,
-              animationDelay: `${Math.random() * 3}s`,
-              opacity: 0.7,
-              transform: `translateX(${config.wind * 50}px)`,
-              textShadow: '0 0 10px rgba(255,255,255,0.5)'
-            }}
-          >
-            {config.effectType === 'snow' ? '❄️' : config.effectType === 'rain' ? '💧' : config.effectType === 'bubble' ? '🫧' : '✨'}
-          </div>
-        ))}
-      </div>
-
-      <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center pointer-events-none">
-        {config.visibleWidgets.includes('countdown') && (
-           <div className="mb-8 font-mono text-sm tracking-widest bg-white/10 border border-white/20 px-6 py-2 rounded-full backdrop-blur-md text-white/90 shadow-lg">
-             2025-01-01 00:00:00
-           </div>
-        )}
-
-        <h1 
-          className="font-bold mb-6 drop-shadow-2xl transition-all"
-          style={{ 
-            color: config.primaryColor, 
-            fontSize: `${3.5 * config.fontScale}rem`,
-            fontFamily: config.fontStyle,
-            textShadow: '0 4px 30px rgba(0,0,0,0.3)'
-          }}
-        >
-          {config.mainTitle}
-        </h1>
-        
-        <p className="text-2xl text-white/90 max-w-lg whitespace-pre-wrap leading-relaxed font-light tracking-wide" style={{ color: config.secondaryColor }}>
-          {config.subTitle}
-        </p>
-
-        {config.interactionMode === 'blindbox' && (
-          <div className="mt-16 pointer-events-auto">
-            {!gameData.gift ? (
-              <div className="animate-bounce cursor-pointer bg-white/10 backdrop-blur-lg p-8 rounded-3xl border border-white/40 hover:bg-white/20 transition-all text-center group shadow-[0_0_50px_rgba(255,255,255,0.1)]">
-                 <Box className="w-20 h-20 text-white/80 mx-auto mb-4 group-hover:scale-110 transition-transform" />
-                 <p className="text-white font-medium tracking-widest uppercase text-xs">Tap {config.triggerCount - gameData.clickCount} times</p>
-              </div>
-            ) : (
-              <div className="animate-zoomIn bg-white/90 backdrop-blur-xl p-10 rounded-3xl shadow-2xl text-center transform scale-110 border border-white/50">
-                 <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">You Got</p>
-                 <h3 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-6">{gameData.gift}</h3>
-                 <button onClick={(e) => { e.stopPropagation(); setGameData({clickCount:0, gift:null}); }} className="text-xs bg-gray-100 px-6 py-2 rounded-full hover:bg-gray-200 text-gray-600 font-bold transition-colors">RESET</button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// 5. 入口 (App)
-// ============================================================================
-
-export default function App() {
-  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
-
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      @keyframes float { 0% { transform: translateY(0) translateX(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) translateX(var(--wind-x, 0px)); opacity: 0; } }
-      @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
-      @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1.1); opacity: 1; } }
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    `;
-    document.head.appendChild(style);
-    return () => { document.head.removeChild(style); };
-  }, []);
-
-  return (
-    <div className="relative w-full h-screen bg-gray-900 overflow-hidden font-sans text-gray-800">
-      <DisplayUI config={config} isPanelOpen={isPanelOpen} />
-      <ConfigUI config={config} onChange={(k, v) => setConfig(p => ({...p, [k]: v}))} isOpen={isPanelOpen} setIsOpen={setIsPanelOpen} />
-    </div>
   );
 }

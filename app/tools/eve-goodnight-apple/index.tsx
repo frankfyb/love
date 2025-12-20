@@ -44,7 +44,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   giftType: 'apple',
 };
 
-export const CONFIG_METADATA = {
+// 保留原有的 CONFIG_METADATA 以保持向后兼容性
+export const CONFIG_METADATA: Record<string, any> = {
   bgTheme: {
     label: '场景氛围',
     type: 'select',
@@ -71,6 +72,111 @@ export const CONFIG_METADATA = {
       { label: '冬日鲜花', value: 'flower' },
     ]
   }
+};
+
+// 添加通用配置元数据
+export const eveGoodnightAppleConfigMetadata = {
+  panelTitle: '平安夜工坊',
+  panelSubtitle: 'Design Your Romance',
+  configSchema: {
+    bgTheme: {
+      label: '场景氛围',
+      type: 'select' as const,
+      options: [
+        { label: '静谧深夜', value: 'deepNight' },
+        { label: '温馨暖屋', value: 'warmRoom' },
+        { label: '自定义图片', value: 'custom' },
+      ],
+      category: 'scene' as const,
+    },
+    appleSize: { 
+      label: '礼物大小', 
+      type: 'slider' as const,
+      min: 0.5, 
+      max: 2.0, 
+      step: 0.1,
+      category: 'visual' as const,
+    },
+    windowScale: { 
+      label: '窗户大小', 
+      type: 'slider' as const,
+      min: 0.5, 
+      max: 1.5, 
+      step: 0.1,
+      category: 'visual' as const,
+    },
+    starDensity: { 
+      label: '星空密度', 
+      type: 'slider' as const,
+      min: 0, 
+      max: 100, 
+      step: 1,
+      category: 'visual' as const,
+    },
+    starSpeed: { 
+      label: '闪烁速度', 
+      type: 'slider' as const,
+      min: 0.1, 
+      max: 3.0, 
+      step: 0.1,
+      category: 'visual' as const,
+    },
+    haloIntensity: { 
+      label: '祝福光晕', 
+      type: 'slider' as const,
+      min: 0, 
+      max: 1, 
+      step: 0.1,
+      category: 'visual' as const,
+    },
+    appleLabel: { 
+      label: '标签文字', 
+      type: 'input' as const,
+      category: 'content' as const,
+    },
+    bubbleText: { 
+      label: '女孩气泡', 
+      type: 'input' as const,
+      category: 'content' as const,
+    },
+    blessingText: { 
+      label: '点击祝福语', 
+      type: 'input' as const,
+      category: 'content' as const,
+    },
+    giftType: {
+      label: '礼物形态',
+      type: 'select' as const,
+      options: [
+        { label: '经典红苹果', value: 'apple' },
+        { label: '神秘礼盒', value: 'giftbox' },
+        { label: '冬日鲜花', value: 'flower' },
+      ],
+      category: 'visual' as const,
+    }
+  },
+  tabs: [
+    { id: 'scene' as const, label: '场景' },
+    { id: 'visual' as const, label: '视觉' },
+    { id: 'content' as const, label: '内容' },
+  ],
+  mobileSteps: [
+    { 
+      id: 1, 
+      label: '场景', 
+      fields: ['bgTheme' as const, 'windowScale' as const]
+    },
+    { 
+      id: 2, 
+      label: '礼物', 
+      fields: ['giftType' as const, 'appleSize' as const, 'haloIntensity' as const]
+    },
+    { 
+      id: 3, 
+      label: '文案', 
+      fields: ['appleLabel' as const, 'bubbleText' as const, 'blessingText' as const]
+    },
+  ],
 };
 
 // --- 2. 内部图形组件 (SVG Assets) ---
@@ -243,7 +349,7 @@ export function ConfigUI({
         <div key={key} className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">{meta.label}</label>
           <div className="flex gap-2 mb-2">
-            {meta.options.map(opt => (
+            {meta.options.map((opt: { value: any; label: any; }) => (
               <button
                 key={opt.value}
                 onClick={() => onChange(key as keyof AppConfig, opt.value)}

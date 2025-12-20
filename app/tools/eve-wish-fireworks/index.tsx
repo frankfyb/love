@@ -55,7 +55,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   wind: 0,
 };
 
-export const CONFIG_METADATA = {
+// 保留原有的 CONFIG_METADATA 以保持向后兼容性
+export const CONFIG_METADATA: Record<string, any> = {
   backgroundType: {
     label: '背景场景',
     type: 'select',
@@ -87,6 +88,135 @@ export const CONFIG_METADATA = {
   showAppleTrigger: { label: '显示平安果按钮', type: 'boolean' },
 };
 
+// 添加通用配置元数据
+export const eveWishFireworksConfigMetadata = {
+  panelTitle: '许愿烟花',
+  panelSubtitle: 'Design Your Romance',
+  configSchema: {
+    backgroundType: {
+      label: '背景场景',
+      type: 'select' as const,
+      options: [
+        { label: '静谧海边', value: 'seaside' },
+        { label: '深邃夜空', value: 'night' },
+        { label: '自定义图片', value: 'custom' },
+      ],
+      category: 'scene' as const,
+    },
+    customBgUrl: {
+      label: '自定义背景URL',
+      type: 'input' as const,
+      category: 'scene' as const,
+      condition: (config: AppConfig) => config.backgroundType === 'custom',
+    },
+    autoPlay: {
+      label: '自动循环播放',
+      type: 'switch' as const,
+      category: 'visual' as const,
+    },
+    fireworkStyle: {
+      label: '烟花/粒子形状',
+      type: 'select' as const,
+      options: [
+        { label: '经典圆形', value: 'classic' },
+        { label: '浪漫爱心', value: 'heart' },
+        { label: '闪烁星形', value: 'star' },
+      ],
+      category: 'visual' as const,
+    },
+    fireworkColor: {
+      label: '烟花主色',
+      type: 'color' as const,
+      category: 'visual' as const,
+    },
+    wishText: {
+      label: '许愿祝福文字',
+      type: 'textarea' as const,
+      category: 'content' as const,
+    },
+    textDuration: {
+      label: '文字燃烧时长(秒)',
+      type: 'slider' as const,
+      min: 2,
+      max: 20,
+      step: 1,
+      category: 'content' as const,
+    },
+    particleCount: {
+      label: '爆炸粒子数',
+      type: 'slider' as const,
+      min: 30,
+      max: 400,
+      step: 10,
+      category: 'visual' as const,
+    },
+    gravity: {
+      label: '重力系数',
+      type: 'slider' as const,
+      min: 0.05,
+      max: 0.5,
+      step: 0.01,
+      category: 'physics' as const,
+    },
+    showAppleTrigger: {
+      label: '显示平安果按钮',
+      type: 'switch' as const,
+      category: 'visual' as const,
+    },
+    trailLength: {
+      label: '拖尾长度',
+      type: 'slider' as const,
+      min: 0.5,
+      max: 1,
+      step: 0.01,
+      category: 'visual' as const,
+    },
+    textResolution: {
+      label: '文字采样密度',
+      type: 'slider' as const,
+      min: 1,
+      max: 10,
+      step: 1,
+      category: 'visual' as const,
+    },
+    wind: {
+      label: '风力系数',
+      type: 'slider' as const,
+      min: -0.5,
+      max: 0.5,
+      step: 0.01,
+      category: 'physics' as const,
+    }
+  },
+  tabs: [
+    { id: 'scene' as const, label: '场景' },
+    { id: 'visual' as const, label: '视觉' },
+    { id: 'content' as const, label: '内容' },
+    { id: 'physics' as const, label: '物理' },
+  ],
+  mobileSteps: [
+    { 
+      id: 1, 
+      label: '场景', 
+      fields: ['backgroundType' as const, 'customBgUrl' as const, 'autoPlay' as const]
+    },
+    { 
+      id: 2, 
+      label: '样式', 
+      fields: ['fireworkStyle' as const, 'fireworkColor' as const, 'particleCount' as const, 'trailLength' as const]
+    },
+    { 
+      id: 3, 
+      label: '内容', 
+      fields: ['wishText' as const, 'textDuration' as const, 'textResolution' as const]
+    },
+    { 
+      id: 4, 
+      label: '物理', 
+      fields: ['gravity' as const, 'wind' as const, 'showAppleTrigger' as const]
+    },
+  ],
+};
 /**
  * ==============================================================================
  * 2. 内部工具函数 & 粒子类 (Utility Functions & Classes)

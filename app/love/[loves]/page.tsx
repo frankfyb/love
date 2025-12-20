@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { getToolFullConfig, getToolKeyList } from '@/config/toolsRegistry';
 import { useWorks } from '@/hooks/useWorks';
 import Modal from '@/components/common/Modal';
+import { GenericConfigPanel } from '@/components/generic/GenericConfigPanel';
 import { 
   RotateCcw, 
   Share2, 
@@ -74,7 +75,7 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
     } catch {}
   }, [tool]);
 
-  const handleConfigChange = (key: string, value: any) => {
+  const handleConfigChange = (key: keyof any, value: any) => {
     // 对于 Christmas Avatar 工具，我们需要特殊处理 stickers 状态
     if (toolKey === 'christmas-avatar' && key === 'stickers') {
       // 这里可以添加 stickers 状态的处理逻辑
@@ -135,17 +136,17 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
     );
   }
 
-  const { DisplayUI, ConfigUI, defaultConfig } = tool;
+  const { DisplayUI, configMetadata, defaultConfig } = tool;
   
   // Guard for initial render
   if (!config) return null; 
 
   return (
     <main className="relative flex h-screen w-full bg-black font-sans text-slate-100 overflow-hidden">
-      {/* Ambient Background Glow (Optional) */}
+      {/* Ambient Background Glow (Optional) */ }
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
 
-      {/* Floating Toolbar */}
+      {/* Floating Toolbar */ }
       <div className={`fixed top-6 right-6 z-50 flex flex-col gap-4 items-end transition-all duration-700 ease-in-out ${!isOpen ? 'opacity-0 hover:opacity-100 translate-y-[-20px] hover:translate-y-0' : 'opacity-100 translate-y-0'}`}>
         <div className="flex items-center gap-1 p-1.5 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl transition-all hover:bg-white/10">
           
@@ -186,7 +187,7 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
         </div>
       </div>
 
-      {/* Templates Modal */}
+      {/* Templates Modal */ }
       <Modal 
         isOpen={showTemplates} 
         onClose={() => setShowTemplates(false)} 
@@ -236,10 +237,10 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
         </div>
       </Modal>
 
-      {/* Toast Notification */}
+      {/* Toast Notification */ }
       <Toast message={toastMsg} show={showToast} onClose={() => setShowToast(false)} />
 
-      {/* Main Content */}
+      {/* Main Content */ }
       <div className="absolute inset-0 z-0">
         <DisplayUI config={config} isPanelOpen={isOpen} onConfigChange={handleConfigChange} />
       </div>
@@ -247,7 +248,19 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       <div 
         className={`absolute top-0 left-0 h-full z-0 transition-transform duration-500 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-          <ConfigUI config={config} onChange={handleConfigChange} isOpen={isOpen} setIsOpen={setIsOpen} />
+          {configMetadata ? (
+            <GenericConfigPanel 
+              config={config} 
+              configMetadata={configMetadata} 
+              onChange={handleConfigChange} 
+              isOpen={isOpen} 
+              setIsOpen={setIsOpen} 
+            />
+          ) : (
+            <div className="w-[420px] h-full bg-gray-900 flex items-center justify-center">
+              <p className="text-gray-500">该工具暂不支持配置面板</p>
+            </div>
+          )}
       </div>
     </main>
   );

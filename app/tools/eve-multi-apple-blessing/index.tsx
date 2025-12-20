@@ -39,7 +39,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   showMusicBtn: true,
 };
 
-export const CONFIG_METADATA = {
+// 保留原有的 CONFIG_METADATA 以保持向后兼容性
+export const CONFIG_METADATA: Record<string, any> = {
   bgTheme: {
     label: '氛围背景',
     type: 'select',
@@ -88,6 +89,90 @@ export const CONFIG_METADATA = {
     type: 'textarea',
     placeholder: '输入礼物，用逗号分隔'
   }
+};
+
+// 添加通用配置元数据
+export const eveMultiAppleBlessingConfigMetadata = {
+  panelTitle: '多重苹果祝福',
+  panelSubtitle: 'Design Your Romance',
+  configSchema: {
+    bgTheme: {
+      label: '氛围背景',
+      type: 'select' as const,
+      options: [
+        { label: '定制节日 (当前)', value: ASSETS.bgImage },
+        { label: '梦幻粉紫', value: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)' },
+        { label: '深邃星空', value: 'linear-gradient(to top, #30cfd0 0%, #330867 100%)' },
+        { label: '圣诞暖红', value: 'linear-gradient(to right, #ed213a, #93291e)' },
+        { label: '清新森系', value: 'linear-gradient(to top, #96fbc4 0%, #f9f586 100%)' },
+      ],
+      category: 'scene' as const,
+    },
+    effectType: {
+      label: '浪漫特效',
+      type: 'select' as const,
+      options: [
+        { label: '漫天飘雪', value: 'snow' },
+        { label: '朦胧迷雾', value: 'fog' },
+        { label: '雪雾共舞', value: 'both' },
+        { label: '无特效', value: 'none' },
+      ],
+      category: 'visual' as const,
+    },
+    blessingStyle: {
+      label: '祝福风格',
+      type: 'select' as const,
+      options: [
+        { label: '甜腻告白 (Sweet)', value: 'sweet' },
+        { label: '温柔陪伴 (Gentle)', value: 'gentle' },
+        { label: '小众文艺 (Poetic)', value: 'poetic' },
+      ],
+      category: 'content' as const,
+    },
+    boxShape: {
+      label: '礼盒动画',
+      type: 'select' as const,
+      options: [
+        { label: '标准', value: 'square' },
+        { label: 'Q弹', value: 'round' },
+      ],
+      category: 'visual' as const,
+    },
+    boxLabel: {
+      label: '封面寄语',
+      type: 'input' as const,
+      placeholder: '例如：平安喜乐',
+      category: 'content' as const,
+    },
+    giftList: {
+      label: '礼物清单 (逗号分隔)',
+      type: 'textarea' as const,
+      placeholder: '输入礼物，用逗号分隔',
+      category: 'content' as const,
+    }
+  },
+  tabs: [
+    { id: 'scene' as const, label: '场景' },
+    { id: 'visual' as const, label: '视觉' },
+    { id: 'content' as const, label: '内容' },
+  ],
+  mobileSteps: [
+    { 
+      id: 1, 
+      label: '场景', 
+      fields: ['bgTheme' as const, 'effectType' as const]
+    },
+    { 
+      id: 2, 
+      label: '样式', 
+      fields: ['boxShape' as const, 'boxLabel' as const]
+    },
+    { 
+      id: 3, 
+      label: '内容', 
+      fields: ['blessingStyle' as const, 'giftList' as const]
+    },
+  ],
 };
 
 // 预设祝福语文案库
@@ -436,7 +521,7 @@ export function ConfigUI({
                 onChange={(e) => onChange('bgTheme', e.target.value)}
                 className="w-full p-2 rounded-lg bg-white/50 border border-white/60 focus:ring-2 focus:ring-red-300 outline-none"
               >
-                {CONFIG_METADATA.bgTheme.options?.map(opt => (
+                {CONFIG_METADATA.bgTheme.options?.map((opt: { value: any; label: any; }) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
@@ -444,7 +529,7 @@ export function ConfigUI({
             
             <ConfigItem label={CONFIG_METADATA.effectType.label}>
               <div className="grid grid-cols-2 gap-2">
-                {CONFIG_METADATA.effectType.options?.map(opt => (
+                {CONFIG_METADATA.effectType.options?.map((opt: { value: any; label: any; }) => (
                   <button
                     key={opt.value}
                     onClick={() => onChange('effectType', opt.value)}
@@ -462,7 +547,7 @@ export function ConfigUI({
             
             <ConfigItem label={CONFIG_METADATA.boxShape.label}>
               <div className="flex gap-2">
-                {CONFIG_METADATA.boxShape.options?.map(opt => (
+                {CONFIG_METADATA.boxShape.options?.map((opt: { value: any; label: any; }) => (
                    <button
                    key={opt.value}
                    onClick={() => onChange('boxShape', opt.value)}
@@ -495,7 +580,7 @@ export function ConfigUI({
                 onChange={(e) => onChange('blessingStyle', e.target.value)}
                 className="w-full p-2 rounded-lg bg-white/50 border border-white/60 focus:ring-2 focus:ring-red-300 outline-none"
               >
-                {CONFIG_METADATA.blessingStyle.options?.map(opt => (
+                {CONFIG_METADATA.blessingStyle.options?.map((opt: { value: any; label: any; }) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
@@ -552,7 +637,7 @@ export function ConfigUI({
                    <div className="space-y-2">
                       <label className="text-xs text-gray-500 font-medium">氛围主题</label>
                       <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
-                        {CONFIG_METADATA.bgTheme.options?.map((opt, idx) => (
+                        {CONFIG_METADATA.bgTheme.options?.map((opt: { value: any; label: any; }, idx: number) => (
                            <div 
                              key={idx}
                              onClick={() => onChange('bgTheme', opt.value)}
@@ -575,7 +660,7 @@ export function ConfigUI({
                           value={config.effectType}
                           onChange={(e) => onChange('effectType', e.target.value)}
                         >
-                          {CONFIG_METADATA.effectType.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          {CONFIG_METADATA.effectType.options?.map((o: { value: any; label: any; }) => <option key={o.value} value={o.value}>{o.label}</option>)}
                         </select>
                       </div>
                       <div>
@@ -585,7 +670,7 @@ export function ConfigUI({
                           value={config.boxShape}
                           onChange={(e) => onChange('boxShape', e.target.value)}
                         >
-                          {CONFIG_METADATA.boxShape.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                          {CONFIG_METADATA.boxShape.options?.map((o: { value: any; label: any; }) => <option key={o.value} value={o.value}>{o.label}</option>)}
                         </select>
                       </div>
                    </div>

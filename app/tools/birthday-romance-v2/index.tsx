@@ -20,8 +20,9 @@ export const DEFAULT_CONFIG: AppConfig = {
   showDecorations: true,
 };
 
-type ControlType = 'slider' | 'toggle' | 'textarea';
+type ControlType = 'slider' | 'switch' | 'textarea';
 
+// 保留原有的 CONFIG_METADATA 以保持向后兼容性
 const CONFIG_METADATA: Array<{
   key: keyof AppConfig;
   label: string;
@@ -35,8 +36,73 @@ const CONFIG_METADATA: Array<{
   { key: 'fontScale', label: '文字大小', type: 'slider', min: 1.0, max: 4.0, step: 0.1 },
   { key: 'particleCount', label: '氛围浓度', type: 'slider', min: 20, max: 100, step: 10 },
   { key: 'floatSpeed', label: '流转速度', type: 'slider', min: 0.2, max: 2.5, step: 0.1 },
-  { key: 'showDecorations', label: '开启卡通装饰', type: 'toggle' },
+  { key: 'showDecorations', label: '开启卡通装饰', type: 'switch' },
 ];
+
+// 添加通用配置元数据
+export const birthdayRomanceV2ConfigMetadata = {
+  panelTitle: '生日浪漫配置 V2',
+  panelSubtitle: 'Design Your Romance',
+  configSchema: {
+    customMessages: {
+      label: '定制祝福语 (逗号分隔)',
+      type: 'textarea' as const,
+      placeholder: '输入祝福语...',
+      category: 'content' as const,
+    },
+    fontScale: {
+      label: '文字大小',
+      type: 'slider' as const,
+      min: 1.0,
+      max: 4.0,
+      step: 0.1,
+      category: 'visual' as const,
+    },
+    particleCount: {
+      label: '氛围浓度',
+      type: 'slider' as const,
+      min: 20,
+      max: 100,
+      step: 10,
+      category: 'visual' as const,
+    },
+    floatSpeed: {
+      label: '流转速度',
+      type: 'slider' as const,
+      min: 0.2,
+      max: 2.5,
+      step: 0.1,
+      category: 'physics' as const,
+    },
+    showDecorations: {
+      label: '开启卡通装饰',
+      type: 'switch' as const,
+      category: 'visual' as const,
+    }
+  },
+  tabs: [
+    { id: 'content' as const, label: '内容' },
+    { id: 'visual' as const, label: '视觉' },
+    { id: 'physics' as const, label: '物理' },
+  ],
+  mobileSteps: [
+    { 
+      id: 1, 
+      label: '内容', 
+      fields: ['customMessages' as const]
+    },
+    { 
+      id: 2, 
+      label: '样式', 
+      fields: ['fontScale' as const, 'particleCount' as const, 'showDecorations' as const]
+    },
+    { 
+      id: 3, 
+      label: '物理', 
+      fields: ['floatSpeed' as const]
+    },
+  ],
+};
 
 // 2. 配置面板组件 (ConfigUI)
 export function ConfigUI({ config, onChange, isOpen, setIsOpen }: {
@@ -98,7 +164,7 @@ export function ConfigUI({ config, onChange, isOpen, setIsOpen }: {
                 />
               )}
 
-              {meta.type === 'toggle' && (
+              {meta.type === 'switch' && (
                 <label className="flex items-center justify-between cursor-pointer p-3.5 rounded-xl bg-gradient-to-r from-white/5 to-transparent border border-white/5 hover:border-pink-400/30 transition-all duration-300">
                   <span className="flex items-center gap-2 text-sm font-medium text-gray-200">{meta.label}</span>
                   <div className="relative">

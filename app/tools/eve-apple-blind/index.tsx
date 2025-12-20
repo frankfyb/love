@@ -43,54 +43,112 @@ export const DEFAULT_CONFIG: AppConfig = {
   showMusicBtn: true,
 };
 
-export const CONFIG_METADATA = {
-  title: { label: "主标题", type: "text" },
-  romanticMessage: { label: "过程情话", type: "text" },
-  triggerCount: { 
-    label: "盲盒解锁次数", 
-    type: "select", 
-    options: [
-      { label: "3次 (经典)", value: 3 },
-      { label: "5次 (悬念)", value: 5 },
-      { label: "9次 (长久)", value: 9 }
-    ] 
+// 添加通用配置元数据
+export const eveAppleBlindConfigMetadata = {
+  panelTitle: '盲盒配置台',
+  panelSubtitle: 'Customize your surprise',
+  configSchema: {
+    title: {
+      label: '主标题',
+      type: 'input' as const,
+      category: 'content' as const,
+    },
+    romanticMessage: {
+      label: '过程情话',
+      type: 'textarea' as const,
+      category: 'content' as const,
+    },
+    triggerCount: {
+      label: '盲盒解锁次数',
+      type: 'select' as const,
+      options: [
+        { label: '3次 (经典)', value: 3 },
+        { label: '5次 (悬念)', value: 5 },
+        { label: '9次 (长久)', value: 9 }
+      ],
+      category: 'gameplay' as const,
+    },
+    giftContent: {
+      label: '盲盒礼物池 (一行一个)',
+      type: 'textarea' as const,
+      placeholder: '例如：\n拥抱券\n大餐一顿\n520红包',
+      category: 'gameplay' as const,
+    },
+    backgroundType: {
+      label: '氛围背景',
+      type: 'select' as const,
+      options: [
+        { label: '暖光壁炉', value: 'fireplace' },
+        { label: '飘雪森林', value: 'snowy_forest' },
+        { label: '璀璨星空', value: 'starry_sky' },
+        { label: '雾感朦胧', value: 'misty_haze' },
+        { label: '自定义图片', value: 'custom' }
+      ],
+      category: 'scene' as const,
+    },
+    customBgUrl: {
+      label: '自定义背景URL',
+      type: 'input' as const,
+      category: 'scene' as const,
+      condition: (config: AppConfig) => config.backgroundType === 'custom',
+    },
+    textEffect: {
+      label: '文字特效',
+      type: 'select' as const,
+      options: [
+        { label: '暖光呼吸', value: 'warm_breath' },
+        { label: '雪花描边', value: 'snow_stroke' },
+        { label: '渐变流光', value: 'gradient_glow' },
+        { label: '手写轨迹', value: 'handwritten' }
+      ],
+      category: 'visual' as const,
+    },
+    fontType: {
+      label: '字体风格',
+      type: 'select' as const,
+      options: [
+        { label: '优雅雪花体 (Serif)', value: 'serif' },
+        { label: '浪漫手写体 (Cursive)', value: 'cursive' }
+      ],
+      category: 'content' as const,
+    },
+    particleDensity: {
+      label: '浪漫浓度',
+      type: 'slider' as const,
+      min: 20,
+      max: 100,
+      step: 10,
+      category: 'visual' as const,
+    },
+    showMusicBtn: {
+      label: '音乐装饰',
+      type: 'switch' as const,
+      category: 'visual' as const,
+    },
   },
-  giftContent: { label: "盲盒礼物池 (一行一个)", type: "textarea", placeholder: "例如：\n拥抱券\n大餐一顿\n520红包" },
-  
-  backgroundType: {
-    label: "氛围背景",
-    type: "select",
-    options: [
-      { label: "暖光壁炉", value: "fireplace" },
-      { label: "飘雪森林", value: "snowy_forest" },
-      { label: "璀璨星空", value: "starry_sky" },
-      { label: "雾感朦胧", value: "misty_haze" },
-      { label: "自定义图片", value: "custom" }
-    ]
-  },
-  customBgUrl: { label: "自定义背景URL", type: "text", condition: (c: AppConfig) => c.backgroundType === 'custom' },
-  
-  textEffect: {
-    label: "文字特效",
-    type: "select",
-    options: [
-      { label: "暖光呼吸", value: "warm_breath" },
-      { label: "雪花描边", value: "snow_stroke" },
-      { label: "渐变流光", value: "gradient_glow" },
-      { label: "手写轨迹", value: "handwritten" }
-    ]
-  },
-  fontType: {
-    label: "字体风格",
-    type: "select",
-    options: [
-      { label: "优雅雪花体 (Serif)", value: "serif" },
-      { label: "浪漫手写体 (Cursive)", value: "cursive" }
-    ]
-  },
-  
-  particleDensity: { label: "浪漫浓度", type: "slider", min: 20, max: 100, step: 10 },
-  showMusicBtn: { label: "音乐装饰", type: "boolean" },
+  tabs: [
+    { id: 'content' as const, label: '内容' },
+    { id: 'gameplay' as const, label: '玩法' },
+    { id: 'scene' as const, label: '场景' },
+    { id: 'visual' as const, label: '视觉' },
+  ],
+  mobileSteps: [
+    { 
+      id: 1, 
+      label: '基础', 
+      fields: ['title' as const, 'romanticMessage' as const, 'triggerCount' as const]
+    },
+    { 
+      id: 2, 
+      label: '礼物', 
+      fields: ['giftContent' as const, 'backgroundType' as const]
+    },
+    { 
+      id: 3, 
+      label: '样式', 
+      fields: ['textEffect' as const, 'fontType' as const, 'particleDensity' as const, 'showMusicBtn' as const]
+    },
+  ],
 };
 
 // 样式预设系统
@@ -99,7 +157,7 @@ const BG_PRESETS = {
     bg: "radial-gradient(circle at 50% 80%, #5c1313 0%, #2a0808 60%, #000000 100%)",
     overlay: "bg-orange-500/5",
     accent: "text-orange-100",
-    particleType: 'sparkle', // 火星
+    particleType: 'sparkle', // 火火星
     buttonColor: "bg-orange-700"
   },
   snowy_forest: {
@@ -131,173 +189,6 @@ const BG_PRESETS = {
     buttonColor: "bg-white/20"
   }
 };
-
-// =================================================================================
-// 2. 配置面板组件 (ConfigUI)
-// =================================================================================
-
-export function ConfigUI({
-  config,
-  onChange,
-  isOpen,
-  setIsOpen
-}: {
-  config: AppConfig;
-  onChange: (key: string, val: any) => void;
-  isOpen: boolean;
-  setIsOpen: (v: boolean) => void;
-}) {
-  const [activeTab, setActiveTab] = useState<'base' | 'visual'>('base');
-
-  const renderField = (key: string) => {
-    const meta = CONFIG_METADATA[key as keyof typeof CONFIG_METADATA];
-    // @ts-ignore
-    if (meta.condition && !meta.condition(config)) return null;
-
-    const value = config[key as keyof AppConfig];
-
-    return (
-      <div key={key} className="space-y-1.5 mb-4">
-        <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
-          {meta.label}
-        </label>
-        
-        {meta.type === 'text' && (
-           <input
-             type="text"
-             value={value as string}
-             onChange={(e) => onChange(key, e.target.value)}
-             className="w-full bg-white/50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-300 outline-none"
-           />
-        )}
-        
-        {meta.type === 'textarea' && (
-           <textarea
-             value={value as string}
-             onChange={(e) => onChange(key, e.target.value)}
-             rows={4}
-             className="w-full bg-white/50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-pink-300 outline-none resize-none"
-             placeholder={(meta as any).placeholder}
-           />
-        )}
-
-        {meta.type === 'select' && (meta as any).options && (
-          <div className="flex flex-wrap gap-2">
-            {(meta as any).options.map((opt: any) => (
-              <button
-                key={opt.value}
-                onClick={() => onChange(key, opt.value)}
-                className={`flex-1 min-w-[80px] py-1.5 px-2 text-xs rounded-md border transition-all ${
-                  value === opt.value
-                    ? "bg-pink-50 border-pink-300 text-pink-700 font-bold shadow-sm"
-                    : "bg-white/50 border-transparent text-gray-600 hover:bg-white"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {meta.type === 'slider' && (
-          <div className="flex items-center gap-3">
-             <input
-               type="range"
-               min={(meta as any).min}
-               max={(meta as any).max}
-               step={(meta as any).step}
-               value={value as number}
-               onChange={(e) => onChange(key, Number(e.target.value))}
-               className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
-             />
-             <span className="text-xs w-8 text-right text-gray-500">{value}</span>
-          </div>
-        )}
-
-        {meta.type === 'boolean' && (
-            <button
-                onClick={() => onChange(key, !value)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${value ? 'bg-pink-500' : 'bg-gray-300'}`}
-            >
-                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${value ? 'translate-x-5' : 'translate-x-1'}`} />
-            </button>
-        )}
-      </div>
-    );
-  };
-
-  if (!isOpen) {
-    return (
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed top-4 left-4 z-50 p-3 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full border border-white/30 shadow-lg transition-all active:scale-95 group"
-      >
-        <Settings size={20} className="text-white group-hover:rotate-45 transition-transform" />
-      </button>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex pointer-events-none">
-       {/* 遮罩 */}
-       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm pointer-events-auto" onClick={() => setIsOpen(false)} />
-       
-       {/* 面板 */}
-       <div className="w-full max-w-sm h-full bg-white/90 backdrop-blur-2xl shadow-2xl ml-auto pointer-events-auto flex flex-col transform transition-transform animate-slide-in-right">
-          <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white/50">
-             <h2 className="font-bold text-gray-800 flex items-center gap-2">
-               <Settings size={18} className="text-pink-500" /> 盲盒配置台
-             </h2>
-             <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition">
-               <X size={18} className="text-gray-500" />
-             </button>
-          </div>
-
-          <div className="flex p-2 gap-2 bg-gray-50/50">
-            <button 
-              onClick={() => setActiveTab('base')}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'base' ? 'bg-white shadow text-pink-600' : 'text-gray-500 hover:bg-gray-100'}`}
-            >
-              基础内容
-            </button>
-            <button 
-              onClick={() => setActiveTab('visual')}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'visual' ? 'bg-white shadow text-pink-600' : 'text-gray-500 hover:bg-gray-100'}`}
-            >
-              视觉特效
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
-             {activeTab === 'base' ? (
-               <>
-                 {renderField('title')}
-                 {renderField('romanticMessage')}
-                 <div className="h-px bg-gray-200 my-4" />
-                 <h3 className="text-xs font-black text-gray-400 mb-3 uppercase">盲盒规则</h3>
-                 {renderField('triggerCount')}
-                 {renderField('giftContent')}
-               </>
-             ) : (
-               <>
-                 {renderField('backgroundType')}
-                 {renderField('customBgUrl')}
-                 <div className="h-px bg-gray-200 my-4" />
-                 {renderField('textEffect')}
-                 {renderField('fontType')}
-                 <div className="h-px bg-gray-200 my-4" />
-                 {renderField('particleDensity')}
-               </>
-             )}
-          </div>
-          
-          <div className="p-3 border-t border-gray-100 text-center text-[10px] text-gray-400">
-            Customize your surprise
-          </div>
-       </div>
-    </div>
-  );
-}
 
 // =================================================================================
 // 3. 核心展示组件 (DisplayUI)
@@ -615,17 +506,10 @@ export default function SafetyApplePage() {
 
   return (
     <div className="relative w-full h-[100dvh] overflow-hidden font-sans bg-black">
-      <ConfigUI 
-        config={config} 
-        onChange={handleConfigChange} 
-        isOpen={isConfigOpen} 
-        setIsOpen={setIsConfigOpen} 
-      />
-      
       <DisplayUI 
         config={config} 
         isPanelOpen={isConfigOpen} 
       />
     </div>
   );
-}12323
+}

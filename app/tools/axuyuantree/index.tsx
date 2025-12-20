@@ -31,150 +31,102 @@ export const DEFAULT_CONFIG: AppConfig = {
   fontStyle: 'serif',
 };
 
-export const CONFIG_METADATA = [
-  {
-    key: 'backgroundColor',
-    label: '夜空背景色',
-    type: 'color',
+// 添加通用配置元数据
+export const axuyuantreeConfigMetadata = {
+  panelTitle: '许愿新光树配置',
+  panelSubtitle: 'Design Your Starlight Tree',
+  configSchema: {
+    backgroundColor: {
+      label: '夜空背景色',
+      type: 'color' as const,
+      category: 'scene' as const,
+    },
+    treeBaseWidth: {
+      label: '树冠宽度',
+      type: 'slider' as const,
+      min: 300,
+      max: 800,
+      step: 10,
+      category: 'scene' as const,
+    },
+    starSize: {
+      label: '星光大小',
+      type: 'slider' as const,
+      min: 1,
+      max: 8,
+      step: 0.5,
+      category: 'visual' as const,
+    },
+    blinkSpeed: {
+      label: '闪烁速度系数',
+      type: 'slider' as const,
+      min: 0.1,
+      max: 5,
+      step: 0.1,
+      category: 'visual' as const,
+    },
+    fireworkIntensity: {
+      label: '烟花粒子数量',
+      type: 'slider' as const,
+      min: 20,
+      max: 150,
+      step: 10,
+      category: 'visual' as const,
+    },
+    gravity: {
+      label: '重力模拟',
+      type: 'slider' as const,
+      min: 0.05,
+      max: 0.5,
+      step: 0.01,
+      category: 'physics' as const,
+    },
+    uiGlassOpacity: {
+      label: '面板透明度',
+      type: 'slider' as const,
+      min: 0.1,
+      max: 0.9,
+      step: 0.1,
+      category: 'scene' as const,
+    },
+    fontStyle: {
+      label: '字体风格',
+      type: 'select' as const,
+      options: [
+        { label: '无衬线 (Sans)', value: 'sans' },
+        { label: '衬线 (Serif)', value: 'serif' },
+        { label: '等宽 (Mono)', value: 'mono' },
+      ],
+      category: 'content' as const,
+    },
   },
-  {
-    key: 'treeBaseWidth',
-    label: '树冠宽度',
-    type: 'slider',
-    min: 300,
-    max: 800,
-    step: 10,
-  },
-  {
-    key: 'starSize',
-    label: '星光大小',
-    type: 'slider',
-    min: 1,
-    max: 8,
-    step: 0.5,
-  },
-  {
-    key: 'blinkSpeed',
-    label: '闪烁速度系数',
-    type: 'slider',
-    min: 0.1,
-    max: 5,
-    step: 0.1,
-  },
-  {
-    key: 'fireworkIntensity',
-    label: '烟花粒子数量',
-    type: 'slider',
-    min: 20,
-    max: 150,
-    step: 10,
-  },
-  {
-    key: 'gravity',
-    label: '重力模拟',
-    type: 'slider',
-    min: 0.05,
-    max: 0.5,
-    step: 0.01,
-  },
-  {
-    key: 'uiGlassOpacity',
-    label: '面板透明度',
-    type: 'slider',
-    min: 0.1,
-    max: 0.9,
-    step: 0.1,
-  },
-];
-
-/**
- * ==============================================================================
- * 2. 配置面板组件 (ConfigUI)
- * ==============================================================================
- */
-
-interface ConfigUIProps {
-  config: AppConfig;
-  onChange: (key: string, val: any) => void;
-  isOpen: boolean;
-  setIsOpen: (v: boolean) => void;
-}
-
-export function ConfigUI({ config, onChange, isOpen, setIsOpen }: ConfigUIProps) {
-  return (
-    <>
-      {/* Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg hover:bg-white/20 transition-all duration-300"
-      >
-        {isOpen ? <X size={20} /> : <Settings size={20} />}
-      </button>
-
-      {/* Drawer */}
-      <div
-        className={`fixed top-0 left-0 h-full w-80 z-40 transform transition-transform duration-500 ease-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        style={{
-          background: `rgba(15, 23, 42, ${config.uiGlassOpacity * 2})`, // Darker for readability
-          backdropFilter: 'blur(20px)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-        }}
-      >
-        <div className="p-6 h-full overflow-y-auto text-white">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2 font-serif text-pink-300">
-            <Sparkles size={20} />
-            星光控制台
-          </h2>
-
-          <div className="space-y-6">
-            {CONFIG_METADATA.map((item) => (
-              <div key={item.key} className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 flex justify-between">
-                  {item.label}
-                  <span className="text-xs text-gray-500 font-mono">
-                    {(config as any)[item.key]}
-                  </span>
-                </label>
-
-                {item.type === 'slider' && (
-                  <input
-                    type="range"
-                    min={item.min}
-                    max={item.max}
-                    step={item.step}
-                    value={(config as any)[item.key]}
-                    onChange={(e) => onChange(item.key, Number(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-pink-500 hover:accent-pink-400"
-                  />
-                )}
-
-                {item.type === 'color' && (
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={(config as any)[item.key]}
-                      onChange={(e) => onChange(item.key, e.target.value)}
-                      className="w-10 h-10 rounded cursor-pointer border-none bg-transparent"
-                    />
-                    <span className="text-xs text-gray-400 uppercase">{(config as any)[item.key]}</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 pt-6 border-t border-white/10">
-            <p className="text-xs text-gray-500 text-center font-serif italic">
-              "每一颗星光，都是一个被听见的心愿。"
-            </p>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
+  tabs: [
+    { id: 'scene' as const, label: '场景', icon: null },
+    { id: 'content' as const, label: '内容', icon: null },
+    { id: 'visual' as const, label: '视觉', icon: null },
+    { id: 'physics' as const, label: '物理', icon: null }
+  ],
+  mobileSteps: [
+    { 
+      id: 1, 
+      label: '场景', 
+      icon: null, 
+      fields: ['backgroundColor' as const, 'treeBaseWidth' as const, 'uiGlassOpacity' as const] 
+    },
+    { 
+      id: 2, 
+      label: '视觉', 
+      icon: null, 
+      fields: ['starSize' as const, 'blinkSpeed' as const, 'fireworkIntensity' as const] 
+    },
+    { 
+      id: 3, 
+      label: '物理', 
+      icon: null, 
+      fields: ['gravity' as const, 'fontStyle' as const] 
+    },
+  ],
+};
 
 /**
  * ==============================================================================
@@ -231,7 +183,7 @@ export function DisplayUI({ config, isPanelOpen }: DisplayUIProps) {
   // Animation Refs (to avoid closures in loop)
   const wishesRef = useRef<Wish[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number>(0);
 
   // Sync state with ref
   useEffect(() => {
@@ -555,9 +507,10 @@ export function DisplayUI({ config, isPanelOpen }: DisplayUIProps) {
         setWishes([...wishesRef.current]);
       }
 
-      if (activeHover) {
-        setHoveredWish(activeHover);
-        setTooltipPos({ x: activeHover.x, y: activeHover.y });
+      if (activeHover !== null) {
+        const hoverWish = activeHover as Wish;
+        setHoveredWish(hoverWish);
+        setTooltipPos({ x: hoverWish.x, y: hoverWish.y });
         document.body.style.cursor = 'pointer';
       } else {
         setHoveredWish(null);
@@ -826,12 +779,6 @@ export default function StarlightWishesPage() {
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-slate-900 text-slate-50">
       <DisplayUI config={config} isPanelOpen={isConfigOpen} />
-      <ConfigUI 
-        config={config} 
-        onChange={handleConfigChange} 
-        isOpen={isConfigOpen} 
-        setIsOpen={setIsConfigOpen} 
-      />
     </main>
   );
 }
