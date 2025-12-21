@@ -10,12 +10,12 @@ import { DEFAULT_CONFIG as christmasDefaultConfig, christmasCardConfigMetadata a
 const ChristmasCardDisplayUI = dynamic(() => import('@/tools/christmas-card').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
 // 雨雪涟漪特效
-import { DEFAULT_CONFIG as rainSnowRippleDefault, CONFIG_METADATA as rainSnowRippleMetadata } from '@/tools/rain-snow-ripple/config';
-const RainSnowRippleDisplayUI = dynamic(() => import('@/tools/rain-snow-ripple/DisplayUI'), { loading: () => <Loading /> });
+import { DEFAULT_CONFIG as rainSnowRippleDefault, rainSnowRippleConfigMetadata as rainSnowRippleMetadata } from '@/tools/rain-snow-ripple/index';
+const RainSnowRippleDisplayUI = dynamic(() => import('@/tools/rain-snow-ripple').then(mod => mod.default), { loading: () => <Loading /> });
 
 // 温馨文字卡片
-import { defaultConfig as warmTextDefault, CONFIG_METADATA as warmTextMetadata } from '@/tools/warm-text-card/config';
-const WarmTextCardDisplayUI = dynamic(() => import('@/tools/warm-text-card/DisplayUI'), { loading: () => <Loading /> });
+import { defaultConfig as warmTextDefault, warmTextCardConfigMetadata as warmTextMetadata } from '@/tools/warm-text-card/index';
+const WarmTextCardDisplayUI = dynamic(() => import('@/tools/warm-text-card').then(mod => mod.default), { loading: () => <Loading /> });
 
 // 圣诞头像工坊
 import { DEFAULT_CONFIG as christmasAvatarDefault, christmasAvatarConfigMetadata as christmasAvatarMetadata } from '@/tools/christmas-avatar/index';

@@ -1,24 +1,56 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { GenericConfigPanel } from '@/components/generic/GenericConfigPanel';
 import type { ToolConfigMetadata } from '@/types/genericConfig';
-import type { AppConfig, RippleShape } from './config';
 
-// 从现有配置文件导入类型和默认配置
-export type { AppConfig } from './config';
-export { DEFAULT_CONFIG } from './config';
+/**
+ * ==============================================================================
+ * 1. 核心配置定义 (Core Configuration)
+ * ==============================================================================
+ */
 
-// 定义通用配置元数据
+export type RippleShape = 'circle' | 'heart' | 'star'
+
+export interface AppConfig {
+  rainSpeed: number
+  snowDensity: number
+  rainColor: string
+  snowColor: string
+  text: string
+  rippleShape: RippleShape
+  rippleSize: number
+  rippleLife: number
+  fallingText: string
+  fallingSpeed: number
+  fallingDensity: number
+  fallingSize: number
+}
+
+export const DEFAULT_CONFIG: AppConfig = {
+  rainSpeed: 1.2,
+  snowDensity: 0.3,
+  rainColor: '#39ff14',
+  snowColor: '#ffd700',
+  text: 'Merry Christmas',
+  rippleShape: 'heart',
+  rippleSize: 20,
+  rippleLife: 0.02,
+  fallingText: '🎁,🌹,🍬,❤️,Love,平安',
+  fallingSpeed: 1.0,
+  fallingDensity: 0.2,
+  fallingSize: 20,
+}
+
+// 添加通用配置元数据
 export const rainSnowRippleConfigMetadata: ToolConfigMetadata<AppConfig> = {
-  panelTitle: '雨雪涟漪特效',
-  panelSubtitle: 'Rain & Snow Ripple Effects',
+  panelTitle: '雨雪涟漪配置',
+  panelSubtitle: 'Design Your Rain and Snow Ripple Effect',
   configSchema: {
     text: {
       label: '中心标题',
       type: 'input',
       category: 'content',
-      description: '显示在画面中央的标题文字'
     },
     rainSpeed: {
       label: '雨丝速度',
@@ -26,8 +58,7 @@ export const rainSnowRippleConfigMetadata: ToolConfigMetadata<AppConfig> = {
       min: 0.1,
       max: 4,
       step: 0.1,
-      category: 'physics',
-      description: '控制雨滴下降的速度'
+      category: 'visual',
     },
     snowDensity: {
       label: '雪花密度',
@@ -36,19 +67,36 @@ export const rainSnowRippleConfigMetadata: ToolConfigMetadata<AppConfig> = {
       max: 1,
       step: 0.05,
       category: 'visual',
-      description: '控制屏幕上雪花的数量'
     },
-    rainColor: {
-      label: '雨丝主色',
-      type: 'color',
-      category: 'visual',
-      description: '雨滴和涟漪的颜色'
+    fallingText: {
+      label: '飘落内容 (逗号分隔)',
+      type: 'textarea',
+      placeholder: '输入Emoji或文字，用逗号分开',
+      category: 'content',
     },
-    snowColor: {
-      label: '雪花颜色',
-      type: 'color',
+    fallingDensity: {
+      label: '礼物密度',
+      type: 'slider',
+      min: 0,
+      max: 1,
+      step: 0.05,
       category: 'visual',
-      description: '雪花的颜色'
+    },
+    fallingSpeed: {
+      label: '礼物速度',
+      type: 'slider',
+      min: 0.5,
+      max: 3,
+      step: 0.1,
+      category: 'visual',
+    },
+    fallingSize: {
+      label: '礼物大小',
+      type: 'slider',
+      min: 12,
+      max: 40,
+      step: 1,
+      category: 'visual',
     },
     rippleShape: {
       label: '溅落形状',
@@ -59,7 +107,6 @@ export const rainSnowRippleConfigMetadata: ToolConfigMetadata<AppConfig> = {
         { label: '璀璨星光 (星)', value: 'star' },
       ],
       category: 'visual',
-      description: '雨滴落地时产生的涟漪形状'
     },
     rippleSize: {
       label: '波纹大小',
@@ -68,7 +115,6 @@ export const rainSnowRippleConfigMetadata: ToolConfigMetadata<AppConfig> = {
       max: 50,
       step: 1,
       category: 'visual',
-      description: '涟漪的最大尺寸'
     },
     rippleLife: {
       label: '消失速度',
@@ -76,69 +122,43 @@ export const rainSnowRippleConfigMetadata: ToolConfigMetadata<AppConfig> = {
       min: 0.01,
       max: 0.1,
       step: 0.005,
-      category: 'physics',
-      description: '涟漪消失的速度'
-    },
-    fallingText: {
-      label: '飘落内容',
-      type: 'textarea',
-      placeholder: '输入Emoji或文字，用逗号分开',
-      category: 'content',
-      description: '飘落的元素内容，用逗号分隔'
-    },
-    fallingSpeed: {
-      label: '礼物速度',
-      type: 'slider',
-      min: 0.5,
-      max: 3,
-      step: 0.1,
-      category: 'physics',
-      description: '飘落元素下降的速度'
-    },
-    fallingDensity: {
-      label: '礼物密度',
-      type: 'slider',
-      min: 0,
-      max: 1,
-      step: 0.05,
       category: 'visual',
-      description: '飘落元素的密度'
     },
-    fallingSize: {
-      label: '礼物大小',
-      type: 'slider',
-      min: 12,
-      max: 40,
-      step: 1,
+    rainColor: {
+      label: '雨丝主色',
+      type: 'color',
       category: 'visual',
-      description: '飘落元素的大小'
-    }
+    },
+    snowColor: {
+      label: '雪花颜色',
+      type: 'color',
+      category: 'visual',
+    },
   },
   tabs: [
     { id: 'content', label: '内容' },
     { id: 'visual', label: '视觉' },
-    { id: 'physics', label: '物理' },
   ],
   mobileSteps: [
     { 
       id: 1, 
       label: '内容', 
-      fields: ['text', 'fallingText']
+      fields: ['text', 'fallingText'] 
     },
     { 
       id: 2, 
-      label: '样式', 
-      fields: ['rainColor', 'snowColor', 'rippleShape', 'rippleSize', 'snowDensity', 'fallingSize']
-    },
-    { 
-      id: 3, 
-      label: '物理', 
-      fields: ['rainSpeed', 'rippleLife', 'fallingSpeed', 'fallingDensity']
+      label: '视觉', 
+      fields: ['rainSpeed', 'snowDensity', 'fallingDensity', 'fallingSpeed', 'fallingSize', 'rippleShape', 'rippleSize', 'rippleLife', 'rainColor', 'snowColor'] 
     },
   ],
 };
 
-// 配置UI组件
+/**
+ * ==============================================================================
+ * 2. 配置面板组件 (ConfigUI)
+ * ==============================================================================
+ */
+
 export function ConfigUI({ 
   config, 
   onChange, 
@@ -161,5 +181,153 @@ export function ConfigUI({
   );
 }
 
-// 展示UI组件
-export { default as DisplayUI } from './DisplayUI';
+/**
+ * ==============================================================================
+ * 3. 核心展示组件 (DisplayUI)
+ * ==============================================================================
+ */
+
+export default function RainSnowRippleDisplayUI({ config }: { config: AppConfig }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    const drawHeart = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      const topCurveHeight = size * 0.4;
+      ctx.moveTo(0, topCurveHeight);
+      ctx.bezierCurveTo(0, 0, -size / 2, 0, -size / 2, topCurveHeight);
+      ctx.bezierCurveTo(-size / 2, (size + topCurveHeight) / 2, 0, size, 0, size);
+      ctx.bezierCurveTo(0, size, size / 2, (size + topCurveHeight) / 2, size / 2, topCurveHeight);
+      ctx.bezierCurveTo(size / 2, 0, 0, 0, 0, topCurveHeight);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      const spikes = 5;
+      const outerRadius = size;
+      const innerRadius = size / 2;
+      let rot = Math.PI / 2 * 3;
+      let cx = 0;
+      let cy = 0;
+      let step = Math.PI / spikes;
+      ctx.moveTo(cx, cy - outerRadius);
+      for (let i = 0; i < spikes; i++) {
+        let x0 = cx + Math.cos(rot) * outerRadius;
+        let y0 = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x0, y0);
+        rot += step;
+        x0 = cx + Math.cos(rot) * innerRadius;
+        y0 = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x0, y0);
+        rot += step;
+      }
+      ctx.lineTo(cx, cy - outerRadius);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    const hexToRgb = (hex: string) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '255, 255, 255';
+    };
+
+    class Ripple {
+      x: number;
+      y: number;
+      size: number;
+      opacity: number;
+      shape: RippleShape;
+      constructor(x: number, y: number) { this.x = x; this.y = y; this.size = 1; this.opacity = 1; this.shape = config.rippleShape; }
+      update() { this.size += 0.5; this.opacity -= config.rippleLife; }
+      draw() {
+        if (!ctx || this.opacity <= 0) return;
+        ctx.strokeStyle = `rgba(${hexToRgb(config.rainColor)}, ${this.opacity})`;
+        ctx.lineWidth = 1.5;
+        const s = Math.min(this.size, config.rippleSize);
+        if (this.shape === 'heart') drawHeart(ctx, this.x, this.y - s / 2, s);
+        else if (this.shape === 'star') drawStar(ctx, this.x, this.y, s * 0.6);
+        else { ctx.beginPath(); ctx.ellipse(this.x, this.y, s, s * 0.3, 0, 0, Math.PI * 2); ctx.stroke(); }
+      }
+    }
+
+    let ripples: Ripple[] = [];
+
+    class RainDrop { x: number; y: number; length: number; speed: number;
+      constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.length = Math.random() * 20 + 10; this.speed = (Math.random() * 5 + 5); }
+      draw() { if (!ctx) return; ctx.beginPath(); ctx.strokeStyle = config.rainColor; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.moveTo(this.x, this.y); ctx.lineTo(this.x, this.y + this.length); ctx.stroke(); }
+      update() { this.y += this.speed * config.rainSpeed; if (this.y > height) { ripples.push(new Ripple(this.x, height - 5)); this.y = -this.length; this.x = Math.random() * width; } }
+    }
+
+    class SnowFlake { x: number; y: number; radius: number; speed: number; wind: number; offset: number;
+      constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.radius = Math.random() * 3 + 1; this.speed = Math.random() * 1 + 0.5; this.wind = Math.random() * 2 - 1; this.offset = Math.random() * 100; }
+      draw() { if (!ctx) return; ctx.beginPath(); ctx.fillStyle = config.snowColor; ctx.shadowBlur = 5; ctx.shadowColor = config.snowColor; ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; }
+      update() { this.y += this.speed; this.x += Math.sin((this.y + this.offset) * 0.01) + this.wind * 0.5; if (this.y > height) { this.y = -5; this.x = Math.random() * width; } if (this.x > width) this.x = 0; if (this.x < 0) this.x = width; }
+    }
+
+    class FallingItem { x!: number; y!: number; content!: string; speed!: number; size!: number; swing!: number; swingOffset!: number;
+      constructor(options: string[]) { this.swingOffset = Math.random() * 100; this.reset(options, true); }
+      reset(options: string[], initial = false) { this.x = Math.random() * width; this.y = initial ? Math.random() * height : -50; this.content = options[Math.floor(Math.random() * options.length)] || '❤'; this.speed = (Math.random() * 0.5 + 0.5) * config.fallingSpeed; this.size = config.fallingSize * (Math.random() * 0.4 + 0.8); this.swing = Math.random() * 0.5 + 0.2; }
+      update(options: string[]) { this.y += this.speed; this.x += Math.sin(this.y * 0.02 + this.swingOffset) * this.swing; if (this.y > height + 50) { this.reset(options); } }
+      draw() { if (!ctx) return; ctx.font = `${this.size}px "Segoe UI Emoji", "Apple Color Emoji", sans-serif`; ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(255,255,255,0.5)'; ctx.fillText(this.content, this.x, this.y); ctx.shadowBlur = 0; }
+    }
+
+    const rainDrops: RainDrop[] = Array.from({ length: 150 }, () => new RainDrop());
+    const snowFlakes: SnowFlake[] = Array.from({ length: 200 }, () => new SnowFlake());
+    const fallingOptions = config.fallingText.split(/[，,]+/).map(s => s.trim()).filter(Boolean);
+    const maxFallingItems = 50;
+    const fallingItems: FallingItem[] = Array.from({ length: maxFallingItems }, () => new FallingItem(fallingOptions));
+
+    const render = () => {
+      ctx.fillStyle = 'rgba(10, 15, 30, 0.25)';
+      ctx.fillRect(0, 0, width, height);
+      ripples = ripples.filter(r => r.opacity > 0);
+      ripples.forEach(r => { r.update(); r.draw(); });
+      rainDrops.forEach(d => { d.update(); d.draw(); });
+      const activeSnow = Math.floor(snowFlakes.length * config.snowDensity);
+      for (let i = 0; i < activeSnow; i++) { snowFlakes[i].update(); snowFlakes[i].draw(); }
+      if (fallingOptions.length > 0) {
+        const activeFalling = Math.floor(maxFallingItems * config.fallingDensity);
+        for (let i = 0; i < activeFalling; i++) { fallingItems[i].update(fallingOptions); fallingItems[i].draw(); }
+      }
+      animationFrameId = requestAnimationFrame(render);
+    };
+    render();
+
+    return () => { cancelAnimationFrame(animationFrameId); window.removeEventListener('resize', handleResize); };
+  }, [config]);
+
+  return (
+    <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#0a0f1e]">
+      <canvas ref={canvasRef} className="block w-full h-full" />
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <h1 className="text-6xl md:text-8xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] text-center px-4 animate-pulse" style={{ textShadow: `0 0 30px ${config.rainColor}80` }}>{config.text}</h1>
+      </div>
+    </div>
+  );
+}
