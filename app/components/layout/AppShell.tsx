@@ -4,6 +4,7 @@ import type { PageKey } from '@/types';
 import { useRouter, usePathname } from 'next/navigation';
 import Navbar from './Navbar';
 import Modal from '@/components/common/Modal';
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -16,14 +17,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const seg = (pathname?.replace('/', '') || '') as PageKey | '';
     setCurrentPage((seg || 'home') as PageKey);
 
-    // Check immersive mode: /love/[toolKey] with 'config' param
+    // Check immersive mode: /love/[toolKey] - all tool pages should be immersive
     const checkImmersive = () => {
-      if (pathname?.startsWith('/love/') && pathname !==('/love')) {
-        const search = new URLSearchParams(window.location.search);
-        if (search.get('config')) {
-          setIsImmersive(true);
-          return;
-        }
+      // 修改判断条件：只要是 /love/ 开头的路径（但不是 /love 本身）就进入沉浸式模式
+      if (pathname?.startsWith('/love/') && pathname !== '/love') {
+        setIsImmersive(true);
+        return;
       }
       setIsImmersive(false);
     };

@@ -1,12 +1,10 @@
 'use client';
 import React, { useMemo, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getToolFullConfig as getToolFullConfigImport } from '@/config/toolsRegistry';
-import { useWorks } from '@/hooks/useWorks';
-import ModalImport from '@/components/common/Modal';
-import { GenericConfigPanel } from '@/components/generic/GenericConfigPanel';
-import { FloatingActionBar } from '@/components/generic/FloatingActionBar';
-import type { ToolConfigMetadata } from '@/types/genericConfig';
+// import { useRouter } from 'next/navigation'; // 实际项目中请解开此注释
+// import { getToolFullConfig } from '@/config/toolsRegistry'; // 实际项目中请解开此注释
+// import { useWorks } from '@/hooks/useWorks'; // 实际项目中请解开此注释
+// import Modal from '@/components/common/Modal'; // 实际项目中请解开此注释
+// import { GenericConfigPanel } from '@/components/generic/GenericConfigPanel'; // 实际项目中请解开此注释
 import { 
   Plus, 
   Trash2, 
@@ -15,42 +13,102 @@ import {
   ChevronLeft,
   X
 } from 'lucide-react';
+import { FloatingActionBar } from '@/components/generic/FloatingActionBar';
 
 // ================= MOCK DATA & COMPONENTS FOR PREVIEW (预览用模拟数据) =================
 
-// 使用导入的Modal组件作为基础，如果需要可以扩展
-const Modal = ModalImport;
+// 1. Mock useRouter
+const useRouter = () => {
+  return {
+    push: (path: string) => console.log(`[Mock Router] Navigate to: ${path}`)
+  };
+};
 
-const getToolFullConfig = (key: string) => {
-  try {
-    // 尝试使用真实的工具配置
-    return getToolFullConfigImport(key as any);
-  } catch {
-    // 如果失败则返回模拟数据
-    return {
-      name: 'Preview Tool',
-      DisplayUI: ({ isPanelOpen }: any) => (
-        <div className={`w-full h-full flex items-center justify-center transition-all duration-500 ${isPanelOpen ? 'pl-[420px]' : ''}`}>
-          <div className="text-center space-y-4">
-            <div className="w-32 h-32 mx-auto bg-gradient-to-tr from-pink-500 to-purple-600 rounded-full animate-pulse blur-xl opacity-50 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
-            <div className="relative z-10">
-              <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-300 to-purple-300">
-                Tool Preview
-              </h1>
-              <p className="text-gray-400 mt-2">内容显示区域</p>
-            </div>
+// 2. Mock Modal
+const Modal = ({ isOpen, onClose, title, children }: any) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-white/5">
+          <h3 className="text-lg font-medium text-white">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-white/10 text-gray-400">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+// 3. Mock GenericConfigPanel
+const GenericConfigPanel = ({ isOpen, setIsOpen }: any) => {
+  return (
+    <div className="h-full w-[320px] md:w-[420px] bg-gray-900 border-r border-white/10 p-6 flex flex-col gap-4">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-bold text-white">配置面板</h2>
+        <button onClick={() => setIsOpen(false)} className="md:hidden p-2 bg-white/10 rounded-lg">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="space-y-4">
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <label className="text-sm text-gray-400 mb-2 block">示例选项 A</label>
+          <div className="h-2 bg-white/10 rounded-full w-full overflow-hidden">
+            <div className="h-full w-2/3 bg-pink-500" />
           </div>
         </div>
-      ),
-      defaultConfig: { demo: true },
-      configMetadata: { 
-        configSchema: {},
-        tabs: []
-      } as ToolConfigMetadata<any>,
-      // 可选：保留自定义ConfigUI（兼容老工具，逐步替换）
-      ConfigUI: undefined
-    };
-  }
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <label className="text-sm text-gray-400 mb-2 block">示例开关 B</label>
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-6 bg-pink-500 rounded-full relative">
+              <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+            </div>
+            <span className="text-xs text-gray-500">已开启</span>
+          </div>
+        </div>
+      </div>
+      <div className="mt-auto text-xs text-gray-600 text-center">
+        Mock Config Panel
+      </div>
+    </div>
+  );
+};
+
+// 4. Mock Hooks & Logic
+const useWorks = (key: string) => {
+  const [works, setWorks] = useState<any[]>([
+    { id: '1700000000000', name: '初次相遇', data: {} },
+    { id: '1700000000001', name: '星空之下', data: {} }
+  ]);
+  const addWork = (name: string, data: any) => {
+    setWorks(prev => [...prev, { id: Date.now().toString(), name, data }]);
+  };
+  const removeWork = (id: string) => {
+    setWorks(prev => prev.filter(w => w.id !== id));
+  };
+  return { works, addWork, removeWork };
+};
+
+const getToolFullConfig = (key: string) => {
+  return {
+    defaultConfig: { demo: true },
+    configMetadata: { demo: { type: 'boolean' } },
+    DisplayUI: ({ isPanelOpen }: any) => (
+      <div className={`w-full h-full flex items-center justify-center transition-all duration-500 ${isPanelOpen ? 'pl-[420px]' : ''}`}>
+        <div className="text-center space-y-4">
+          <div className="w-32 h-32 mx-auto bg-gradient-to-tr from-pink-500 to-purple-600 rounded-full animate-pulse blur-xl opacity-50 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+          <div className="relative z-10">
+            <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-300 to-purple-300">
+              Tool Preview
+            </h1>
+            <p className="text-gray-400 mt-2">内容显示区域</p>
+          </div>
+        </div>
+      </div>
+    )
+  };
 };
 
 // ================= REAL IMPLEMENTATION STARTS HERE =================
@@ -173,7 +231,7 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
     }
   };
 
-  // Navigation handlers
+  // Navigation Handlers
   const goHome = () => router.push('/');
   const goLibrary = () => router.push('/love');
   const goProfile = () => router.push('/profile');
@@ -199,16 +257,18 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* ================= FLOATING ACTION BAR ================= */}
-      <FloatingActionBar 
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        onNavigateHome={goHome}
-        onNavigateLibrary={goLibrary}
-        onNavigateProfile={goProfile}
-        onToggleTemplates={() => setShowTemplates(true)}
-        onShare={copyShareLink}
-        onReset={() => setConfig(defaultConfig)}
-      />
+      <div className="fixed inset-0 pointer-events-none z-40">
+        <FloatingActionBar 
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          onNavigateHome={goHome}
+          onNavigateLibrary={goLibrary}
+          onNavigateProfile={goProfile}
+          onToggleTemplates={() => setShowTemplates(true)}
+          onShare={copyShareLink}
+          onReset={() => setConfig(defaultConfig)}
+        />
+      </div>
 
       {/* ================= Templates Modal ================= */}
       <Modal 
@@ -269,12 +329,10 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       </div>
 
       {/* ================= Configuration Side Panel ================= */}
-      {/* PC端：左侧侧边栏 | 移动端：底部抽屉 */}
       <div 
         className={`
           absolute top-0 left-0 h-full z-40
           transition-transform duration-500 ease-in-out will-change-transform
-          md:block hidden
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
@@ -292,20 +350,12 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
               <p className="text-gray-500 text-sm">此工具暂无配置项</p>
             </div>
           )}
+          
+          {/* Mobile Panel Close Handle (Optional visual cue) */}
+          <div className="md:hidden absolute -right-6 top-1/2 -translate-y-1/2 w-6 h-12 bg-white/5 rounded-r-lg flex items-center justify-center" onClick={() => setIsOpen(false)}>
+             <ChevronLeft className="w-4 h-4 text-white/50" />
+          </div>
         </div>
-      </div>
-
-      {/* 移动端配置面板 */}
-      <div className="md:hidden">
-        {configMetadata ? (
-          <GenericConfigPanel 
-            config={config} 
-            configMetadata={configMetadata} 
-            onChange={handleConfigChange} 
-            isOpen={isOpen} 
-            setIsOpen={setIsOpen} 
-          />
-        ) : null}
       </div>
 
     </main>

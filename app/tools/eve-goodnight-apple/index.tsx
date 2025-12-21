@@ -314,222 +314,222 @@ const NightWindow = ({ starDensity, starSpeed, scale }: { starDensity: number, s
 
 // --- 3. 配置面板组件 (ConfigUI) ---
 
-export function ConfigUI({
-  config,
-  onChange,
-  isOpen,
-  setIsOpen
-}: {
-  config: AppConfig;
-  onChange: (key: string, val: any) => void;
-  isOpen: boolean;
-  setIsOpen: (v: boolean) => void;
-}) {
-  const [activeTab, setActiveTab] = useState('basic');
+// export function ConfigUI({
+//   config,
+//   onChange,
+//   isOpen,
+//   setIsOpen
+// }: {
+//   config: AppConfig;
+//   onChange: (key: string, val: any) => void;
+//   isOpen: boolean;
+//   setIsOpen: (v: boolean) => void;
+// }) {
+//   const [activeTab, setActiveTab] = useState('basic');
 
-  // 处理文件上传
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onChange('customBgUrl', reader.result as string);
-        onChange('bgTheme', 'custom'); // 自动切换到自定义模式
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+//   // 处理文件上传
+//   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+//     const file = e.target.files?.[0];
+//     if (file) {
+//       const reader = new FileReader();
+//       reader.onloadend = () => {
+//         onChange('customBgUrl', reader.result as string);
+//         onChange('bgTheme', 'custom'); // 自动切换到自定义模式
+//       };
+//       reader.readAsDataURL(file);
+//     }
+//   };
 
-  const renderControl = (key: keyof typeof CONFIG_METADATA) => {
-    const meta = CONFIG_METADATA[key];
-    const value = config[key as keyof AppConfig];
+//   const renderControl = (key: keyof typeof CONFIG_METADATA) => {
+//     const meta = CONFIG_METADATA[key];
+//     const value = config[key as keyof AppConfig];
 
-    if (meta.type === 'select' && meta.options) {
-      return (
-        <div key={key} className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">{meta.label}</label>
-          <div className="flex gap-2 mb-2">
-            {meta.options.map((opt: { value: any; label: any; }) => (
-              <button
-                key={opt.value}
-                onClick={() => onChange(key as keyof AppConfig, opt.value)}
-                className={`flex-1 py-1.5 px-3 rounded-lg text-xs transition-all ${
-                  value === opt.value
-                    ? 'bg-red-500 text-white shadow-md'
-                    : 'bg-white/50 hover:bg-white text-gray-600'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          {/* 如果是背景选择，且选了自定义，显示上传按钮 */}
-          {key === 'bgTheme' && value === 'custom' && (
-             <div className="mt-2">
-               <label className="flex items-center justify-center w-full px-4 py-2 bg-white/50 border border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-white/80 transition">
-                 <Upload size={16} className="mr-2 text-gray-600" />
-                 <span className="text-xs text-gray-600">点击上传背景图片</span>
-                 <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-               </label>
-             </div>
-          )}
-        </div>
-      );
-    }
+//     if (meta.type === 'select' && meta.options) {
+//       return (
+//         <div key={key} className="mb-4">
+//           <label className="block text-sm font-medium text-gray-700 mb-1">{meta.label}</label>
+//           <div className="flex gap-2 mb-2">
+//             {meta.options.map((opt: { value: any; label: any; }) => (
+//               <button
+//                 key={opt.value}
+//                 onClick={() => onChange(key as keyof AppConfig, opt.value)}
+//                 className={`flex-1 py-1.5 px-3 rounded-lg text-xs transition-all ${
+//                   value === opt.value
+//                     ? 'bg-red-500 text-white shadow-md'
+//                     : 'bg-white/50 hover:bg-white text-gray-600'
+//                 }`}
+//               >
+//                 {opt.label}
+//               </button>
+//             ))}
+//           </div>
+//           {/* 如果是背景选择，且选了自定义，显示上传按钮 */}
+//           {key === 'bgTheme' && value === 'custom' && (
+//              <div className="mt-2">
+//                <label className="flex items-center justify-center w-full px-4 py-2 bg-white/50 border border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-white/80 transition">
+//                  <Upload size={16} className="mr-2 text-gray-600" />
+//                  <span className="text-xs text-gray-600">点击上传背景图片</span>
+//                  <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+//                </label>
+//              </div>
+//           )}
+//         </div>
+//       );
+//     }
 
-    if (meta.type === 'slider') {
-      return (
-        <div key={key} className="mb-4">
-          <div className="flex justify-between text-sm text-gray-700 mb-1">
-            <span>{meta.label}</span>
-            <span className="text-xs opacity-60">{typeof value === 'number' ? value.toFixed(1) : value}</span>
-          </div>
-          <input
-            type="range"
-            min={meta.min}
-            max={meta.max}
-            step={meta.step}
-            value={value as number}
-            onChange={(e) => onChange(key as keyof AppConfig, parseFloat(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500"
-          />
-        </div>
-      );
-    }
+//     if (meta.type === 'slider') {
+//       return (
+//         <div key={key} className="mb-4">
+//           <div className="flex justify-between text-sm text-gray-700 mb-1">
+//             <span>{meta.label}</span>
+//             <span className="text-xs opacity-60">{typeof value === 'number' ? value.toFixed(1) : value}</span>
+//           </div>
+//           <input
+//             type="range"
+//             min={meta.min}
+//             max={meta.max}
+//             step={meta.step}
+//             value={value as number}
+//             onChange={(e) => onChange(key as keyof AppConfig, parseFloat(e.target.value))}
+//             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-500"
+//           />
+//         </div>
+//       );
+//     }
 
-    if (meta.type === 'text') {
-      return (
-        <div key={key} className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">{meta.label}</label>
-          <input
-            type="text"
-            value={value as string}
-            onChange={(e) => onChange(key as keyof AppConfig, e.target.value)}
-            className="w-full px-3 py-2 bg-white/50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-          />
-        </div>
-      );
-    }
-    return null;
-  };
+//     if (meta.type === 'text') {
+//       return (
+//         <div key={key} className="mb-4">
+//           <label className="block text-sm font-medium text-gray-700 mb-1">{meta.label}</label>
+//           <input
+//             type="text"
+//             value={value as string}
+//             onChange={(e) => onChange(key as keyof AppConfig, e.target.value)}
+//             className="w-full px-3 py-2 bg-white/50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+//           />
+//         </div>
+//       );
+//     }
+//     return null;
+//   };
 
-  const DesktopDrawer = () => (
-    <motion.div
-      initial={{ x: -320 }}
-      animate={{ x: isOpen ? 0 : -320 }}
-      className="fixed left-0 top-0 bottom-0 w-80 bg-white/30 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 hidden md:flex flex-col"
-    >
-      <div className="p-4 border-b border-white/20 flex justify-between items-center bg-white/10">
-        <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <Settings2 size={20} /> 平安夜工坊
-        </h2>
-        <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/30 rounded-full">
-          <X size={20} />
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <section>
-          <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-1"><Sparkles size={12}/> 氛围设置</h3>
-          {renderControl('bgTheme')}
-          {renderControl('windowScale')}
-          {renderControl('starDensity')}
-          {renderControl('starSpeed')}
-        </section>
-        <section>
-          <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-1"><Sparkles size={12}/> 礼物定制</h3>
-          {renderControl('giftType')}
-          {renderControl('appleSize')}
-          {renderControl('haloIntensity')}
-        </section>
-        <section>
-          <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-1"><Settings2 size={12}/> 祝福文案</h3>
-          {renderControl('appleLabel')}
-          {renderControl('bubbleText')}
-          {renderControl('blessingText')}
-        </section>
-      </div>
-    </motion.div>
-  );
+//   const DesktopDrawer = () => (
+//     <motion.div
+//       initial={{ x: -320 }}
+//       animate={{ x: isOpen ? 0 : -320 }}
+//       className="fixed left-0 top-0 bottom-0 w-80 bg-white/30 backdrop-blur-xl border-r border-white/30 shadow-2xl z-50 hidden md:flex flex-col"
+//     >
+//       <div className="p-4 border-b border-white/20 flex justify-between items-center bg-white/10">
+//         <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+//           <Settings2 size={20} /> 平安夜工坊
+//         </h2>
+//         <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/30 rounded-full">
+//           <X size={20} />
+//         </button>
+//       </div>
+//       <div className="flex-1 overflow-y-auto p-4 space-y-6">
+//         <section>
+//           <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-1"><Sparkles size={12}/> 氛围设置</h3>
+//           {renderControl('bgTheme')}
+//           {renderControl('windowScale')}
+//           {renderControl('starDensity')}
+//           {renderControl('starSpeed')}
+//         </section>
+//         <section>
+//           <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-1"><Sparkles size={12}/> 礼物定制</h3>
+//           {renderControl('giftType')}
+//           {renderControl('appleSize')}
+//           {renderControl('haloIntensity')}
+//         </section>
+//         <section>
+//           <h3 className="text-xs font-bold text-gray-500 uppercase mb-3 flex items-center gap-1"><Settings2 size={12}/> 祝福文案</h3>
+//           {renderControl('appleLabel')}
+//           {renderControl('bubbleText')}
+//           {renderControl('blessingText')}
+//         </section>
+//       </div>
+//     </motion.div>
+//   );
 
-  const MobileCard = () => (
-    <motion.div
-      initial={{ y: -200, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="fixed top-0 left-0 right-0 z-50 md:hidden flex flex-col items-center pt-2 px-2"
-    >
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="w-full bg-white/40 backdrop-blur-xl border border-white/40 rounded-2xl shadow-lg overflow-hidden"
-          >
-            <div className="flex border-b border-white/20">
-              {['场景', '礼物', '文案'].map((tab, idx) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(idx === 0 ? 'basic' : idx === 1 ? 'gift' : 'text')}
-                  className={`flex-1 py-3 text-xs font-bold ${
-                    (activeTab === 'basic' && idx === 0) || (activeTab === 'gift' && idx === 1) || (activeTab === 'text' && idx === 2)
-                      ? 'bg-white/40 text-red-800'
-                      : 'text-gray-600'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+//   const MobileCard = () => (
+//     <motion.div
+//       initial={{ y: -200, opacity: 0 }}
+//       animate={{ y: 0, opacity: 1 }}
+//       className="fixed top-0 left-0 right-0 z-50 md:hidden flex flex-col items-center pt-2 px-2"
+//     >
+//       <AnimatePresence>
+//         {isOpen && (
+//           <motion.div
+//             initial={{ height: 0, opacity: 0 }}
+//             animate={{ height: 'auto', opacity: 1 }}
+//             exit={{ height: 0, opacity: 0 }}
+//             className="w-full bg-white/40 backdrop-blur-xl border border-white/40 rounded-2xl shadow-lg overflow-hidden"
+//           >
+//             <div className="flex border-b border-white/20">
+//               {['场景', '礼物', '文案'].map((tab, idx) => (
+//                 <button
+//                   key={tab}
+//                   onClick={() => setActiveTab(idx === 0 ? 'basic' : idx === 1 ? 'gift' : 'text')}
+//                   className={`flex-1 py-3 text-xs font-bold ${
+//                     (activeTab === 'basic' && idx === 0) || (activeTab === 'gift' && idx === 1) || (activeTab === 'text' && idx === 2)
+//                       ? 'bg-white/40 text-red-800'
+//                       : 'text-gray-600'
+//                   }`}
+//                 >
+//                   {tab}
+//                 </button>
+//               ))}
+//             </div>
             
-            <div className="p-4 max-h-[50vh] overflow-y-auto">
-              {activeTab === 'basic' && (
-                <>
-                  {renderControl('bgTheme')}
-                  {renderControl('windowScale')}
-                </>
-              )}
-              {activeTab === 'gift' && (
-                <>
-                  {renderControl('appleSize')}
-                  {renderControl('haloIntensity')}
-                </>
-              )}
-              {activeTab === 'text' && (
-                <>
-                  {renderControl('bubbleText')}
-                  {renderControl('blessingText')}
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+//             <div className="p-4 max-h-[50vh] overflow-y-auto">
+//               {activeTab === 'basic' && (
+//                 <>
+//                   {renderControl('bgTheme')}
+//                   {renderControl('windowScale')}
+//                 </>
+//               )}
+//               {activeTab === 'gift' && (
+//                 <>
+//                   {renderControl('appleSize')}
+//                   {renderControl('haloIntensity')}
+//                 </>
+//               )}
+//               {activeTab === 'text' && (
+//                 <>
+//                   {renderControl('bubbleText')}
+//                   {renderControl('blessingText')}
+//                 </>
+//               )}
+//             </div>
+//           </motion.div>
+//         )}
+//       </AnimatePresence>
       
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="mt-2 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2 text-sm text-white font-medium hover:bg-white/30 transition-colors"
-      >
-        {isOpen ? <ChevronUp size={16} className="rotate-180" /> : <Settings2 size={16} />}
-        {isOpen ? '收起配置' : '定制平安果'}
-      </button>
-    </motion.div>
-  );
+//       <button
+//         onClick={() => setIsOpen(!isOpen)}
+//         className="mt-2 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-1.5 rounded-full shadow-lg flex items-center gap-2 text-sm text-white font-medium hover:bg-white/30 transition-colors"
+//       >
+//         {isOpen ? <ChevronUp size={16} className="rotate-180" /> : <Settings2 size={16} />}
+//         {isOpen ? '收起配置' : '定制平安果'}
+//       </button>
+//     </motion.div>
+//   );
 
-  return (
-    <>
-      <DesktopDrawer />
-      <MobileCard />
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed left-6 top-6 z-50 p-3 bg-white/20 backdrop-blur-md rounded-full shadow-lg hidden md:block hover:bg-white/40 transition"
-        >
-          <Settings2 size={24} className="text-gray-800" />
-        </button>
-      )}
-    </>
-  );
-}
+//   return (
+//     <>
+//       <DesktopDrawer />
+//       <MobileCard />
+//       {!isOpen && (
+//         <button
+//           onClick={() => setIsOpen(true)}
+//           className="fixed left-6 top-6 z-50 p-3 bg-white/20 backdrop-blur-md rounded-full shadow-lg hidden md:block hover:bg-white/40 transition"
+//         >
+//           <Settings2 size={24} className="text-gray-800" />
+//         </button>
+//       )}
+//     </>
+//   );
+// }
 
 // --- 4. 核心展示组件 (DisplayUI) ---
 

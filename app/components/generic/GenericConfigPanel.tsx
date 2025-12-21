@@ -393,11 +393,13 @@ export function GenericConfigPanel<T>({
   const [activeTab, setActiveTab] = useState<CategoryType>(configMetadata.tabs[0]?.id || 'base');
   const [isMobile, setIsMobile] = useState(false);
   const [mobileStep, setMobileStep] = useState(1);
-  const [mobileExpanded, setMobileExpanded] = useState(true);
 
   // 移动端检测
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -417,86 +419,83 @@ export function GenericConfigPanel<T>({
   // --- 移动端渲染逻辑 ---
   if (isMobile) {
     return (
-      <div className={`fixed bottom-0 left-0 right-0 z-50 flex flex-col items-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${!isOpen ? 'pointer-events-none' : ''}`}>
+      <div className={`fixed top-0 left-0 right-0 z-[60] flex flex-col items-center transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${!isOpen ? '-translate-y-full' : 'translate-y-0'}`}>
         <div className={`
-          w-[95%] max-w-md 
+          w-full
           bg-white/70 dark:bg-gray-900/80 backdrop-blur-3xl
-          border border-white/40 dark:border-white/10 
-          shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] rounded-t-3xl overflow-hidden
+          border-b border-white/40 dark:border-white/10 
+          shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] rounded-b-3xl overflow-hidden
           transition-all duration-500
-          ${mobileExpanded ? 'translate-y-0 opacity-100 mb-0' : 'translate-y-[88%] opacity-90 mb-0'}
         `}>
           
           {/* Mobile Header / Toggle */}
           <div 
-            className="h-14 flex items-center justify-between px-5 border-b border-white/30 dark:border-white/5 cursor-pointer bg-white/40 dark:bg-white/5 active:bg-white/60"
-            onClick={() => setMobileExpanded(!mobileExpanded)}
+            className="h-16 flex items-center justify-between px-5 border-b border-white/30 dark:border-white/5 bg-white/40 dark:bg-white/5"
           >
             <div className="flex items-center gap-3">
                <span className="p-1.5 bg-pink-100 dark:bg-pink-900/30 rounded-lg text-pink-500"><Smartphone className="w-4 h-4" /></span>
                <span className="text-sm font-bold bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  {mobileExpanded ? '快速配置' : '展开配置'}
+                  快速配置
                </span>
             </div>
-            <div className="bg-white/50 dark:bg-white/10 p-1.5 rounded-full">
-              {mobileExpanded ? <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-300"/> : <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-300"/>}
-            </div>
+            <button 
+              onClick={() => setIsOpen(false)}
+              className="p-2 hover:bg-white/40 dark:hover:bg-white/10 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-600 dark:text-gray-300"/>
+            </button>
           </div>
 
           {/* Mobile Steps Nav */}
-          {mobileExpanded && (
-            <div className="flex justify-around p-3 bg-white/20 dark:bg-white/5 border-b border-white/20 dark:border-white/5">
-              {mobileSteps.map((step) => {
-                const isActive = mobileStep === step.id;
-                return (
-                  <button
-                    key={step.id}
-                    onClick={() => setMobileStep(step.id)}
-                    className={`
-                      flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-300 relative
-                      ${isActive ? 'bg-white shadow-sm text-pink-500 scale-105' : 'text-gray-400 hover:text-gray-600'}
-                    `}
-                  >
-                    <div className={isActive ? 'text-pink-500' : 'text-gray-400'}>{step.icon}</div>
-                    <span className="text-[10px] font-bold">{step.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div className="flex justify-around p-3 bg-white/20 dark:bg-white/5 border-b border-white/20 dark:border-white/5">
+            {mobileSteps.map((step) => {
+              const isActive = mobileStep === step.id;
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => setMobileStep(step.id)}
+                  className={`
+                    flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl transition-all duration-300 relative
+                    ${isActive ? 'bg-white shadow-sm text-pink-500 scale-105' : 'text-gray-400 hover:text-gray-600'}
+                  `}
+                >
+                  <div className={isActive ? 'text-pink-500' : 'text-gray-400'}>{step.icon}</div>
+                  <span className="text-[10px] font-bold">{step.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* Mobile Content Area */}
-          {mobileExpanded && (
-            <div className="p-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
-              {mobileSteps.find(s => s.id === mobileStep)?.fields.map(key => (
-                 <FieldRenderer<T>
-                    key={key as string}
-                    itemKey={key}
-                    metadata={configMetadata.configSchema[key]}
-                    configValue={config[key]}
-                    allConfig={config}
-                    onChange={onChange}
-                  />
-              ))}
-              
-              <div className="mt-4 flex gap-3">
-                 <button 
-                   onClick={() => setMobileStep(prev => Math.max(1, prev - 1))}
-                   disabled={mobileStep === 1}
-                   className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-xs font-bold text-gray-500 disabled:opacity-50"
-                 >
-                   上一步
-                 </button>
-                 <button 
-                   onClick={() => setMobileStep(prev => Math.min(mobileSteps.length, prev + 1))}
-                   disabled={mobileStep === mobileSteps.length}
-                   className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-pink-500/30 disabled:opacity-50"
-                 >
-                   下一步
-                 </button>
-              </div>
+          <div className="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+            {mobileSteps.find(s => s.id === mobileStep)?.fields.map(key => (
+               <FieldRenderer<T>
+                  key={key as string}
+                  itemKey={key}
+                  metadata={configMetadata.configSchema[key]}
+                  configValue={config[key]}
+                  allConfig={config}
+                  onChange={onChange}
+                />
+            ))}
+            
+            <div className="mt-4 flex gap-3">
+               <button 
+                 onClick={() => setMobileStep(prev => Math.max(1, prev - 1))}
+                 disabled={mobileStep === 1}
+                 className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl text-xs font-bold text-gray-500 disabled:opacity-50"
+               >
+                 上一步
+               </button>
+               <button 
+                 onClick={() => setMobileStep(prev => Math.min(mobileSteps.length, prev + 1))}
+                 disabled={mobileStep === mobileSteps.length}
+                 className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl text-xs font-bold shadow-lg shadow-pink-500/30 disabled:opacity-50"
+               >
+                 下一步
+               </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     );

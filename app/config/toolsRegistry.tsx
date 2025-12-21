@@ -45,11 +45,35 @@ const EveSantaWalkDisplayUI = dynamic(() => import('@/tools/eve-santa-walk').the
 import { DEFAULT_CONFIG as eveWishFireworksDefault, eveWishFireworksConfigMetadata as eveWishFireworksMetadata } from '@/tools/eve-wish-fireworks/index';
 const EveWishFireworksDisplayUI = dynamic(() => import('@/tools/eve-wish-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
+// 流光新年烟花
+import { DEFAULT_CONFIG as newyearFireworksDefault, newyearFireworksConfigMetadata as newyearFireworksMetadata } from '@/tools/newyear-fireworks/index';
+const NewYearFireworksDisplayUI = dynamic(() => import('@/tools/newyear-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 时光隧道
+import { DEFAULT_CONFIG as timeTunnelDefault, timeTunnelConfigMetadata as timeTunnelMetadata } from '@/tools/time-tunnel/index';
+const TimeTunnelDisplayUI = dynamic(() => import('@/tools/time-tunnel').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 银河工坊
+import { DEFAULT_CONFIG as galaxyWeaverDefault, galaxyWeaverConfigMetadata as galaxyWeaverMetadata } from '@/tools/galaxy-weaver/index';
+const GalaxyWeaverDisplayUI = dynamic(() => import('@/tools/galaxy-weaver').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 锦鲤祝福池
+import { DEFAULT_CONFIG as koiBlessingPoolDefault, koiBlessingPoolConfigMetadata as koiBlessingPoolMetadata } from '@/tools/koi-blessing-pool/index';
+const KoiBlessingPoolDisplayUI = dynamic(() => import('@/tools/koi-blessing-pool').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 圣诞壁炉
+import { DEFAULT_CONFIG as christmasFireplaceDefault, christmasFireplaceConfigMetadata as christmasFireplaceMetadata } from '@/tools/christmas-fireplace/index';
+const ChristmasFireplaceDisplayUI = dynamic(() => import('@/tools/christmas-fireplace').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 浪漫圣诞树
+import { DEFAULT_CONFIG as romanticChristmasDefault, romanticChristmasConfigMetadata as romanticChristmasMetadata } from '@/tools/romantic-christmas/index';
+const RomanticChristmasDisplayUI = dynamic(() => import('@/tools/romantic-christmas').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
 // ========================== 2. 类型定义（扩展，新增configMetadata）==========================
 /**
  * 工具基础配置项类型（扩展：新增configMetadata）
  */
-type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks';
+type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks' | 'newyear-fireworks' | 'time-tunnel' | 'galaxy-weaver' | 'koi-blessing-pool' | 'christmas-fireplace' | 'romantic-christmas';
 
 interface ToolBasicConfig<T = any> {
   // 原有字段
@@ -132,7 +156,45 @@ const toolRegistry: Record<ToolKey, ToolBasicConfig> = {
     configMetadata: eveWishFireworksMetadata,
     // ConfigUI: EveWishFireworksConfigUI,
   },
+  'newyear-fireworks': {
+    name: '流光新年烟花',
+    DisplayUI: NewYearFireworksDisplayUI,
+    defaultConfig: newyearFireworksDefault,
+    configMetadata: newyearFireworksMetadata,
+  },
+  'time-tunnel': {
+    name: '时光隧道',
+    DisplayUI: TimeTunnelDisplayUI,
+    defaultConfig: timeTunnelDefault,
+    configMetadata: timeTunnelMetadata,
+  },
+  'galaxy-weaver': {
+    name: '银河工坊',
+    DisplayUI: GalaxyWeaverDisplayUI,
+    defaultConfig: galaxyWeaverDefault,
+    configMetadata: galaxyWeaverMetadata,
+  },
+  'koi-blessing-pool': {
+    name: '锦鲤祝福池',
+    DisplayUI: KoiBlessingPoolDisplayUI,
+    defaultConfig: koiBlessingPoolDefault,
+    configMetadata: koiBlessingPoolMetadata,
+  },
+  'christmas-fireplace': {
+    name: '圣诞壁炉',
+    DisplayUI: ChristmasFireplaceDisplayUI,
+    defaultConfig: christmasFireplaceDefault,
+    configMetadata: christmasFireplaceMetadata,
+  },
+  'romantic-christmas': {
+    name: '浪漫圣诞树',
+    DisplayUI: RomanticChristmasDisplayUI,
+    defaultConfig: romanticChristmasDefault,
+    configMetadata: romanticChristmasMetadata,
+  },
 };
+
+export default toolRegistry;
 
 // ========================== 4. 通用工具函数（新增：获取配置元数据）==========================
 /**

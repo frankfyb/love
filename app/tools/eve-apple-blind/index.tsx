@@ -50,33 +50,33 @@ export const eveAppleBlindConfigMetadata = {
   configSchema: {
     title: {
       label: '主标题',
-      type: 'input' as const,
-      category: 'content' as const,
+      type: 'input',
+      category: 'content',
     },
     romanticMessage: {
       label: '过程情话',
-      type: 'textarea' as const,
-      category: 'content' as const,
+      type: 'textarea',
+      category: 'content',
     },
     triggerCount: {
       label: '盲盒解锁次数',
-      type: 'select' as const,
+      type: 'select',
       options: [
         { label: '3次 (经典)', value: 3 },
         { label: '5次 (悬念)', value: 5 },
         { label: '9次 (长久)', value: 9 }
       ],
-      category: 'gameplay' as const,
+      category: 'gameplay',
     },
     giftContent: {
       label: '盲盒礼物池 (一行一个)',
-      type: 'textarea' as const,
+      type: 'textarea',
       placeholder: '例如：\n拥抱券\n大餐一顿\n520红包',
-      category: 'gameplay' as const,
+      category: 'gameplay',
     },
     backgroundType: {
       label: '氛围背景',
-      type: 'select' as const,
+      type: 'select',
       options: [
         { label: '暖光壁炉', value: 'fireplace' },
         { label: '飘雪森林', value: 'snowy_forest' },
@@ -84,69 +84,69 @@ export const eveAppleBlindConfigMetadata = {
         { label: '雾感朦胧', value: 'misty_haze' },
         { label: '自定义图片', value: 'custom' }
       ],
-      category: 'scene' as const,
+      category: 'scene',
     },
     customBgUrl: {
       label: '自定义背景URL',
-      type: 'input' as const,
-      category: 'scene' as const,
+      type: 'input',
+      category: 'scene',
       condition: (config: AppConfig) => config.backgroundType === 'custom',
     },
     textEffect: {
       label: '文字特效',
-      type: 'select' as const,
+      type: 'select',
       options: [
         { label: '暖光呼吸', value: 'warm_breath' },
         { label: '雪花描边', value: 'snow_stroke' },
         { label: '渐变流光', value: 'gradient_glow' },
         { label: '手写轨迹', value: 'handwritten' }
       ],
-      category: 'visual' as const,
+      category: 'visual',
     },
     fontType: {
       label: '字体风格',
-      type: 'select' as const,
+      type: 'select',
       options: [
         { label: '优雅雪花体 (Serif)', value: 'serif' },
         { label: '浪漫手写体 (Cursive)', value: 'cursive' }
       ],
-      category: 'content' as const,
+      category: 'content',
     },
     particleDensity: {
       label: '浪漫浓度',
-      type: 'slider' as const,
+      type: 'slider',
       min: 20,
       max: 100,
       step: 10,
-      category: 'visual' as const,
+      category: 'visual',
     },
     showMusicBtn: {
       label: '音乐装饰',
-      type: 'switch' as const,
-      category: 'visual' as const,
+      type: 'switch',
+      category: 'visual',
     },
   },
   tabs: [
-    { id: 'content' as const, label: '内容' },
-    { id: 'gameplay' as const, label: '玩法' },
-    { id: 'scene' as const, label: '场景' },
-    { id: 'visual' as const, label: '视觉' },
+    { id: 'content', label: '内容' },
+    { id: 'gameplay', label: '玩法' },
+    { id: 'scene', label: '场景' },
+    { id: 'visual', label: '视觉' },
   ],
   mobileSteps: [
     { 
       id: 1, 
       label: '基础', 
-      fields: ['title' as const, 'romanticMessage' as const, 'triggerCount' as const]
+      fields: ['title', 'romanticMessage', 'triggerCount']
     },
     { 
       id: 2, 
       label: '礼物', 
-      fields: ['giftContent' as const, 'backgroundType' as const]
+      fields: ['giftContent', 'backgroundType']
     },
     { 
       id: 3, 
       label: '样式', 
-      fields: ['textEffect' as const, 'fontType' as const, 'particleDensity' as const, 'showMusicBtn' as const]
+      fields: ['textEffect', 'fontType', 'particleDensity', 'showMusicBtn']
     },
   ],
 };
