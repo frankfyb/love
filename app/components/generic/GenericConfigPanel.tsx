@@ -4,7 +4,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Settings2, ChevronDown, ChevronUp, ChevronLeft, 
   Upload, Type, Palette, Sparkles, Image as ImageIcon, 
-  Menu, X, Gift, Wind, Box, Smartphone, LayoutTemplate
+  Menu, X, Gift, Wind, Box, Smartphone, LayoutTemplate,
+  Plus, Trash2, Video
 } from 'lucide-react';
 
 // ============================================================================
@@ -134,40 +135,45 @@ const CustomSelectControl = ({ value, onChange, options }: any) => {
 // 玻璃态列表生成器
 const ListBuilderControl = ({ value, onChange, placeholder }: any) => {
   const [inputValue, setInputValue] = useState('');
-  const items = value ? value.split(',').filter((i: string) => i.trim() !== '') : [];
+  // 支持数组和字符串两种格式
+  const items = Array.isArray(value) 
+    ? value 
+    : value ? value.split(',').filter((i: string) => i.trim() !== '') : [];
 
   const handleAdd = () => {
     if (!inputValue.trim()) return;
     const newItems = [...items, inputValue.trim()];
-    onChange(newItems.join(','));
+    // 如果原值是数组，则返回数组；否则返回逗号分隔的字符串
+    onChange(Array.isArray(value) ? newItems : newItems.join(','));
     setInputValue('');
   };
 
   const handleRemove = (index: number) => {
     const newItems = [...items];
     newItems.splice(index, 1);
-    onChange(newItems.join(','));
+    onChange(Array.isArray(value) ? newItems : newItems.join(','));
   };
 
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <BaseControl className="flex-1 px-3 py-2 hover:bg-white/60">
+        <BaseControl className="flex-1 px-3 py-2.5 hover:bg-white/60">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAdd())}
             placeholder={placeholder}
-            className="w-full bg-transparent focus:outline-none text-sm"
+            className="w-full bg-transparent focus:outline-none text-sm text-gray-800 dark:text-gray-100"
           />
         </BaseControl>
         <button 
           onClick={handleAdd}
           disabled={!inputValue.trim()}
-          className="px-3.5 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl shadow-lg hover:shadow-pink-500/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+          className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-600 hover:to-rose-500 text-white rounded-xl shadow-lg hover:shadow-pink-500/40 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all font-medium flex items-center justify-center gap-1"
         >
-          <X className="w-4 h-4" />
+          <span className="text-sm">+</span>
+          <span className="text-xs font-semibold hidden xs:inline">添加</span>
         </button>
       </div>
 
@@ -176,7 +182,7 @@ const ListBuilderControl = ({ value, onChange, placeholder }: any) => {
           <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider flex items-center gap-1">
             <Box className="w-3 h-3"/> 已添加 ({items.length})
           </span>
-          <span className="text-[10px] text-gray-400 bg-white/40 px-2 py-0.5 rounded-full">逗号分隔</span>
+          {!Array.isArray(value) && <span className="text-[10px] text-gray-400 bg-white/40 px-2 py-0.5 rounded-full">逗号分隔</span>}
         </div>
         
         {items.length === 0 ? (
@@ -328,22 +334,212 @@ const FileControl = ({ label }: any) => (
   </button>
 );
 
+// Select + Input 组合控件（用于预设选择 + 自定义输入）
+const SelectInputControl = ({ value, onChange, options, placeholder }: any) => {
+  const [mode, setMode] = React.useState<'preset' | 'custom'>('preset');
+  
+  return (
+    <div className="space-y-2">
+      {/* 模式切换 */}
+      <div className="flex bg-white/30 dark:bg-black/20 p-1 rounded-lg border border-white/40 dark:border-white/5 gap-1">
+        <button
+          onClick={() => setMode('preset')}
+          className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+            mode === 'preset'
+              ? 'bg-white/90 dark:bg-gray-700 text-pink-600 dark:text-pink-300 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          预设选择
+        </button>
+        <button
+          onClick={() => setMode('custom')}
+          className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+            mode === 'custom'
+              ? 'bg-white/90 dark:bg-gray-700 text-pink-600 dark:text-pink-300 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          自定义
+        </button>
+      </div>
+      
+      {/* 控件内容 */}
+      {mode === 'preset' ? (
+        <CustomSelectControl value={value} onChange={onChange} options={options} />
+      ) : (
+        <InputControl value={value} onChange={onChange} placeholder={placeholder || '输入自定义 URL...'} />
+      )}
+    </div>
+  );
+};
+
+// 贴纸选择器控件
+const StickerPickerControl = ({ value, onChange, options, extraData }: any) => {
+  const [customUrl, setCustomUrl] = React.useState('');
+  const { decorations = [], onClearDecorations } = extraData || {};
+  
+  const handleAddSticker = (sticker: any) => {
+    if (onChange) {
+      onChange(sticker);
+    }
+  };
+  
+  return (
+    <div className="space-y-4">
+      {/* 贴纸网格 */}
+      <div className="grid grid-cols-4 gap-2">
+        {options?.map((opt: any, idx: number) => (
+          <button
+            key={idx}
+            onClick={() => handleAddSticker(opt)}
+            className="aspect-square flex items-center justify-center text-2xl bg-white/40 hover:bg-white/70 dark:bg-white/5 dark:hover:bg-white/10 rounded-xl transition-all border border-white/20 hover:scale-105 active:scale-95 shadow-sm"
+          >
+            {opt.icon || opt.value}
+          </button>
+        ))}
+      </div>
+      
+      {/* 自定义输入 */}
+      <div className="flex gap-2">
+        <BaseControl className="flex-1 px-3 py-2 hover:bg-white/60">
+          <input
+            type="text"
+            value={customUrl}
+            onChange={(e) => setCustomUrl(e.target.value)}
+            placeholder="自定义图片 URL..."
+            className="w-full bg-transparent focus:outline-none text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400"
+          />
+        </BaseControl>
+        <button
+          onClick={() => {
+            if (customUrl.trim()) {
+              handleAddSticker({ type: 'image', value: customUrl, label: 'Custom' });
+              setCustomUrl('');
+            }
+          }}
+          disabled={!customUrl.trim()}
+          className="px-3 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-xl shadow-lg hover:shadow-pink-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+      
+      {/* 当前装饰统计 */}
+      {decorations && decorations.length > 0 && (
+        <div className="pt-2 border-t border-white/10 dark:border-white/5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              当前装饰 ({decorations.length})
+            </span>
+          </div>
+          <button
+            onClick={onClearDecorations}
+            className="w-full py-2 bg-red-500/10 text-red-500 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors font-medium"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            清除所有装饰
+          </button>
+        </div>
+      )}
+      
+      {/* 提示文本 */}
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-relaxed">
+        💡 提示：点击装饰品可选中，选中后拖动主体可移动，拖动上方手柄可旋转。
+      </p>
+    </div>
+  );
+};
+
+// 背景预设选择器（特殊控件）
+const BackgroundPresetControl = ({ presets, onChange }: any) => {
+  if (!presets || presets.length === 0) return null;
+  
+  return (
+    <div className="mb-6 border-t border-white/10 dark:border-white/5 pt-4">
+      <Label>快速预设</Label>
+      <div className="grid grid-cols-3 gap-2">
+        {presets.map((preset: any, idx: number) => (
+          <button
+            key={idx}
+            onClick={() => onChange(preset)}
+            className="h-16 rounded-lg border border-white/20 dark:border-white/10 overflow-hidden relative group transition-all hover:ring-2 hover:ring-pink-300/50"
+          >
+            {/* 背景预览 */}
+            {preset.type === 'color' && (
+              <div className="w-full h-full" style={{ background: preset.value }} />
+            )}
+            {preset.type === 'image' && (
+              <img src={preset.value} className="w-full h-full object-cover" alt={preset.label} />
+            )}
+            {preset.type === 'video' && (
+              <video src={preset.value} className="w-full h-full object-cover" muted />
+            )}
+            
+            {/* 悬浮标签 */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[9px] text-white font-bold transition-opacity px-1 text-center">
+              {preset.label}
+            </div>
+            
+            {/* 视频标识 */}
+            {preset.type === 'video' && (
+              <div className="absolute top-1 right-1">
+                <Video className="w-3 h-3 text-white drop-shadow-md" />
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// 主题预设选择器（特殊控件）
+const ThemePresetControl = ({ presets, onChange }: any) => {
+  if (!presets || presets.length === 0) return null;
+  
+  return (
+    <div className="mb-6 border-t border-white/10 dark:border-white/5 pt-4">
+      <Label>快速预设</Label>
+      <div className="grid grid-cols-2 gap-2">
+        {presets.map((preset: any, idx: number) => (
+          <button
+            key={idx}
+            onClick={() => onChange(preset)}
+            className="h-20 rounded-lg border border-white/20 dark:border-white/10 overflow-hidden relative group transition-all hover:ring-2 hover:ring-pink-300/50"
+          >
+            {/* 主题预览 */}
+            <div className="w-full h-full" style={{ background: preset.preview }} />
+            
+            {/* 悬浮标签 */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] text-white font-bold transition-opacity px-2 text-center">
+              {preset.label}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // ============================================================================
 // 3. 字段渲染器
 // ============================================================================
 const FieldRenderer = <T,>({ 
-  itemKey, configValue, allConfig, metadata, onChange 
+  itemKey, configValue, allConfig, metadata, onChange, extraData 
 }: { 
-  itemKey: keyof T; configValue: any; allConfig: T; metadata: GenericConfigItemMetadata<T>; onChange: (key: keyof T, val: any) => void 
+  itemKey: keyof T; configValue: any; allConfig: T; metadata: GenericConfigItemMetadata<T>; onChange: (key: keyof T, val: any) => void; extraData?: any;
 }) => {
   if (metadata.condition && !metadata.condition(allConfig)) return null;
 
-  const commonProps = { value: configValue, onChange: (val: any) => onChange(itemKey, val), ...metadata };
+  const commonProps = { value: configValue, onChange: (val: any) => onChange(itemKey, val), ...metadata, extraData };
   let Control;
   switch (metadata.type) {
     case 'input': Control = InputControl; break;
     case 'textarea': Control = TextareaControl; break;
     case 'select': Control = CustomSelectControl; break;
+    case 'select-input': Control = SelectInputControl; break;
+    case 'sticker-picker': Control = StickerPickerControl; break;
     case 'list': Control = ListBuilderControl; break;
     case 'radio': Control = RadioGroupControl; break;
     case 'switch': Control = SwitchControl; break;
@@ -383,13 +579,31 @@ interface GenericConfigPanelProps<T> {
   setIsOpen: (isOpen: boolean) => void;
 }
 
+export interface GenericConfigPanelExtraProps {
+  /** 额外数据，用于特殊控件（如 sticker-picker 的 decorations） */
+  extraData?: any;
+  /** 背景预设数据（用于快速选择背景） */
+  backgroundPresets?: Array<{ label: string; value: string; type: string }>;
+  /** 背景预设变更回调 */
+  onBackgroundPresetChange?: (preset: any) => void;
+  /** 主题预设数据（用于快速选择主题） */
+  themePresets?: Array<{ label: string; value: string; type: string; preview: string }>;
+  /** 主题预设变更回调 */
+  onThemePresetChange?: (preset: any) => void;
+}
+
 export function GenericConfigPanel<T>({
   config,
   configMetadata,
   onChange,
   isOpen,
-  setIsOpen
-}: GenericConfigPanelProps<T>) {
+  setIsOpen,
+  extraData,
+  backgroundPresets,
+  onBackgroundPresetChange,
+  themePresets,
+  onThemePresetChange
+}: GenericConfigPanelProps<T> & GenericConfigPanelExtraProps) {
   const [activeTab, setActiveTab] = useState<CategoryType>(configMetadata.tabs[0]?.id || 'base');
   const [isMobile, setIsMobile] = useState(false);
   const [mobileStep, setMobileStep] = useState(1);
@@ -415,6 +629,12 @@ export function GenericConfigPanel<T>({
   const activeFields = useMemo(() => 
     Object.keys(configMetadata.configSchema).filter(k => configMetadata.configSchema[k as keyof T].category === activeTab), 
   [activeTab, configMetadata]);
+
+  // 判断当前 tab 是否需要显示背景预设
+  const shouldShowBackgroundPresets = activeTab === 'background' && backgroundPresets && backgroundPresets.length > 0;
+
+  // 判断当前 tab 是否需要显示主题预设
+  const shouldShowThemePresets = activeTab === 'visual' && themePresets && themePresets.length > 0;
 
   // --- 移动端渲染逻辑 ---
   if (isMobile) {
@@ -476,6 +696,7 @@ export function GenericConfigPanel<T>({
                   configValue={config[key]}
                   allConfig={config}
                   onChange={onChange}
+                  extraData={extraData}
                 />
             ))}
             
@@ -574,8 +795,26 @@ export function GenericConfigPanel<T>({
               configValue={config[key as keyof T]}
               allConfig={config}
               onChange={onChange}
+              extraData={extraData}
             />
           ))}
+          
+          {/* 背景预设选择器（仅在 background tab 显示） */}
+          {shouldShowBackgroundPresets && (
+            <BackgroundPresetControl
+              presets={backgroundPresets}
+              onChange={onBackgroundPresetChange}
+            />
+          )}
+
+          {/* 主题预设选择器（仅在 visual tab 显示） */}
+          {shouldShowThemePresets && (
+            <ThemePresetControl
+              presets={themePresets}
+              onChange={onThemePresetChange}
+            />
+          )}
+          
           <div className="h-12" />
         </div>
 

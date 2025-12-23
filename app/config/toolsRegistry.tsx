@@ -14,8 +14,8 @@ import { DEFAULT_CONFIG as rainSnowRippleDefault, rainSnowRippleConfigMetadata a
 const RainSnowRippleDisplayUI = dynamic(() => import('@/tools/rain-snow-ripple').then(mod => mod.default), { loading: () => <Loading /> });
 
 // 温馨文字卡片
-import { defaultConfig as warmTextDefault, warmTextCardConfigMetadata as warmTextMetadata } from '@/tools/warm-text-card/index';
-const WarmTextCardDisplayUI = dynamic(() => import('@/tools/warm-text-card').then(mod => mod.default), { loading: () => <Loading /> });
+import { DEFAULT_CONFIG as warmTextDefault, warmTextCardConfigMetadata as warmTextMetadata } from '@/tools/warm-text-card/index';
+const WarmTextCardDisplayUI = dynamic(() => import('@/tools/warm-text-card').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
 // 圣诞头像工坊
 import { DEFAULT_CONFIG as christmasAvatarDefault, christmasAvatarConfigMetadata as christmasAvatarMetadata } from '@/tools/christmas-avatar/index';
@@ -69,11 +69,15 @@ const ChristmasFireplaceDisplayUI = dynamic(() => import('@/tools/christmas-fire
 import { DEFAULT_CONFIG as romanticChristmasDefault, romanticChristmasConfigMetadata as romanticChristmasMetadata } from '@/tools/romantic-christmas/index';
 const RomanticChristmasDisplayUI = dynamic(() => import('@/tools/romantic-christmas').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
+// 圣诞树贺卡
+import { DEFAULT_CONFIG as christmasTreeCardDefault, christmasTreeCardConfigMetadata as christmasTreeCardMetadata } from '@/tools/christmas-tree-card/index';
+const ChristmasTreeCardDisplayUI = dynamic(() => import('@/tools/christmas-tree-card').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
 // ========================== 2. 类型定义（扩展，新增configMetadata）==========================
 /**
  * 工具基础配置项类型（扩展：新增configMetadata）
  */
-type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks' | 'newyear-fireworks' | 'time-tunnel' | 'galaxy-weaver' | 'koi-blessing-pool' | 'christmas-fireplace' | 'romantic-christmas';
+type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks' | 'newyear-fireworks' | 'time-tunnel' | 'galaxy-weaver' | 'koi-blessing-pool' | 'christmas-fireplace' | 'romantic-christmas' | 'christmas-tree-card';
 
 interface ToolBasicConfig<T = any> {
   // 原有字段
@@ -100,7 +104,6 @@ const toolRegistry: Record<ToolKey, ToolBasicConfig> = {
     DisplayUI: WarmTextCardDisplayUI,
     defaultConfig: warmTextDefault,
     configMetadata: warmTextMetadata,
-    // ConfigUI: WarmTextCardConfigUI,
   },
   'rain-snow-ripple': {
     name: '雨雪涟漪特效',
@@ -191,6 +194,12 @@ const toolRegistry: Record<ToolKey, ToolBasicConfig> = {
     DisplayUI: RomanticChristmasDisplayUI,
     defaultConfig: romanticChristmasDefault,
     configMetadata: romanticChristmasMetadata,
+  },
+  'christmas-tree-card': {
+    name: '圣诞树贺卡',
+    DisplayUI: ChristmasTreeCardDisplayUI,
+    defaultConfig: christmasTreeCardDefault,
+    configMetadata: christmasTreeCardMetadata,
   },
 };
 

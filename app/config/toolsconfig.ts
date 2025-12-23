@@ -200,6 +200,15 @@ export const TOOL_METADATA: ToolMetadata[] = [
     sort: 17,
     cover: 'https://images.unsplash.com/photo-1543548042-63f5badc8b48?w=400&h=300&fit=crop',
   },
+  {
+    id: 'christmas-tree-card',
+    toolName: '圣诞树贺卡',
+    isActive: true,
+    description: '创建互动式圣诞树贺卡，支持自定义装饰和音乐，打造独特的节日祝福',
+    tag: ['热门', '节日专属', '视觉特效'],
+    sort: 18,
+    cover: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=400&h=300&fit=crop',
+  },
 ];
 
 /** 分类-工具关联配置 */
@@ -223,6 +232,7 @@ export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
   { id: 'rel16', toolId: 'koi-blessing-pool', categoryId: 'festival' },
   { id: 'rel17', toolId: 'christmas-fireplace', categoryId: 'festival' },
   { id: 'rel18', toolId: 'romantic-christmas', categoryId: 'festival' },
+  { id: 'rel19', toolId: 'christmas-tree-card', categoryId: 'festival' },
 ];
 
 // ====================== 3. 辅助函数（适配数组标签） ======================

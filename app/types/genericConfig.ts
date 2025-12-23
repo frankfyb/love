@@ -7,6 +7,7 @@
  */
 export type GenericControlType = 
   | 'select' 
+  | 'select-input'
   | 'radio' 
   | 'switch' 
   | 'color' 
@@ -16,13 +17,14 @@ export type GenericControlType =
   | 'file' 
   | 'list' 
   | 'sticker-grid'
+  | 'sticker-picker'
   | 'multi-select'
   | 'readonly';
 
 /**
  * 分类类型
  */
-export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base';
+export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base' | 'background' | 'audio' | 'decoration';
 
 /**
  * 通用配置项元数据接口

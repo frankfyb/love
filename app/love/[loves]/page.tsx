@@ -7,6 +7,8 @@ import ModalImport from '@/components/common/Modal';
 import { GenericConfigPanel } from '@/components/generic/GenericConfigPanel';
 import { FloatingActionBar } from '@/components/generic/FloatingActionBar';
 import type { ToolConfigMetadata } from '@/types/genericConfig';
+import { PRESETS as christmasTreeCardPresets } from '@/tools/christmas-tree-card/index';
+import { THEME_PRESETS as warmTextCardThemePresets } from '@/tools/warm-text-card/index';
 import { 
   Plus, 
   Trash2, 
@@ -138,6 +140,22 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       if (prev[key] === value) return prev;
       return { ...prev, [key]: value };
     });
+  };
+
+  // 处理背景预设变更
+  const handleBackgroundPresetChange = (preset: any) => {
+    if (preset.type === 'color') {
+      setConfig((prev: any) => ({ ...prev, bgType: 'color', bgValue: preset.value }));
+    } else if (preset.type === 'image') {
+      setConfig((prev: any) => ({ ...prev, bgType: 'image', bgValue: preset.value }));
+    } else if (preset.type === 'video') {
+      setConfig((prev: any) => ({ ...prev, bgType: 'video', bgValue: preset.value }));
+    }
+  };
+
+  // 处理温馨文字卡片的主题预设变更
+  const handleThemePresetChange = (preset: any) => {
+    setConfig((prev: any) => ({ ...prev, theme: preset.value }));
   };
 
   const saveCurrentTemplate = () => {
@@ -285,7 +303,11 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
               configMetadata={configMetadata} 
               onChange={handleConfigChange} 
               isOpen={isOpen} 
-              setIsOpen={setIsOpen} 
+              setIsOpen={setIsOpen}
+              backgroundPresets={toolKey === 'christmas-tree-card' ? christmasTreeCardPresets.backgrounds : undefined}
+              onBackgroundPresetChange={toolKey === 'christmas-tree-card' ? handleBackgroundPresetChange : undefined}
+              themePresets={toolKey === 'warm-text-card' ? warmTextCardThemePresets : undefined}
+              onThemePresetChange={toolKey === 'warm-text-card' ? handleThemePresetChange : undefined}
             />
           ) : (
             <div className="w-[320px] md:w-[420px] h-full bg-gray-900/90 backdrop-blur-md flex items-center justify-center border-r border-white/10">
@@ -303,7 +325,9 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
             configMetadata={configMetadata} 
             onChange={handleConfigChange} 
             isOpen={isOpen} 
-            setIsOpen={setIsOpen} 
+            setIsOpen={setIsOpen}
+            backgroundPresets={toolKey === 'christmas-tree-card' ? christmasTreeCardPresets.backgrounds : undefined}
+            onBackgroundPresetChange={toolKey === 'christmas-tree-card' ? handleBackgroundPresetChange : undefined}
           />
         ) : null}
       </div>
