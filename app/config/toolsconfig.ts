@@ -49,7 +49,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'christmas-card',
     toolName: '圣诞贺卡生成器',
-    isActive: true,
+    isActive: false,
     description: '一键生成精美圣诞贺卡，支持自定义文字和样式，为亲朋好友送上节日祝福',
     tag: ['热门', '节日专属'], // 数组格式
     sort: 1,
@@ -58,7 +58,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'rain-snow-ripple',
     toolName: '雨雪波纹特效',
-    isActive: true,
+    isActive: false,
     description: '添加浪漫的雨雪波纹背景，适配节日氛围，营造温馨浪漫的视觉效果',
     tag: ['热门', '视觉特效'],
     sort: 2,
@@ -67,7 +67,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'warm-text-card',
     toolName: '暖心文字卡片',
-    isActive: true,
+    isActive: false,
     description: '生成温柔的文字卡片，适合表白、日常暖心问候，传递真挚情感',
     tag: ['热门', '灵感'],
     sort: 3,
@@ -76,7 +76,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'ai-poetry',
     toolName: 'AI浪漫诗集',
-    isActive: true,
+    isActive: false,
     description: 'AI生成专属浪漫诗集，支持自定义主题，为爱人创作独一无二的情诗',
     tag: ['新品', 'AI创作'],
     sort: 4,
@@ -85,7 +85,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'axuyuantree',
     toolName: '许愿元树',
-    isActive: true,
+    isActive: false,
     description: '在星光树下许下心愿，让愿望随星光闪耀，见证爱情的美好时刻',
     tag: ['热门', '节日专属', '表白专属'],
     sort: 5,
@@ -94,7 +94,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'eve-goodnight-apple',
     toolName: '晚安平安果',
-    isActive: true,
+    isActive: false,
     description: '在宁静夜晚送上一颗温暖的平安果，伴你入梦，传递深情晚安祝福',
     tag: ['节日专属', '表白专属'],
     sort: 6,
@@ -103,7 +103,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'eve-multi-apple-blessing',
     toolName: '多重苹果祝福',
-    isActive: true,
+    isActive: false,
     description: '打开礼盒，收获多重惊喜祝福，层层递进的情感表达更显用心',
     tag: ['节日专属', '表白专属'],
     sort: 7,
@@ -112,7 +112,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'eve-santa-walk',
     toolName: '圣诞老人漫步',
-    isActive: true,
+    isActive: false,
     description: '与圣诞老人互动，收获节日惊喜，增添圣诞夜的神秘与欢乐',
     tag: ['节日专属', '视觉特效'],
     sort: 8,
@@ -121,7 +121,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'eve-wish-fireworks',
     toolName: '许愿烟花',
-    isActive: true,
+    isActive: false,
     description: '点燃烟花，许下心中美好愿望，在绚烂烟火中见证爱的誓言',
     tag: ['节日专属', '视觉特效'],
     sort: 9,
@@ -131,7 +131,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'christmas-avatar',
     toolName: '圣诞头像工坊',
-    isActive: true,
+    isActive: false,
     description: '制作个性化的圣诞主题头像，为社交媒体增添节日气氛',
     tag: ['节日专属', '实用'],
     sort: 10,
@@ -140,7 +140,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'birthday-romance-v2',
     toolName: '生日浪漫生成器 V2',
-    isActive: true,
+    isActive: false,
     description: '为特殊的日子创造浪漫的生日祝福，定制专属的生日惊喜体验',
     tag: ['表白专属', '节日专属'],
     sort: 11,
@@ -149,7 +149,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'newyear-fireworks',
     toolName: '流光新年烟花',
-    isActive: true,
+    isActive: false,
     description: '绚丽的新年烟花秀，迎接新年的到来，共同许下新年愿望',
     tag: ['节日专属', '视觉特效'],
     sort: 12,
@@ -158,7 +158,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'time-tunnel',
     toolName: '时光隧道',
-    isActive: true,
+    isActive: false,
     description: '穿越时空的视觉体验，回顾美好回忆，重温恋爱历程的重要时刻',
     tag: ['视觉特效', '灵感'],
     sort: 13,
@@ -167,7 +167,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'galaxy-weaver',
     toolName: '银河工坊',
-    isActive: true,
+    isActive: false,
     description: '创造属于你的璀璨银河，用星辰大海表达永恒的爱意',
     tag: ['视觉特效', 'AI创作'],
     sort: 14,
@@ -176,7 +176,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'koi-blessing-pool',
     toolName: '锦鲤祝福池',
-    isActive: true,
+    isActive: false,
     description: '在锦鲤池中许下心愿，收获满满祝福，寓意着好运与爱情双丰收',
     tag: ['节日专属', '表白专属'],
     sort: 15,
@@ -185,7 +185,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'christmas-fireplace',
     toolName: '圣诞壁炉',
-    isActive: true,
+    isActive: false,
     description: '温暖的圣诞壁炉，营造节日氛围，在温馨火光中享受二人世界',
     tag: ['节日专属', '视觉特效'],
     sort: 16,
@@ -194,7 +194,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'romantic-christmas',
     toolName: '浪漫圣诞树',
-    isActive: true,
+    isActive: false,
     description: '装饰专属于你们的浪漫圣诞树，共同点亮爱的圣诞奇迹',
     tag: ['节日专属', '表白专属', '视觉特效'],
     sort: 17,
