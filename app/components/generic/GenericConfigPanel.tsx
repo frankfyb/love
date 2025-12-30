@@ -5,7 +5,7 @@ import {
   Settings2, ChevronDown, ChevronUp, ChevronLeft, 
   Upload, Type, Palette, Sparkles, Image as ImageIcon, 
   Menu, X, Gift, Wind, Box, Smartphone, LayoutTemplate,
-  Plus, Trash2, Video
+  Plus, Trash2, Video, Music, Check, Volume2, VolumeX
 } from 'lucide-react';
 
 // ============================================================================
@@ -322,8 +322,55 @@ import type { GenericControlType, CategoryType, GenericConfigItemMetadata, ToolC
  *   │  }
  *   └─ 返回值: File (需要实现上传逻辑)
  * 
- * 1️⃣4️⃣ BackgroundPreset（背景预设选择器）[特殊组件]
- *   ├─ 文件路径: BackgroundPresetControl (行 454-495)
+ * 1️⃣4️⃣ MediaGrid（媒体网格选择器）
+ *   ├─ 文件路径: MediaGridControl (行 500+)
+ *   ├─ 使用场景: 背景媒体选择（颜色/图片/视频）+ 自定义上传
+ *   ├─ 元数据配置:
+ *   │  {
+ *   │    type: 'media-grid',
+ *   │    label: '背景选择',
+ *   │    mediaType: 'background', // 'background' | 'music'
+ *   │    defaultItems: [...], // 预设项目
+ *   │    description: '可选描述'
+ *   │  }
+ *   ├─ 集成示例:
+ *   │  backgroundValue: {
+ *   │    type: 'media-grid',
+ *   │    label: '背景场景',
+ *   │    mediaType: 'background',
+ *   │    defaultItems: PRESETS.backgrounds,
+ *   │    category: 'background'
+ *   │  }
+ *   └─ 返回值: string (URL 或 Hex 颜色)
+ * 
+ * 1️⃣5️⃣ MediaPicker（媒体选择器）
+ *   ├─ 文件路径: MediaPickerControl (行 600+)
+ *   ├─ 使用场景: 音乐/音频媒体选择 + 播放控制
+ *   ├─ 元数据配置:
+ *   │  {
+ *   │    type: 'media-picker',
+ *   │    label: '背景音乐',
+ *   │    mediaType: 'music',
+ *   │    defaultItems: [...],
+ *   │    description: '可选描述'
+ *   │  }
+ *   ├─ 集成示例:
+ *   │  bgMusicUrl: {
+ *   │    type: 'media-picker',
+ *   │    label: '音乐选择',
+ *   │    mediaType: 'music',
+ *   │    defaultItems: PRESETS.music,
+ *   │    category: 'audio'
+ *   │  }
+ *   ├─ 额外字段 (extraData):
+ *   │  {
+ *   │    isMusicPlaying: boolean,
+ *   │    onMusicPlayingChange?: (playing: boolean) => void
+ *   │  }
+ *   └─ 返回值: string (音乐 URL)
+ * 
+ * 1️⃣6️⃣ BackgroundPreset（背景预设选择器）[特殊组件]
+ *   ├─ 文件路径: BackgroundPresetControl (行 700+)
  *   ├─ 使用场景: 背景快速预设选择（仅在 background tab 显示）
  *   ├─ 特点:
  *   │  • 支持颜色、图片、视频三种背景预览
@@ -339,8 +386,8 @@ import type { GenericControlType, CategoryType, GenericConfigItemMetadata, ToolC
  *   │  />
  *   └─ 返回值: 通过 onBackgroundPresetChange 回调
  * 
- * 1️⃣5️⃣ ThemePreset（主题预设选择器）[特殊组件]
- *   ├─ 文件路径: ThemePresetControl (行 497-523)
+ * 1️⃣7️⃣ ThemePreset（主题预设选择器）[特殊组件]
+ *   ├─ 文件路径: ThemePresetControl (行 750+)
  *   ├─ 使用场景: 主题快速预设选择（仅在 visual tab 显示）
  *   ├─ 特点:
  *   │  • 显示预览背景
@@ -370,6 +417,8 @@ import type { GenericControlType, CategoryType, GenericConfigItemMetadata, ToolC
  * 数值范围调整                   slider                     0-100 范围内
  * 从多个选项选一个               select 或 radio            radio 更直观
  * 表情/Emoji 选择                sticker-grid               4列网格展示
+ * 背景媒体网格选择               media-grid                 支持颜色/图片/视频
+ * 音乐媒体选择                   media-picker               带播放控制
  * 动态列表管理                   list                       支持增删
  * 多项选择                       multi-select               返回数组
  * 装饰品高级选择                 sticker-picker             预设+自定义+统计
@@ -481,11 +530,80 @@ import type { GenericControlType, CategoryType, GenericConfigItemMetadata, ToolC
  *    ```
  * 
  * ═══════════════════════════════════════════════════════════════════════════════
- * 📝 实际应用示例
+ * 📝 实际应用示例 - 背景场景配置
  * ═══════════════════════════════════════════════════════════════════════════════
  * 
- * // 圣诞树贺卡配置元数据
- * export const christmasTreeCardConfigMetadata = {
+ * // 许愿新光树配置元数据示例（来自 demo4/page.tsx）
+ * export const starlightWishesConfigMetadata = {
+ *   panelTitle: '许愿新光树配置',
+ *   panelSubtitle: 'Design Your Starlight Tree',
+ *   configSchema: {
+ *     // --- 背景媒体网格 ---
+ *     backgroundValue: {
+ *       type: 'media-grid',
+ *       label: '背景场景',
+ *       mediaType: 'background',
+ *       category: 'background',
+ *       defaultItems: [
+ *         { id: 'c_1', value: '#0f172a', label: '深邃夜空', type: 'color' },
+ *         { id: 'c_2', value: '#1a0b2e', label: '紫色梦境', type: 'color' },
+ *         { id: 'img_1', url: 'https://...', label: '梦幻森林', type: 'image' },
+ *         { id: 'vid_1', url: 'https://...', label: '粒子流光', type: 'video' }
+ *       ]
+ *     },
+ * 
+ *     // --- 背景音乐媒体选择 ---
+ *     bgMusicUrl: {
+ *       type: 'media-picker',
+ *       label: '背景音乐',
+ *       mediaType: 'music',
+ *       category: 'audio',
+ *       defaultItems: [
+ *         { id: 'm_1', value: 'https://...', label: '新年烟火' }
+ *       ]
+ *     },
+ * 
+ *     isMusicPlaying: {
+ *       type: 'switch',
+ *       label: '播放音乐',
+ *       category: 'audio'
+ *     },
+ * 
+ *     // --- 其他配置 ---
+ *     treeBaseWidth: {
+ *       type: 'slider',
+ *       label: '树冠宽度',
+ *       min: 300, max: 800, step: 10,
+ *       category: 'visual'
+ *     },
+ *     starSize: {
+ *       type: 'slider',
+ *       label: '星光大小',
+ *       min: 1, max: 8, step: 0.5,
+ *       category: 'visual'
+ *     }
+ *   },
+ *   tabs: [
+ *     { id: 'background', label: '背景场景' },
+ *     { id: 'audio', label: '音效' },
+ *     { id: 'visual', label: '视觉效果' }
+ *   ]
+ * }
+ * 
+ * // 使用面板
+ * <GenericConfigPanel
+ *   config={config}
+ *   configMetadata={starlightWishesConfigMetadata}
+ *   onChange={(key, val) => setConfig({...config, [key]: val})}
+ *   isOpen={isPanelOpen}
+ *   setIsOpen={setIsPanelOpen}
+ *   extraData={{
+ *     isMusicPlaying: config.isMusicPlaying,
+ *     onMusicPlayingChange: (playing) => setConfig({...config, isMusicPlaying: playing})
+ *   }}
+ * />
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
  *   panelTitle: '圣诞树贺卡配置',
  *   panelSubtitle: 'Design Your Christmas Tree Card',
  *   configSchema: {
@@ -553,6 +671,45 @@ import type { GenericControlType, CategoryType, GenericConfigItemMetadata, ToolC
  *     { id: 1, label: '基础', fields: ['bgType', 'bgValue', 'enableSnow'] },
  *     { id: 2, label: '样式', fields: ['particleCount', 'particleColor', 'glassBlur'] },
  *     { id: 3, label: '内容', fields: ['capsuleText', 'treeTextLevels'] }
+ *   ]
+ * }
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 📝 实际应用示例 - 许愿新光树（使用 media-grid 和 media-picker）
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * 
+ * export const starlightWishesConfigMetadata = {
+ *   panelTitle: '许愿新光树配置',
+ *   panelSubtitle: 'Design Your Starlight Tree',
+ *   configSchema: {
+ *     backgroundValue: {
+ *       type: 'media-grid',
+ *       label: '背景场景',
+ *       mediaType: 'background',
+ *       category: 'background',
+ *       defaultItems: [
+ *         { id: 'c_1', value: '#0f172a', label: '深邃夜空', type: 'color' },
+ *         { id: 'i_1', url: 'https://...', label: '梦幻森林', type: 'image' }
+ *       ]
+ *     },
+ *     bgMusicUrl: {
+ *       type: 'media-picker',
+ *       label: '背景音乐',
+ *       mediaType: 'music',
+ *       category: 'audio',
+ *       defaultItems: [
+ *         { id: 'm_1', value: 'https://...', label: '新年烟火' }
+ *       ]
+ *     },
+ *     isMusicPlaying: {
+ *       type: 'switch',
+ *       label: '播放音乐',
+ *       category: 'audio'
+ *     }
+ *   },
+ *   tabs: [
+ *     { id: 'background', label: '背景场景', icon: ImageIcon },
+ *     { id: 'audio', label: '音效', icon: Music }
  *   ]
  * }
  * 
@@ -998,6 +1155,313 @@ const StickerPickerControl = ({ value, onChange, options, extraData }: any) => {
   );
 };
 
+// 媒体网格控件（支持背景媒体的颜色、图片、视频选择）
+const MediaGridControl = ({ value, onChange, defaultItems = [], mediaType = 'background', extraData }: any) => {
+  const [activeType, setActiveType] = useState<'color' | 'image' | 'video' | 'music'>(
+    mediaType === 'background' ? 'color' : 'music'
+  );
+  const [urlInput, setUrlInput] = useState('');
+  const [customItems, setCustomItems] = useState<any[]>([]);
+
+  // 合并预设和自定义资源
+  const getCombinedItems = () => {
+    const presets = defaultItems.filter((item: any) => item.type === activeType);
+    const customs = customItems.filter((item: any) => item.type === activeType);
+    return [...customs, ...presets];
+  };
+
+  const handleAddCustom = () => {
+    if (!urlInput.trim()) return;
+    const newItem = {
+      id: `custom_${Date.now()}`,
+      type: activeType,
+      value: urlInput,
+      label: `Custom ${customItems.length + 1}`,
+      isCustom: true,
+    };
+    setCustomItems([...customItems, newItem]);
+    onChange(newItem.value);
+    setUrlInput('');
+  };
+
+  const handleDeleteCustom = (id: string) => {
+    setCustomItems(customItems.filter(item => item.id !== id));
+  };
+
+  const allItems = getCombinedItems();
+
+  return (
+    <div className="space-y-4">
+      {/* 类型切换（仅背景模式显示） */}
+      {mediaType === 'background' && (
+        <div className="flex gap-1.5 bg-white/30 dark:bg-black/20 p-1 rounded-xl border border-white/40 dark:border-white/5">
+          {(['color', 'image', 'video'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setActiveType(type)}
+              className={`flex-1 py-2 text-xs font-medium rounded-lg transition-all ${
+                activeType === type
+                  ? 'bg-white/90 dark:bg-gray-700 text-pink-600 dark:text-pink-300 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/40'
+              }`}
+            >
+              {type === 'color' ? '纯色' : type === 'image' ? '图片' : '视频'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 自定义输入区域 */}
+      {(mediaType === 'background' && activeType !== 'color') || mediaType === 'music' ? (
+        <div className="flex gap-2">
+          <BaseControl className="flex-1 px-3 py-2.5 hover:bg-white/60">
+            <input
+              type="text"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()}
+              placeholder={mediaType === 'background' ? `输入 ${activeType} URL...` : '输入音乐 URL...'}
+              className="w-full bg-transparent focus:outline-none text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400"
+            />
+          </BaseControl>
+          <button
+            onClick={handleAddCustom}
+            disabled={!urlInput.trim()}
+            className="px-3 py-2 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-lg shadow-lg hover:shadow-pink-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      ) : null}
+
+      {/* 媒体网格 */}
+      {allItems.length > 0 && (
+        <div className="grid grid-cols-3 gap-2.5 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
+          {allItems.map((item, index) => {
+            const isSelected = value === item.value;
+            const displayValue = item.value || item.url;
+
+            return (
+              <div
+                key={item.id || `item_${activeType}_${index}`}
+                onClick={() => onChange(displayValue)}
+                className={`
+                  group relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 aspect-video
+                  ${isSelected
+                    ? 'border-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)] scale-[1.02]'
+                    : 'border-white/20 hover:border-pink-300/50 hover:shadow-md'
+                  }
+                `}
+              >
+                {/* 内容预览 */}
+                {activeType === 'color' && item.value && (
+                  <div className="w-full h-full" style={{ backgroundColor: item.value }} />
+                )}
+                {activeType === 'image' && displayValue && (
+                  <img src={displayValue} alt={item.label} className="w-full h-full object-cover" />
+                )}
+                {activeType === 'video' && displayValue && (
+                  <div className="w-full h-full bg-slate-800 flex items-center justify-center relative">
+                    <Video className="text-white/50 w-6 h-6" />
+                    <span className="absolute bottom-1 right-1 text-[8px] bg-black/50 px-1 rounded text-white/80">VIDEO</span>
+                  </div>
+                )}
+                {activeType === 'music' && displayValue && (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center flex-col gap-1 p-2">
+                    <Music className="text-white w-6 h-6" />
+                    <span className="text-[10px] text-white/90 truncate w-full text-center font-medium">{item.label || 'Music'}</span>
+                  </div>
+                )}
+
+                {/* 选中指示器 */}
+                {isSelected && (
+                  <div className="absolute inset-0 border-2 border-pink-500 rounded-lg flex items-center justify-center bg-pink-500/10">
+                    <div className="bg-pink-500 rounded-full p-0.5 shadow-sm">
+                      <Check size={12} className="text-white" />
+                    </div>
+                  </div>
+                )}
+
+                {/* 自定义标记和删除按钮 */}
+                {item.isCustom && (
+                  <>
+                    <div className="absolute bottom-0 right-0 bg-blue-500/80 text-[8px] text-white px-1.5 py-0.5 rounded-tl-lg">
+                      自定义
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCustom(item.id);
+                      }}
+                      className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={10} />
+                    </button>
+                  </>
+                )}
+
+                {/* 标签悬浮 */}
+                {!isSelected && item.label && (activeType !== 'music' || true) && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-[9px] text-white px-1.5 py-0.5 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                    {item.label}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {allItems.length === 0 && (
+        <div className="text-center py-8 text-xs text-gray-400">
+          <p>暂无{mediaType === 'background' ? '背景' : '音乐'}资源，请添加</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// 媒体选择器控件（用于音乐选择+播放控制）
+const MediaPickerControl = ({ value, onChange, defaultItems = [], mediaType = 'music', extraData }: any) => {
+  const [customItems, setCustomItems] = useState<any[]>([]);
+  const [urlInput, setUrlInput] = useState('');
+  const { isMusicPlaying = false, onMusicPlayingChange } = extraData || {};
+
+  const handleAddCustom = () => {
+    if (!urlInput.trim()) return;
+    const newItem = {
+      id: `custom_${Date.now()}`,
+      type: 'music',
+      value: urlInput,
+      label: `Custom Music ${customItems.length + 1}`,
+      isCustom: true,
+    };
+    setCustomItems([...customItems, newItem]);
+    onChange(newItem.value);
+    setUrlInput('');
+  };
+
+  const handleDeleteCustom = (id: string) => {
+    setCustomItems(customItems.filter(item => item.id !== id));
+  };
+
+  const allItems = [...customItems, ...defaultItems];
+
+  return (
+    <div className="space-y-4">
+      {/* 自定义输入 */}
+      <div className="flex gap-2">
+        <BaseControl className="flex-1 px-3 py-2.5 hover:bg-white/60">
+          <input
+            type="text"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddCustom()}
+            placeholder="输入音乐 URL (MP3/WAV/OGG)..."
+            className="w-full bg-transparent focus:outline-none text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400"
+          />
+        </BaseControl>
+        <button
+          onClick={handleAddCustom}
+          disabled={!urlInput.trim()}
+          className="px-3 py-2 bg-gradient-to-r from-pink-500 to-rose-400 text-white rounded-lg shadow-lg hover:shadow-pink-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* 播放控制 */}
+      {onMusicPlayingChange && (
+        <div className="flex items-center justify-between bg-white/30 dark:bg-black/20 p-3 rounded-xl border border-white/40 dark:border-white/5">
+          <span className="text-sm text-gray-700 dark:text-gray-100 font-medium flex items-center gap-2">
+            {isMusicPlaying ? (
+              <Volume2 className="w-4 h-4 text-green-500" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-gray-400" />
+            )}
+            {isMusicPlaying ? '播放中' : '已停止'}
+          </span>
+          <button
+            onClick={() => onMusicPlayingChange(!isMusicPlaying)}
+            className={`relative w-12 h-6 rounded-full transition-all duration-300 flex items-center ${
+              isMusicPlaying
+                ? 'bg-gradient-to-r from-pink-500 to-rose-400 shadow-[0_0_12px_rgba(236,72,153,0.5)]'
+                : 'bg-gray-300 dark:bg-gray-600'
+            }`}
+          >
+            <div
+              className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-all duration-300 ${
+                isMusicPlaying ? 'translate-x-6' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+        </div>
+      )}
+
+      {/* 音乐网格 */}
+      {allItems.length > 0 && (
+        <div className="grid grid-cols-3 gap-2.5 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
+          {allItems.map((item, index) => {
+            const isSelected = value === item.value;
+            return (
+              <div
+                key={item.id || `music_${index}`}
+                onClick={() => onChange(item.value)}
+                className={`
+                  group relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200 aspect-video
+                  ${isSelected
+                    ? 'border-pink-500 shadow-[0_0_10px_rgba(236,72,153,0.5)] scale-[1.02]'
+                    : 'border-white/20 hover:border-pink-300/50 hover:shadow-md'
+                  }
+                `}
+              >
+                {/* 音乐背景预览 */}
+                <div className="w-full h-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center flex-col gap-1.5 p-2">
+                  <Music className="text-white w-6 h-6" />
+                  <span className="text-[10px] text-white/90 truncate w-full text-center font-medium px-1">{item.label || '未命名'}</span>
+                </div>
+
+                {/* 选中指示器 */}
+                {isSelected && (
+                  <div className="absolute inset-0 border-2 border-pink-500 rounded-lg flex items-center justify-center bg-pink-500/10">
+                    <div className="bg-pink-500 rounded-full p-0.5 shadow-sm">
+                      <Check size={12} className="text-white" />
+                    </div>
+                  </div>
+                )}
+
+                {/* 自定义标记和删除按钮 */}
+                {item.isCustom && (
+                  <>
+                    <div className="absolute bottom-0 right-0 bg-blue-500/80 text-[8px] text-white px-1.5 py-0.5 rounded-tl-lg">
+                      自定义
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCustom(item.id);
+                      }}
+                      className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={10} />
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {allItems.length === 0 && (
+        <div className="text-center py-8 text-xs text-gray-400">
+          <p>暂无音乐资源，请添加</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // 背景预设选择器（特殊控件）
 const BackgroundPresetControl = ({ presets, onChange }: any) => {
   if (!presets || presets.length === 0) return null;
@@ -1087,6 +1551,8 @@ const FieldRenderer = <T,>({
     case 'select': Control = CustomSelectControl; break;
     case 'select-input': Control = SelectInputControl; break;
     case 'sticker-picker': Control = StickerPickerControl; break;
+    case 'media-grid': Control = MediaGridControl; break;
+    case 'media-picker': Control = MediaPickerControl; break;
     case 'list': Control = ListBuilderControl; break;
     case 'radio': Control = RadioGroupControl; break;
     case 'switch': Control = SwitchControl; break;
@@ -1366,12 +1832,12 @@ export function GenericConfigPanel<T>({
         </div>
 
         {/* Footer - 悬浮按钮 */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/90 via-white/60 to-transparent dark:from-black/90 pointer-events-none">
+        {/* <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-white/90 via-white/60 to-transparent dark:from-black/90 pointer-events-none">
           <button className="pointer-events-auto w-full py-3.5 bg-gray-900 text-white dark:bg-white dark:text-black rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all text-sm flex items-center justify-center gap-2 group border border-white/20 backdrop-blur-xl">
              <Gift className="w-4 h-4 group-hover:rotate-12 transition-transform" /> 
              生成预览 / 导出
           </button>
-        </div>
+        </div> */}
       </div>
     </>
   );

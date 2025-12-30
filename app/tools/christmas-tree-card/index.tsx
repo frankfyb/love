@@ -131,7 +131,6 @@ export interface AppConfig {
   particleColor: string;
   glassBlur: number;
   glassOpacity: number;
-  bgType: BgType;
   bgValue: string;
   enableSnow: boolean;
   bgMusicUrl: string;
@@ -145,18 +144,15 @@ export interface AppConfig {
 
 export const PRESETS = {
   backgrounds: [
-    { label: '飘雪视频', value: 'https://assets.mixkit.co/videos/preview/mixkit-falling-snow-on-a-black-background-44583-large.mp4', type: 'video' },
-    { label: '温馨壁炉', value: 'https://assets.mixkit.co/videos/preview/mixkit-burning-wood-in-a-fireplace-4309-large.mp4', type: 'video' },
-    { label: '金色光斑', value: 'https://assets.mixkit.co/videos/preview/mixkit-gold-bokeh-lights-2274-large.mp4', type: 'video' },
+    { label: '飘雪视频', value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/20471-309698211.mp4', type: 'video' },
+    { label: '温馨壁炉', value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/23881-337972830_small.mp4', type: 'video' },
     { label: '梦幻雪夜', value: 'https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?q=80&w=2574&auto=format&fit=crop', type: 'image' },
-    { label: '极光森林', value: 'https://images.unsplash.com/photo-1531685218231-579524f35d5c?q=80&w=2670&auto=format&fit=crop', type: 'image' },
     { label: '复古红绿', value: '#0f392b', type: 'color' },
     { label: '午夜深蓝', value: '#0f172a', type: 'color' },
   ],
   music: [
     { label: 'We Wish You Merry Christmas', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-    { label: 'Jingle Bells (Upbeat)', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-    { label: 'Peaceful Piano', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
+    { label: 'Jingle Bells (Upbeat)', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' }
   ],
   clickSounds: [
     { label: '清脆铃声', value: 'https://cdn.pixabay.com/audio/2022/03/24/audio_c8c8a73467.mp3' },
@@ -182,15 +178,14 @@ export const DEFAULT_CONFIG: AppConfig = {
   particleColor: '#FFD700',
   glassBlur: 12,
   glassOpacity: 0.85,
-  bgType: 'color', 
   bgValue: '#0f172a',
   enableSnow: true,
   bgMusicUrl: PRESETS.music[0].value,
   clickSoundUrl: PRESETS.clickSounds[0].value,
   enableSound: true,
   decorationPicker: null,
-  capsuleText: '',
-  treeTextLevels: '1圣→诞→圣诞→快乐→圣诞快乐→圣诞快乐→圣诞快乐快乐→圣诞快乐快乐→圣诞快乐圣诞快乐→圣诞快乐圣诞快乐',
+  capsuleText: '我的正每天快乐',
+  treeTextLevels: '圣→诞→圣诞→快乐→圣诞快乐→圣诞快乐→圣诞快乐快乐→圣诞快乐快乐→圣诞快乐圣诞快乐→圣诞快乐圣诞快乐',
   treeBottomLetters: 'L/H/J/C/Y/E',
 };
 
@@ -198,19 +193,17 @@ export const christmasTreeCardConfigMetadata = {
   panelTitle: '圣诞树贺卡配置',
   panelSubtitle: 'Design Your Christmas Tree Card',
   configSchema: {
+    particleColor: { category: 'visual' as const, type: 'color' as const, label: '主题点缀色' },
     particleCount: { category: 'visual' as const, type: 'slider' as const, label: '氛围粒子密度', min: 20, max: 300, step: 10 },
     particleSize: { category: 'visual' as const, type: 'slider' as const, label: '粒子尺寸', min: 1, max: 6, step: 0.5 },
     particleSpeed: { category: 'visual' as const, type: 'slider' as const, label: '粒子速度', min: 0.1, max: 3, step: 0.1 },
-    particleColor: { category: 'visual' as const, type: 'color' as const, label: '主题点缀色' },
     glassBlur: { category: 'visual' as const, type: 'slider' as const, label: '卡片磨砂程度', min: 0, max: 24, step: 1 },
     glassOpacity: { category: 'visual' as const, type: 'slider' as const, label: '卡片透明度', min: 0.1, max: 1, step: 0.05 },
-    bgType: { category: 'background' as const, type: 'select' as const, label: '背景类型', options: [{label: '纯色', value: 'color'}, {label: '图片', value: 'image'}, {label: '视频', value: 'video'}] },
-    bgValue: { category: 'background' as const, type: 'input' as const, label: '背景地址/颜色', placeholder: 'URL or Hex Color' },
     enableSnow: { category: 'background' as const, type: 'switch' as const, label: '开启粒子雪花' },
+    bgValue: { category: 'background' as const, type: 'media-grid' as const, label: '背景场景', mediaType: 'background' as const, defaultItems: PRESETS.backgrounds },
     enableSound: { category: 'audio' as const, type: 'switch' as const, label: '启用音效' },
-    bgMusicUrl: { category: 'audio' as const, type: 'select-input' as const, label: '背景音乐', options: PRESETS.music },
-    clickSoundUrl: { category: 'audio' as const, type: 'select' as const, label: '点击音效', options: PRESETS.clickSounds },
-    decorationPicker: { category: 'decoration' as const, type: 'sticker-picker' as const, label: '添加装饰', options: PRESETS.stickers },
+    bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
+    // decorationPicker: { category: 'decoration' as const, type: 'sticker-picker' as const, label: '添加装饰', options: PRESETS.stickers },
     capsuleText: { category: 'content' as const, type: 'input' as const, label: '一键祝福', placeholder: '替换"圣诞快乐"' },
     treeTextLevels: { category: 'content' as const, type: 'textarea' as const, label: '树体文案 (→分隔)' },
     treeBottomLetters: { category: 'content' as const, type: 'input' as const, label: '树干字母 (/分隔)' },
@@ -218,12 +211,11 @@ export const christmasTreeCardConfigMetadata = {
   tabs: [
     { id: 'visual' as const, label: '视觉', icon: null },
     { id: 'background' as const, label: '背景', icon: null },
-    { id: 'audio' as const, label: '音效', icon: null },
-    { id: 'decoration' as const, label: '装饰', icon: null },
+    // { id: 'decoration' as const, label: '装饰', icon: null },
     { id: 'content' as const, label: '内容', icon: null },
   ],
   mobileSteps: [
-    { id: 1, label: '基础', icon: null, fields: ['bgType' as const, 'bgValue' as const, 'enableSnow' as const] },
+    { id: 1, label: '基础', icon: null, fields: ['bgValue' as const, 'enableSnow' as const] },
     { id: 2, label: '样式', icon: null, fields: ['particleCount' as const, 'particleColor' as const, 'glassBlur' as const] },
     { id: 3, label: '内容', icon: null, fields: ['capsuleText' as const, 'treeTextLevels' as const, 'treeBottomLetters' as const] },
   ],
@@ -257,6 +249,17 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
   const bgAudioRef = useRef<HTMLAudioElement | null>(null);
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Helper: 检测背景类型
+  const detectBgType = (value: string): BgType => {
+    if (!value) return 'color';
+    if (value.startsWith('#') || value.startsWith('rgb')) return 'color';
+    if (value.endsWith('.mp4') || value.endsWith('.webm')) return 'video';
+    if (value.includes('video') || value.includes('mixkit')) return 'video';
+    return 'image';
+  };
+
+  const bgType = detectBgType(config.bgValue);
 
   // 背景音乐逻辑
   useEffect(() => {
@@ -482,9 +485,9 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
     >
       {/* Background */}
       <div className="absolute inset-0 z-0 bg-black">
-        {config.bgType === 'color' && <div className="w-full h-full transition-colors duration-500" style={{ background: config.bgValue }} />}
-        {config.bgType === 'image' && <img src={config.bgValue} className="w-full h-full object-cover animate-fadeIn" alt="bg" />}
-        {config.bgType === 'video' && <video key={config.bgValue} src={config.bgValue} className="w-full h-full object-cover animate-fadeIn" autoPlay loop muted playsInline />}
+        {bgType === 'color' && <div className="w-full h-full transition-colors duration-500" style={{ background: config.bgValue }} />}
+        {bgType === 'image' && <img src={config.bgValue} className="w-full h-full object-cover animate-fadeIn" alt="bg" />}
+        {bgType === 'video' && <video key={config.bgValue} src={config.bgValue} className="w-full h-full object-cover animate-fadeIn" autoPlay loop muted playsInline />}
         <div className="absolute inset-0 bg-black/20" />
       </div>
 

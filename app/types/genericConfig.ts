@@ -19,12 +19,14 @@ export type GenericControlType =
   | 'sticker-grid'
   | 'sticker-picker'
   | 'multi-select'
+  | 'media-grid'
+  | 'media-picker'
   | 'readonly';
 
 /**
  * 分类类型
  */
-export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base' | 'background' | 'audio' | 'decoration';
+export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base' | 'background' | 'audio' | 'music' | 'decoration';
 
 /**
  * 通用配置项元数据接口
@@ -50,6 +52,10 @@ export interface GenericConfigItemMetadata<T> {
   description?: string;
   /** 条件显示函数 */
   condition?: (config: T) => boolean;
+  /** 媒体类型（用于media-grid, media-picker） */
+  mediaType?: 'background' | 'music';
+  /** 默认项目（用于media-grid, media-picker） */
+  defaultItems?: any[];
 }
 
 /**

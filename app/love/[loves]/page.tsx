@@ -304,10 +304,6 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
               onChange={handleConfigChange} 
               isOpen={isOpen} 
               setIsOpen={setIsOpen}
-              backgroundPresets={toolKey === 'christmas-tree-card' ? christmasTreeCardPresets.backgrounds : undefined}
-              onBackgroundPresetChange={toolKey === 'christmas-tree-card' ? handleBackgroundPresetChange : undefined}
-              themePresets={toolKey === 'warm-text-card' ? warmTextCardThemePresets : undefined}
-              onThemePresetChange={toolKey === 'warm-text-card' ? handleThemePresetChange : undefined}
             />
           ) : (
             <div className="w-[320px] md:w-[420px] h-full bg-gray-900/90 backdrop-blur-md flex items-center justify-center border-r border-white/10">
@@ -326,8 +322,6 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
             onChange={handleConfigChange} 
             isOpen={isOpen} 
             setIsOpen={setIsOpen}
-            backgroundPresets={toolKey === 'christmas-tree-card' ? christmasTreeCardPresets.backgrounds : undefined}
-            onBackgroundPresetChange={toolKey === 'christmas-tree-card' ? handleBackgroundPresetChange : undefined}
           />
         ) : null}
       </div>

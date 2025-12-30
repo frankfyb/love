@@ -1,545 +1,600 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Maximize, Minimize, Settings, Sparkles, X, Palette, Zap, Type, MessageSquare } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 /**
  * ==============================================================================
- * 1. 核心配置定义 (Core Configuration)
+ * 1. 核心配置 (Configuration)
  * ==============================================================================
  */
 
-export type WarmTextCardConfig = {
-  theme: 'warm' | 'forest' | 'night' | 'minimal' | 'christmas' | 'eve';
-  speed: number;
-  maxCards: number;
-  fontSizeScale: number;
-  customMessages: string[];
+export interface AppConfig {
+  targetDate: string;
+  titleText: string;
+  fireworkDensity: number; 
+  greetings: string[];
+  bgMusicUrl: string;
+  enableSound: boolean;
+}
+
+export const DEFAULT_CONFIG: AppConfig = {
+  targetDate: new Date(new Date().getFullYear() + 1, 0, 1).toISOString(),
+  titleText: '距离 2026 跨年还有',
+  fireworkDensity: 20, 
+  greetings: [
+    '✨ 新年快乐 ✨', '🧨 万事如意 🧨', '❤ 岁岁平安 ❤', 
+    '💰 恭喜发财 💰', '🌸 前程似锦 🌸', '平安喜乐', '大吉大利'
+  ],
+  bgMusicUrl: 'https://cdn.pixabay.com/audio/2022/12/16/audio_108f52236d.mp3', 
+  enableSound: true,
 };
 
-// 定义卡片数据类型
-export type CardData = {
-  id: number;
-  text: string;
+// 音效素材映射
+const AUDIO_SOURCES = {
+  lift: [
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/lift1.mp3',
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/lift2.mp3',
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/lift3.mp3',
+  ],
+  burst: [
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/burst1.mp3',
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/burst2.mp3',
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/burst-sm-1.mp3',
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/burst-sm-2.mp3',
+  ],
+  crackle: [
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/crackle1.mp3',
+    'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/crackle-sm-1.mp3',
+  ]
+};
+
+const random = (min: number, max: number) => Math.random() * (max - min) + min;
+
+/**
+ * ==============================================================================
+ * 2. 高级音频管理器 (Advanced Sound Manager)
+ * ==============================================================================
+ */
+class SoundManager {
+  private pools: { [key: string]: HTMLAudioElement[] } = {};
+  private cursors: { [key: string]: number } = {};
+  private enabled: boolean = true;
+
+  constructor() {
+    if (typeof window === 'undefined') return;
+    
+    this.initPool('lift', AUDIO_SOURCES.lift, 6);
+    this.initPool('burst', AUDIO_SOURCES.burst, 15);
+    this.initPool('crackle', AUDIO_SOURCES.crackle, 8);
+  }
+
+  private initPool(category: string, urls: string[], count: number) {
+    this.pools[category] = [];
+    this.cursors[category] = 0;
+    
+    for (let i = 0; i < count; i++) {
+      const url = urls[i % urls.length];
+      const audio = new Audio(url);
+      audio.preload = 'auto';
+      if (category === 'lift') audio.volume = 0.3;
+      if (category === 'burst') audio.volume = 0.5;
+      if (category === 'crackle') audio.volume = 0.2;
+      this.pools[category].push(audio);
+    }
+  }
+
+  public play(category: 'lift' | 'burst' | 'crackle') {
+    if (!this.enabled || !this.pools[category]) return;
+    
+    const pool = this.pools[category];
+    const cursor = this.cursors[category];
+    const audio = pool[cursor];
+    
+    if (!audio) return;
+
+    if (!audio.paused) {
+      audio.currentTime = 0;
+    }
+    
+    const baseVol = category === 'burst' ? 0.6 : (category === 'lift' ? 0.3 : 0.25);
+    audio.volume = Math.max(0, Math.min(1, baseVol + random(-0.1, 0.1)));
+    audio.playbackRate = category === 'lift' ? random(0.8, 1.2) : random(0.9, 1.1);
+
+    audio.play().catch(() => {});
+    this.cursors[category] = (cursor + 1) % pool.length;
+  }
+
+  public setEnabled(enable: boolean) {
+    this.enabled = enable;
+  }
+}
+
+/**
+ * ==============================================================================
+ * 3. 物理引擎 (Physics Engine)
+ * ==============================================================================
+ */
+
+// 3.1 爆炸粒子 (Spark) - 核心优化
+class Particle {
   x: number;
   y: number;
-  rotate: number;
-  scale: number;
-  zIndex: number;
-  bgIndex: number;
-};
+  vx: number;
+  vy: number;
+  alpha: number;
+  hue: number;
+  brightness: number;
+  decay: number;
+  gravity: number;
+  friction: number;
+  flicker: boolean;
+  size: number;
 
-export const defaultConfig: WarmTextCardConfig = {
-  theme: 'warm',
-  speed: 800,
-  maxCards: 40,
-  fontSizeScale: 1,
-  customMessages: [
-    '生活原本沉闷，但跑起来就有风',
-    '保持热爱，奔赴山海',
-    '愿你的世界总有微风和暖阳',
-    '把温柔和浪漫留给值得的人',
-    'Merry Christmas',
-    '平安喜乐',
-    '岁岁常欢愉',
-  ],
-};
+  constructor(x: number, y: number, hue: number) {
+    this.x = x;
+    this.y = y;
+    
+    const angle = random(0, Math.PI * 2);
+    // 速度分布优化：让粒子扩散更自然
+    const speed = random(2, 16); 
+    
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    
+    this.hue = hue + random(-30, 30);
+    this.brightness = random(50, 80);
+    this.alpha = 1;
+    // 寿命优化：衰减变慢，存活更久，线条更长
+    this.decay = random(0.008, 0.02); 
+    
+    // 物理优化：减小重力，减小空气阻力(friction接近1)，让运动更丝滑
+    this.gravity = 0.05; 
+    this.friction = 0.96; 
+    this.flicker = Math.random() > 0.4;
+    this.size = random(1, 2.5);
+  }
 
-export const THEMES = {
-  warm: {
-    name: '暖阳午后',
-    bg: 'bg-gradient-to-br from-orange-50 to-amber-100',
-    cardBg: ['bg-white', 'bg-orange-50', 'bg-yellow-50', 'bg-rose-50'],
-    textColor: 'text-orange-900',
-    shadow: 'shadow-orange-200/50',
-    decoration: 'none',
-  },
-  forest: {
-    name: '静谧森林',
-    bg: 'bg-gradient-to-br from-emerald-50 to-teal-100',
-    cardBg: ['bg-white', 'bg-emerald-50', 'bg-teal-50', 'bg-green-50'],
-    textColor: 'text-emerald-900',
-    shadow: 'shadow-emerald-200/50',
-    decoration: 'none',
-  },
-  night: {
-    name: '星河入梦',
-    bg: 'bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900',
-    cardBg: ['bg-slate-800', 'bg-purple-900/80', 'bg-indigo-900/80', 'bg-slate-700'],
-    textColor: 'text-indigo-100',
-    shadow: 'shadow-purple-900/50',
-    decoration: 'stars',
-  },
-  minimal: {
-    name: '极简白白',
-    bg: 'bg-gray-50',
-    cardBg: ['bg-white'],
-    textColor: 'text-gray-800',
-    shadow: 'shadow-gray-200',
-    decoration: 'none',
-  },
-  eve: {
-    name: '平安夜',
-    bg: 'bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#312e81]',
-    cardBg: ['bg-[#1e293b]', 'bg-[#334155]', 'bg-[#172554]', 'bg-[#312e81]/80'],
-    textColor: 'text-amber-100',
-    shadow: 'shadow-blue-900/50',
-    decoration: 'snow',
-  },
-  christmas: {
-    name: '圣诞快乐',
-    bg: 'bg-gradient-to-br from-red-50 via-green-50 to-red-100',
-    cardBg: ['bg-white', 'bg-red-50', 'bg-green-50', 'bg-amber-50'],
-    textColor: 'text-red-900',
-    shadow: 'shadow-red-200/50',
-    decoration: 'holly',
-  },
-};
+  update() {
+    this.vx *= this.friction;
+    this.vy *= this.friction;
+    this.vy += this.gravity;
+    
+    this.x += this.vx;
+    this.y += this.vy;
+    
+    this.alpha -= this.decay;
+    if (this.brightness > 30) this.brightness -= 1;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    if (this.alpha <= 0) return;
+    
+    ctx.beginPath();
+    
+    // 优化：绘制圆形粒子，配合全屏拖尾层实现自然轨迹，放弃生硬的连线
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    
+    let light = this.brightness;
+    if (this.flicker) {
+       light = this.brightness + random(-20, 20);
+    }
+    
+    ctx.fillStyle = `hsla(${this.hue}, 100%, ${light}%, ${this.alpha})`;
+    ctx.fill();
+    
+    // 闪烁核心
+    if (this.flicker && Math.random() > 0.8) {
+        ctx.beginPath();
+        ctx.fillStyle = '#FFF';
+        ctx.arc(this.x, this.y, this.size * 0.6, 0, Math.PI*2);
+        ctx.fill();
+    }
+  }
+}
+
+// 3.2 升空烟花 (Shell)
+class Shell {
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  vx: number;
+  vy: number;
+  hue: number;
+  exploded: boolean;
+  trail: {x: number, y: number}[];
+  distToTarget: number;
+  distTraveled: number;
+
+  constructor(startX: number, startY: number, targetX: number, targetY: number) {
+    this.x = startX;
+    this.y = startY;
+    this.targetX = targetX;
+    this.targetY = targetY;
+    this.exploded = false;
+    this.trail = [];
+    
+    this.hue = random(0, 360);
+    
+    const dx = targetX - startX;
+    const dy = targetY - startY;
+    this.distToTarget = Math.sqrt(dx*dx + dy*dy);
+    this.distTraveled = 0;
+    
+    const angle = Math.atan2(dy, dx);
+    const speed = random(13, 17);
+    
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+  }
+
+  update() {
+    this.trail.push({x: this.x, y: this.y});
+    if(this.trail.length > 6) this.trail.shift();
+
+    this.x += this.vx;
+    this.y += this.vy;
+    
+    const v = Math.sqrt(this.vx*this.vx + this.vy*this.vy);
+    this.distTraveled += v;
+    
+    this.vy += 0.04; 
+
+    if (this.distTraveled >= this.distToTarget || v < 2) {
+      this.exploded = true;
+    }
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    if (this.trail.length < 2) return;
+    
+    ctx.beginPath();
+    ctx.moveTo(this.trail[0].x, this.trail[0].y);
+    for(let i = 1; i < this.trail.length; i++) {
+        ctx.lineTo(this.trail[i].x, this.trail[i].y);
+    }
+    
+    ctx.strokeStyle = `hsla(${this.hue}, 100%, 75%, 0.6)`;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+}
+
+// 3.3 文字灰烬 (Text Ember)
+class TextEmber {
+    x: number;
+    y: number;
+    text: string;
+    alpha: number;
+    hue: number;
+    life: number;
+    maxLife: number;
+    scale: number;
+    vx: number;
+    vy: number;
+    dashOffset: number;
+
+    constructor(x: number, y: number, text: string, hue: number) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.hue = hue;
+        this.alpha = 0;
+        this.scale = 0.5; 
+        this.maxLife = 220;
+        this.life = this.maxLife; 
+        
+        this.vx = random(-0.2, 0.2); 
+        this.vy = random(-0.3, -0.6);
+        this.dashOffset = 0;
+    }
+
+    update() {
+        if (this.scale < 1.0) {
+            this.scale += 0.05;
+            this.alpha = Math.min(1, this.alpha + 0.05);
+        } else {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.dashOffset -= 1;
+            this.life--;
+            if (this.life < 80) {
+                this.alpha -= 0.015; 
+                this.scale += 0.002; 
+            }
+        }
+    }
+
+    draw(ctx: CanvasRenderingContext2D) {
+        if (this.alpha <= 0) return;
+        
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.scale(this.scale, this.scale);
+        
+        ctx.font = "bold 64px 'Cinzel', serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        
+        ctx.setLineDash([3, 4]); 
+        ctx.lineDashOffset = this.dashOffset;
+        
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
+        
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `hsla(${this.hue}, 100%, 85%, ${this.alpha})`;
+        ctx.strokeText(this.text, 0, 0);
+        
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(255, 255, 255, ${this.alpha * 0.6})`;
+        ctx.strokeText(this.text, 0, 0);
+
+        ctx.restore();
+    }
+}
 
 /**
  * ==============================================================================
- * 2. 工具函数 (Utils)
+ * 4. 主组件 (DisplayUI)
  * ==============================================================================
  */
 
-function randomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randomFloat(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
-}
-
-/**
- * ==============================================================================
- * 3. 组件实现 (Components)
- * ==============================================================================
- */
-
-// 自定义配置面板组件 (替代 GenericConfigPanel)
-const ConfigPanel = ({
-  config,
-  onChange,
-  isOpen,
-  onClose
-}: {
-  config: WarmTextCardConfig;
-  onChange: (key: keyof WarmTextCardConfig, value: any) => void;
-  isOpen: boolean;
-  onClose: () => void;
-}) => {
-  const [activeTab, setActiveTab] = useState<'content' | 'visual' | 'physics'>('content');
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-y-0 left-0 z-[100] w-80 bg-white/95 backdrop-blur-xl shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col border-r border-gray-100">
-      <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-        <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-          <Settings size={18} />
-          <span>配置面板</span>
-        </h2>
-        <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-          <X size={20} className="text-gray-500" />
-        </button>
-      </div>
-
-      <div className="flex p-2 gap-1 bg-gray-50/50">
-        {[
-          { id: 'content', label: '内容', icon: MessageSquare },
-          { id: 'visual', label: '视觉', icon: Palette },
-          { id: 'physics', label: '动态', icon: Zap },
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 transition-all
-              ${activeTab === tab.id 
-                ? 'bg-white text-blue-600 shadow-sm ring-1 ring-black/5' 
-                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'}`}
-          >
-            <tab.icon size={14} />
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {activeTab === 'content' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">文案内容</label>
-              <textarea
-                value={config.customMessages.join('\n')}
-                onChange={(e) => onChange('customMessages', e.target.value.split('\n').filter(Boolean))}
-                className="w-full h-64 p-3 rounded-xl border-gray-200 border bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm leading-relaxed resize-none"
-                placeholder="每一行作为一条祝福语..."
-              />
-              <p className="mt-2 text-xs text-gray-500">每一行文字都会作为一张独立的卡片显示。</p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'visual' && (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">主题风格</label>
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(THEMES).map(([key, theme]) => (
-                  <button
-                    key={key}
-                    onClick={() => onChange('theme', key)}
-                    className={`relative p-3 rounded-xl text-left border-2 transition-all overflow-hidden group
-                      ${config.theme === key 
-                        ? 'border-blue-500 ring-1 ring-blue-500/20' 
-                        : 'border-transparent hover:border-gray-200 bg-gray-50'}`}
-                  >
-                    <div className={`absolute inset-0 opacity-10 ${theme.bg}`}></div>
-                    <div className="relative z-10">
-                      <div className="font-medium text-gray-900 text-sm">{theme.name}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <label className="text-sm font-medium text-gray-700">字体大小</label>
-                <span className="text-xs text-gray-500">{config.fontSizeScale.toFixed(1)}x</span>
-              </div>
-              <input
-                type="range"
-                min="0.6"
-                max="1.8"
-                step="0.1"
-                value={config.fontSizeScale}
-                onChange={(e) => onChange('fontSizeScale', parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'physics' && (
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <label className="text-sm font-medium text-gray-700">生成速度</label>
-                <span className="text-xs text-gray-500">{config.speed}ms</span>
-              </div>
-              <input
-                type="range"
-                min="200"
-                max="2000"
-                step="100"
-                value={config.speed}
-                onChange={(e) => onChange('speed', parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <p className="text-xs text-gray-400">数值越小，卡片生成越快</p>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <label className="text-sm font-medium text-gray-700">最大数量</label>
-                <span className="text-xs text-gray-500">{config.maxCards}张</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                step="5"
-                value={config.maxCards}
-                onChange={(e) => onChange('maxCards', parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <p className="text-xs text-gray-400">屏幕上同时存在的卡片上限</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// 装饰背景层
-const BackgroundDecoration = ({ type }: { type: string }) => {
-  if (type === 'none') return null;
-
-  const items = Array.from({ length: 25 }).map((_, i) => ({
-    id: i,
-    left: `${randomInt(0, 100)}%`,
-    top: `${randomInt(0, 100)}%`,
-    delay: `${randomFloat(0, 5)}s`,
-    duration: `${randomFloat(3, 8)}s`,
-    size: randomInt(2, 6)
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {items.map((item) => (
-        <div
-          key={item.id}
-          className={`absolute rounded-full opacity-60 animate-pulse
-            ${type === 'snow' ? 'bg-white shadow-[0_0_5px_white]' : ''}
-            ${type === 'stars' ? 'bg-yellow-100 shadow-[0_0_8px_yellow]' : ''}
-            ${type === 'holly' ? (item.id % 2 === 0 ? 'bg-red-400' : 'bg-green-400') : ''}
-          `}
-          style={{
-            left: item.left,
-            top: item.top,
-            width: type === 'stars' ? item.size : item.size * 2,
-            height: type === 'stars' ? item.size : item.size * 2,
-            animationDuration: item.duration,
-            animationDelay: item.delay,
-            filter: 'blur(1px)',
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-// 单个卡片组件
-const WordCard = ({ 
-  data, 
-  theme, 
-  onClick 
-}: { 
-  data: CardData;
-  theme: WarmTextCardConfig['theme']; 
-  onClick: (id: number) => void;
-}) => {
-  const { x, y, rotate, scale, text, zIndex, bgIndex } = data;
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const currentTheme = THEMES[theme] || THEMES.warm;
-  const bgColorClass = currentTheme.cardBg[bgIndex % currentTheme.cardBg.length];
-  const isDarkTheme = theme === 'night' || theme === 'eve';
-  const borderClass = isDarkTheme ? 'border border-white/10' : 'border border-transparent';
-
-  return (
-    <div
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick(data.id);
-      }}
-      className={`absolute transition-all duration-1000 ease-out cursor-pointer select-none
-        flex items-center justify-center p-4 md:p-6 rounded-xl md:rounded-2xl
-        ${bgColorClass} ${currentTheme.textColor} ${currentTheme.shadow} ${borderClass}
-        hover:shadow-2xl hover:scale-110 hover:z-[999] active:scale-95
-      `}
-      style={{
-        left: `${x}%`,
-        top: `${y}%`,
-        transform: `translate(-50%, -50%) rotate(${rotate}deg) scale(${isVisible ? scale : 0})`,
-        opacity: isVisible ? 1 : 0,
-        zIndex: zIndex,
-        boxShadow: isDarkTheme ? '0 4px 20px -2px rgba(0,0,0,0.5)' : '0 10px 30px -5px rgba(0,0,0,0.1)',
-        maxWidth: '80vw',
-        minWidth: '120px',
-        width: 'max-content',
-        filter: scale < 0.7 ? 'blur(0.5px)' : 'none',
-      }}
-    >
-      <p 
-        className="text-center font-medium leading-relaxed font-serif whitespace-pre-wrap break-words"
-        style={{ fontSize: '1.125rem' }}
-      >
-        {text}
-      </p>
-      
-      {theme === 'christmas' && scale > 1 && (
-        <span className="absolute -top-2 -right-2 text-xl animate-bounce" style={{ animationDuration: '3s' }}>
-          🎄
-        </span>
-      )}
-       {theme === 'eve' && scale > 1 && (
-        <span className="absolute -top-3 -right-1 text-yellow-200 text-lg animate-pulse">
-          ✨
-        </span>
-      )}
-    </div>
-  );
-};
-
-export default function WarmTextCardDisplayUI() {
-  const [config, setConfig] = useState<WarmTextCardConfig>(defaultConfig);
-  const [cards, setCards] = useState<CardData[]>([]);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  
+export function DisplayUI({ config }: { config: AppConfig }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const soundManagerRef = useRef<SoundManager | null>(null);
+  const bgAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(!config.enableSound);
 
-  const handleConfigChange = (key: keyof WarmTextCardConfig, value: any) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
-  };
+  // 动画数据
+  const shells = useRef<Shell[]>([]);
+  const particles = useRef<Particle[]>([]);
+  const texts = useRef<TextEmber[]>([]);
+  const timer = useRef(0);
 
-  const toggleFullScreen = () => {
-    if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
-      });
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    }
-  };
-
-  const generateCard = useCallback(() => {
-    setCards(prev => {
-      const messages = config.customMessages || [];
-      let nextCards = [...prev];
-      if (nextCards.length >= config.maxCards) {
-         if (prev.length > config.maxCards + 5) {
-             nextCards = prev.slice(prev.length - config.maxCards);
-         }
-      }
-
-      if (messages.length === 0) return nextCards;
-
-      const scale = randomFloat(0.7, 1.2) * config.fontSizeScale;
-      // 移动端适当减小 scale
-      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-      const finalScale = isMobile ? scale * 0.85 : scale;
-
-      const zIndex = Math.floor(finalScale * 10); 
-      
-      const newCard: CardData = {
-        id: Date.now() + Math.random(),
-        text: messages[randomInt(0, messages.length - 1)],
-        x: randomFloat(5, 95),
-        y: randomFloat(5, 95),
-        rotate: randomInt(-12, 12),
-        scale: finalScale,
-        zIndex: zIndex,
-        bgIndex: randomInt(0, 10),
-      };
-      
-      return [...nextCards, newCard];
-    });
-  }, [config.maxCards, config.customMessages, config.fontSizeScale]);
-
+  // 初始化音效管理器
   useEffect(() => {
-    if (isPlaying) {
-      generateCard();
-      timerRef.current = setInterval(generateCard, config.speed);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isPlaying, config.speed, generateCard]);
-
-  const handleCardClick = (id: number) => {
-    setCards(prev => prev.map(card => 
-      card.id === id ? { ...card, zIndex: 999, scale: card.scale * 1.2, rotate: 0 } as CardData : card
-    ));
-  };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    soundManagerRef.current = new SoundManager();
+    soundManagerRef.current.setEnabled(!isMuted);
   }, []);
 
-  const currentTheme = THEMES[config.theme] || THEMES.warm;
-  // 计算图标颜色，根据背景深浅调整
-  const isDark = config.theme === 'night' || config.theme === 'eve';
-  const iconColor = isDark ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-black';
-  const glassBg = isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-white/40 hover:bg-white/60';
+  // 监听静音切换
+  useEffect(() => {
+    soundManagerRef.current?.setEnabled(!isMuted);
+  }, [isMuted]);
+
+  // 倒计时
+  useEffect(() => {
+    const calc = () => {
+      const diff = new Date(config.targetDate).getTime() - new Date().getTime();
+      if (diff > 0) {
+        setTimeLeft({
+          days: Math.floor(diff / 86400000),
+          hours: Math.floor((diff % 86400000) / 3600000),
+          minutes: Math.floor((diff % 3600000) / 60000),
+          seconds: Math.floor((diff % 60000) / 1000),
+        });
+      }
+    };
+    calc();
+    const t = setInterval(calc, 1000);
+    return () => clearInterval(t);
+  }, [config.targetDate]);
+
+  // 核心动画循环
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !containerRef.current) return;
+    const ctx = canvas.getContext('2d'); 
+    if (!ctx) return;
+
+    let rafId: number;
+
+    const resize = () => {
+      if (!containerRef.current) return;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = containerRef.current.clientWidth * dpr;
+      canvas.height = containerRef.current.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const loop = () => {
+      const width = canvas.width / (window.devicePixelRatio || 1);
+      const height = canvas.height / (window.devicePixelRatio || 1);
+
+      // 1. 绘制背景 & 拖尾
+      // 降低透明度 (0.15 -> 0.12)，让上一帧残留更久，形成自然的流光拖尾
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'rgba(5, 5, 8, 0.12)'; 
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. 之后的绘制全部使用 lighter 模式 (光效叠加)
+      ctx.globalCompositeOperation = 'lighter';
+
+      // 3. 发射器逻辑
+      timer.current++;
+      if (timer.current >= config.fireworkDensity) {
+         const startX = random(width * 0.1, width * 0.9);
+         const targetX = random(width * 0.1, width * 0.9);
+         const targetY = random(height * 0.15, height * 0.5);
+         
+         shells.current.push(new Shell(startX, height, targetX, targetY));
+         soundManagerRef.current?.play('lift');
+         
+         if (Math.random() > 0.6) {
+             setTimeout(() => {
+                shells.current.push(new Shell(random(width * 0.2, width * 0.8), height, random(width*0.2, width*0.8), random(height*0.2, height*0.5)));
+                soundManagerRef.current?.play('lift');
+             }, 100);
+         }
+         timer.current = 0;
+      }
+
+      // 4. 更新升空烟花
+      for (let i = shells.current.length - 1; i >= 0; i--) {
+        const s = shells.current[i];
+        s.update();
+        s.draw(ctx);
+        if (s.exploded) {
+          soundManagerRef.current?.play('burst');
+          if (Math.random() > 0.5) {
+             setTimeout(() => soundManagerRef.current?.play('crackle'), 100);
+          }
+          
+          const particleCount = Math.floor(random(120, 180));
+          for (let k = 0; k < particleCount; k++) {
+            particles.current.push(new Particle(s.x, s.y, s.hue));
+          }
+
+          if (random(0, 1) > 0.6 && s.y < height * 0.65) {
+             const text = config.greetings[Math.floor(random(0, config.greetings.length))];
+             texts.current.push(new TextEmber(s.x, s.y, text, s.hue));
+          }
+
+          shells.current.splice(i, 1);
+        }
+      }
+
+      // 5. 更新爆炸粒子
+      for (let i = particles.current.length - 1; i >= 0; i--) {
+        const p = particles.current[i];
+        p.update();
+        p.draw(ctx);
+        if (p.alpha <= 0) particles.current.splice(i, 1);
+      }
+
+      // 6. 更新文字
+      for (let i = texts.current.length - 1; i >= 0; i--) {
+         const t = texts.current[i];
+         t.update();
+         t.draw(ctx);
+         if (t.alpha <= 0 && t.life <= 0) texts.current.splice(i, 1);
+      }
+
+      rafId = requestAnimationFrame(loop);
+    };
+
+    loop();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(rafId);
+    };
+  }, [config]);
+
+  // 点击发射
+  const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
+    if (bgAudioRef.current && bgAudioRef.current.paused && isPlaying) {
+        bgAudioRef.current.play().catch(()=>{});
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    let clientX, clientY;
+    if ('touches' in e) {
+       clientX = e.touches[0].clientX;
+       clientY = e.touches[0].clientY;
+    } else {
+       clientX = (e as React.MouseEvent).clientX;
+       clientY = (e as React.MouseEvent).clientY;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    const startX = random(rect.width * 0.1, rect.width * 0.9);
+    shells.current.push(new Shell(startX, rect.height, x, y));
+    soundManagerRef.current?.play('lift');
+  };
+
+  const toggleMusic = () => {
+    if (!bgAudioRef.current) return;
+    if (isPlaying) {
+      bgAudioRef.current.pause();
+    } else {
+      bgAudioRef.current.play().catch(() => {});
+    }
+    setIsPlaying(!isPlaying);
+  };
 
   return (
-    <div 
-      ref={containerRef}
-      className={`relative w-full h-screen overflow-hidden transition-colors duration-1000 ${currentTheme.bg}`}
-      onClick={() => isPanelOpen && setIsPanelOpen(false)}
-    >
-      <BackgroundDecoration type={currentTheme.decoration || 'none'} />
+    <div ref={containerRef} className="fixed inset-0 w-full h-full bg-[#050508] overflow-hidden select-none">
+      <canvas 
+        ref={canvasRef} 
+        className="absolute inset-0 z-10 cursor-pointer touch-none block"
+        onMouseDown={handleInteraction}
+        onTouchStart={handleInteraction}
+      />
 
-      {/* 浮动卡片层 */}
-      <div className="absolute inset-0 z-10 w-full h-full">
-        {cards.map(card => (
-          <WordCard 
-            key={card.id} 
-            data={card} 
-            theme={config.theme} 
-            onClick={handleCardClick}
-          />
-        ))}
+      {/* 倒计时 UI */}
+      <div className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center justify-center mix-blend-screen">
+         <div className="text-center animate-fade-in px-4">
+            <h1 className="text-white/60 text-lg md:text-2xl mb-8 tracking-[0.4em] font-light uppercase drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+              {config.titleText}
+            </h1>
+            <div className="flex items-start justify-center gap-3 md:gap-8">
+               <TimeUnit num={timeLeft.days} label="DAYS" />
+               <Separator />
+               <TimeUnit num={timeLeft.hours} label="HOURS" />
+               <Separator />
+               <TimeUnit num={timeLeft.minutes} label="MINS" />
+               <Separator />
+               <TimeUnit num={timeLeft.seconds} label="SECS" isSeconds />
+            </div>
+         </div>
       </div>
 
-      {/* 顶部控制栏 */}
-      <div className="absolute top-4 right-4 z-50 flex gap-3 safe-area-top">
-        <button 
-          onClick={(e) => {
-             e.stopPropagation();
-             setIsPlaying(!isPlaying);
-          }}
-          className={`p-3 rounded-full backdrop-blur-md shadow-sm transition-all active:scale-95 ${glassBg} ${iconColor}`}
-          title={isPlaying ? "暂停生成" : "继续生成"}
-        >
-          <Sparkles size={20} className={isPlaying ? "animate-spin-slow" : ""} />
+      {/* 控制按钮 */}
+      <div className="absolute bottom-6 right-6 z-30 flex items-center gap-3 pointer-events-auto">
+        <button onClick={toggleMusic} className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 text-white transition-all active:scale-95">
+           {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
         </button>
-
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFullScreen();
-          }}
-          className={`hidden md:block p-3 rounded-full backdrop-blur-md shadow-sm transition-all active:scale-95 ${glassBg} ${iconColor}`}
-          title="全屏沉浸"
-        >
-          {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
-        </button>
-
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsPanelOpen(!isPanelOpen);
-          }}
-          className={`p-3 rounded-full backdrop-blur-md shadow-sm transition-all active:scale-95 ${glassBg} ${iconColor}`}
-          title="设置"
-        >
-          <Settings size={20} />
+        <button onClick={() => setIsMuted(!isMuted)} className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 text-white transition-all active:scale-95">
+           {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
       </div>
+
+      <audio ref={bgAudioRef} src={config.bgMusicUrl} loop onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
       
-      {/* 侧边配置面板 */}
-      <div 
-        className="absolute inset-y-0 left-0 z-[100]"
-        onClick={(e) => e.stopPropagation()} 
-      >
-         <ConfigPanel 
-            config={config} 
-            onChange={handleConfigChange} 
-            isOpen={isPanelOpen} 
-            onClose={() => setIsPanelOpen(false)}
-         />
-      </div>
-
-      {/* 初始引导 */}
-      {!isPlaying && cards.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none p-4">
-          <div className="bg-white/90 backdrop-blur-md p-6 md:p-8 rounded-3xl shadow-xl text-center animate-bounce-slow max-w-sm">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">准备好了吗？</h1>
-            <p className="text-sm md:text-base text-gray-600">点击右上角的设置按钮定制内容<br/>或点击星星开始</p>
-          </div>
-        </div>
-      )}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@200;600&display=swap');
+        .animate-fade-in { animation: fadeIn 2s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
     </div>
   );
+}
+
+const Separator = () => <div className="text-xl md:text-5xl text-white/20 font-light mt-1 md:mt-2">:</div>;
+
+function TimeUnit({ num, label, isSeconds = false }: { num: number, label: string, isSeconds?: boolean }) {
+  return (
+    <div className="flex flex-col items-center w-14 md:w-24">
+      <span 
+        className="font-['Inter'] font-semibold tabular-nums leading-none tracking-tight drop-shadow-[0_0_30px_rgba(255,215,0,0.6)]"
+        style={{ 
+          fontSize: isSeconds ? 'clamp(2.5rem, 6vw, 4.5rem)' : 'clamp(2rem, 5vw, 3.5rem)',
+          color: isSeconds ? '#FFD700' : '#ffffff'
+        }}
+      >
+        {num.toString().padStart(2, '0')}
+      </span>
+      <span className="text-[9px] md:text-xs text-white/40 mt-2 tracking-widest">{label}</span>
+    </div>
+  );
+}
+
+export default function NewYearCountdownPage() {
+  const [config] = useState<AppConfig>(DEFAULT_CONFIG);
+  return <DisplayUI config={config} />;
 }
