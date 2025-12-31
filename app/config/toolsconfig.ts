@@ -209,6 +209,15 @@ export const TOOL_METADATA: ToolMetadata[] = [
     sort: 18,
     cover: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=400&h=300&fit=crop',
   },
+  {
+    id: 'newyear-countdown',
+    toolName: '新年倒计时',
+    isActive: true,
+    description: '绚丽的新年倒计时烟花秀，迎接新年的到来，支持自定义目标日期和祝福词',
+    tag: ['热门', '节日专属', '视觉特效'],
+    sort: 19,
+    cover: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=300&fit=crop',
+  },
 ];
 
 /** 分类-工具关联配置 */
@@ -233,6 +242,7 @@ export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
   { id: 'rel17', toolId: 'christmas-fireplace', categoryId: 'festival' },
   { id: 'rel18', toolId: 'romantic-christmas', categoryId: 'festival' },
   { id: 'rel19', toolId: 'christmas-tree-card', categoryId: 'festival' },
+  { id: 'rel20', toolId: 'newyear-countdown', categoryId: 'festival' },
 ];
 
 // ====================== 3. 辅助函数（适配数组标签） ======================

@@ -11,6 +11,7 @@ export type GenericControlType =
   | 'radio' 
   | 'switch' 
   | 'color' 
+  | 'datetime'
   | 'slider' 
   | 'input' 
   | 'textarea' 
@@ -56,6 +57,8 @@ export interface GenericConfigItemMetadata<T> {
   mediaType?: 'background' | 'music';
   /** 默认项目（用于media-grid, media-picker） */
   defaultItems?: any[];
+  /** 日期时间类型（用于datetime控件） 'datetime' | 'date' | 'time' */
+  timeType?: 'datetime' | 'date' | 'time';
 }
 
 /**

@@ -73,11 +73,15 @@ const RomanticChristmasDisplayUI = dynamic(() => import('@/tools/romantic-christ
 import { DEFAULT_CONFIG as christmasTreeCardDefault, christmasTreeCardConfigMetadata as christmasTreeCardMetadata } from '@/tools/christmas-tree-card/index';
 const ChristmasTreeCardDisplayUI = dynamic(() => import('@/tools/christmas-tree-card').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
+// 新年倒计时
+import { DEFAULT_CONFIG as newyearCountdownDefault, newYearCountdownCardConfigMetadata as newyearCountdownMetadata } from '@/tools/newyear-countdown/index';
+const NewYearCountdownDisplayUI = dynamic(() => import('@/tools/newyear-countdown').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
 // ========================== 2. 类型定义（扩展，新增configMetadata）==========================
 /**
  * 工具基础配置项类型（扩展：新增configMetadata）
  */
-type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks' | 'newyear-fireworks' | 'time-tunnel' | 'galaxy-weaver' | 'koi-blessing-pool' | 'christmas-fireplace' | 'romantic-christmas' | 'christmas-tree-card';
+type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks' | 'newyear-fireworks' | 'time-tunnel' | 'galaxy-weaver' | 'koi-blessing-pool' | 'christmas-fireplace' | 'romantic-christmas' | 'christmas-tree-card' | 'newyear-countdown';
 
 interface ToolBasicConfig<T = any> {
   // 原有字段
@@ -200,6 +204,12 @@ const toolRegistry: Record<ToolKey, ToolBasicConfig> = {
     DisplayUI: ChristmasTreeCardDisplayUI,
     defaultConfig: christmasTreeCardDefault,
     configMetadata: christmasTreeCardMetadata,
+  },
+  'newyear-countdown': {
+    name: '新年倒计时',
+    DisplayUI: NewYearCountdownDisplayUI,
+    defaultConfig: newyearCountdownDefault,
+    configMetadata: newyearCountdownMetadata,
   },
 };
 

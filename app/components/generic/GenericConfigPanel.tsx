@@ -182,6 +182,42 @@ import type { GenericControlType, CategoryType, GenericConfigItemMetadata, ToolC
  *   │  }
  *   └─ 返回值: string (hex 颜色码，如 "#FFD700")
  * 
+ * 7️⃣ .5️⃣ DateTime（日期时间选择器）
+ *   ├─ 文件路径: DateTimeControl (行 280-340)
+ *   ├─ 使用场景: 日期和时间选择（倒计时目标、事件日期等）
+ *   ├─ 元数据配置:
+ *   │  {
+ *   │    type: 'datetime',
+ *   │    label: '日期时间标签',
+ *   │    timeType: 'datetime' | 'date' | 'time',  // 可选，默认 'datetime'
+ *   │    description: '可选描述'
+ *   │  }
+ *   ├─ 集成示例:
+ *   │  targetDate: {
+ *   │    type: 'datetime',
+ *   │    label: '倒计时目标',
+ *   │    timeType: 'datetime',  // 同时选择日期和时间
+ *   │    category: 'content'
+ *   │  },
+ *   │  birthDate: {
+ *   │    type: 'datetime',
+ *   │    label: '出生日期',
+ *   │    timeType: 'date',  // 仅选择日期
+ *   │    category: 'content'
+ *   │  },
+ *   │  meetTime: {
+ *   │    type: 'datetime',
+ *   │    label: '见面时间',
+ *   │    timeType: 'time',  // 仅选择时间
+ *   │    category: 'content'
+ *   │  }
+ *   ├─ 特点:
+ *   │  • 支持三种时间选择模式：完整日期时间 / 仅日期 / 仅时间
+ *   │  • 内部使用 ISO 8601 格式存储（"2026-01-01T00:00:00Z"）
+ *   │  • 浏览器原生日期时间选择器，用户体验好
+ *   │  • 自动格式转换，无需手动处理 ISO 字符串
+ *   └─ 返回值: string (ISO 8601 格式的日期时间字符串)
+ * 
  * 8️⃣  Radio（单选组）
  *   ├─ 文件路径: RadioGroupControl (行 240-260)
  *   ├─ 使用场景: 多选项单选（布局方式、显示模式等）
@@ -980,7 +1016,74 @@ const ColorControl = ({ value, onChange }: any) => (
   </div>
 );
 
-const StickerGridControl = ({ value, onChange, options }: any) => (
+// 日期时间选择控件
+const DateTimeControl = ({ value, onChange, timeType = 'datetime' }: any) => {
+  // 将 ISO 字符串转换为输入框格式
+  const formatToInput = (isoString: string) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '';
+    
+    // 转换为 YYYY-MM-DDTHH:mm 格式
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    if (timeType === 'date') {
+      return `${year}-${month}-${day}`;
+    } else if (timeType === 'time') {
+      return `${hours}:${minutes}`;
+    } else {
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+  };
+
+  // 将输入框格式转换为 ISO 字符串
+  const formatToISO = (inputValue: string) => {
+    if (!inputValue) return '';
+    
+    try {
+      if (timeType === 'date') {
+        // 格式: YYYY-MM-DD -> ISO
+        return new Date(inputValue + 'T00:00:00').toISOString();
+      } else if (timeType === 'time') {
+        // 格式: HH:mm -> 今天的时间
+        const today = new Date();
+        const [hours, minutes] = inputValue.split(':');
+        today.setHours(parseInt(hours), parseInt(minutes), 0);
+        return today.toISOString();
+      } else {
+        // 格式: YYYY-MM-DDTHH:mm -> ISO
+        return new Date(inputValue + ':00').toISOString();
+      }
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isoValue = formatToISO(e.target.value);
+    onChange(isoValue);
+  };
+
+  return (
+    <BaseControl className="px-4 py-3 hover:bg-white/60">
+      <div className="flex items-center gap-3">
+        <input
+          type={timeType === 'date' ? 'date' : timeType === 'time' ? 'time' : 'datetime-local'}
+          value={formatToInput(value)}
+          onChange={handleChange}
+          className="flex-1 bg-transparent focus:outline-none text-sm text-gray-800 dark:text-gray-100 font-medium"
+        />
+        <span className="text-xs text-gray-400 font-mono flex-shrink-0">
+          {timeType === 'date' ? '📅' : timeType === 'time' ? '🕐' : '📆'}
+        </span>
+      </div>
+    </BaseControl>
+  );
+};const StickerGridControl = ({ value, onChange, options }: any) => (
   <div className="grid grid-cols-4 gap-2.5">
     {options.map((opt: any) => {
       const isActive = value === opt.value;
@@ -1543,7 +1646,13 @@ const FieldRenderer = <T,>({
 }) => {
   if (metadata.condition && !metadata.condition(allConfig)) return null;
 
-  const commonProps = { value: configValue, onChange: (val: any) => onChange(itemKey, val), ...metadata, extraData };
+  const commonProps = { 
+    value: configValue, 
+    onChange: (val: any) => onChange(itemKey, val), 
+    ...metadata, 
+    extraData,
+    timeType: metadata.timeType
+  };
   let Control;
   switch (metadata.type) {
     case 'input': Control = InputControl; break;
@@ -1558,6 +1667,7 @@ const FieldRenderer = <T,>({
     case 'switch': Control = SwitchControl; break;
     case 'slider': Control = SliderControl; break;
     case 'color': Control = ColorControl; break;
+    case 'datetime': Control = DateTimeControl; break;
     case 'sticker-grid': Control = StickerGridControl; break;
     case 'multi-select': Control = MultiSelectControl; break;
     case 'file': Control = FileControl; break;
