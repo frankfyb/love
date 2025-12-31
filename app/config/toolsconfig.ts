@@ -149,7 +149,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'newyear-fireworks',
     toolName: '流光新年烟花',
-    isActive: false,
+    isActive: true,
     description: '绚丽的新年烟花秀，迎接新年的到来，共同许下新年愿望',
     tag: ['节日专属', '视觉特效'],
     sort: 12,

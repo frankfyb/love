@@ -86,19 +86,21 @@ export const newYearCountdownCardConfigMetadata = {
     explosionRange: { category: 'visual' as const, type: 'slider' as const, label: '烟花爆炸范围', min: 5, max: 30, step: 1 },
     fireworkDensity: { category: 'visual' as const, type: 'slider' as const, label: '烟花发射密度', min: 10, max: 60, step: 5, help: '数值越小越密集' },
     
-    enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-    bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
+    enableSound: { category: 'audio' as const, type: 'switch' as const, label: '启用音效' },
+    bgMusicUrl: { category: 'audio' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
   },
   tabs: [
     { id: 'content' as const, label: '定制', icon: null },
     { id: 'background' as const, label: '背景', icon: null },
     { id: 'visual' as const, label: '视觉', icon: null },
+    { id: 'audio' as const, label: '音频', icon: null },
   ],
   mobileSteps: [
     { id: 1, label: '专属定制', icon: null, fields: ['recipientName' as const, 'titleText' as const, 'targetDate' as const] },
     { id: 2, label: '祝福语', icon: null, fields: ['greetings' as const] },
-    { id: 3, label: '背景场景', icon: null, fields: ['bgValue' as const], bgMusicUrl: 'bgMusicUrl' as const },
+    { id: 3, label: '背景场景', icon: null, fields: ['bgValue' as const] },
     { id: 4, label: '视觉调整', icon: null, fields: ['explosionRange' as const, 'fireworkDensity' as const] },
+    { id: 5, label: '音频', icon: null, fields: ['bgMusicUrl' as const, 'enableSound' as const] },
   ],
 };
 
