@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, AlertCircle, RotateCw, XCircle } from 'lucide-react';
+import { RotateCw, XCircle } from 'lucide-react';
+import { useAudioControl } from '@/hooks/useAudioControl';
+import AudioControlPanel from '@/components/common/AudioControlPanel';
 
 /**
  * ==============================================================================
@@ -201,7 +203,7 @@ export const christmasTreeCardConfigMetadata = {
     glassOpacity: { category: 'visual' as const, type: 'slider' as const, label: '卡片透明度', min: 0.1, max: 1, step: 0.05 },
     enableSnow: { category: 'background' as const, type: 'switch' as const, label: '开启粒子雪花' },
     bgValue: { category: 'background' as const, type: 'media-grid' as const, label: '背景场景', mediaType: 'background' as const, defaultItems: PRESETS.backgrounds },
-    enableSound: { category: 'audio' as const, type: 'switch' as const, label: '启用音效' },
+    enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
     bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
     // decorationPicker: { category: 'decoration' as const, type: 'sticker-picker' as const, label: '添加装饰', options: PRESETS.stickers },
     capsuleText: { category: 'content' as const, type: 'input' as const, label: '一键祝福', placeholder: '替换"圣诞快乐"' },
@@ -240,15 +242,25 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
   const [internalDecorations, setInternalDecorations] = useState<DecorationItem[]>([]);
   const decorations = decorationsProp ?? internalDecorations;
   const setDecorations = setDecorationsProp ?? setInternalDecorations;
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioError, setAudioError] = useState(false);
   const [interactionMode, setInteractionMode] = useState<'drag' | 'rotate' | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   
   const dragOffsetRef = useRef<{ x: number, y: number }>({ x: 0, y: 0 });
-  const bgAudioRef = useRef<HTMLAudioElement | null>(null);
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 使用可复用的音效 Hook
+  const {
+    audioRef: bgAudioRef,
+    isPlaying,
+    isMuted,
+    handlePlayPause,
+    handleToggleMute,
+  } = useAudioControl({
+    musicUrl: config.bgMusicUrl,
+    enabled: config.enableSound,
+    volume: 0.5,
+  });
 
   // Helper: 检测背景类型
   const detectBgType = (value: string): BgType => {
@@ -260,32 +272,6 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
   };
 
   const bgType = detectBgType(config.bgValue);
-
-  // 背景音乐逻辑
-  useEffect(() => {
-     if(bgAudioRef.current && isPlaying) {
-        bgAudioRef.current.play().catch(e => {
-           console.log("Auto-play blocked after source change", e);
-           setIsPlaying(false);
-        });
-     }
-  }, [config.bgMusicUrl]);
-
-  const toggleMusic = async () => {
-    if (!bgAudioRef.current) return;
-    if (isPlaying) {
-      bgAudioRef.current.pause();
-    } else {
-      try {
-        setAudioError(false);
-        await bgAudioRef.current.play();
-      } catch (err) {
-        console.error("Play failed:", err);
-        setAudioError(true);
-        setIsPlaying(false);
-      }
-    }
-  };
 
   // 点击音效逻辑
   const playClickSound = useCallback(() => {
@@ -567,13 +553,19 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
         </div>
       </div>
 
-      {/* Music Toggle */}
-      <div className="absolute top-6 right-6 z-40 flex flex-col items-end gap-2">
-        <button onClick={(e) => { e.stopPropagation(); toggleMusic(); }} className={`p-3 rounded-full backdrop-blur-md border border-white/30 shadow-lg transition-all hover:scale-110 ${isPlaying ? 'bg-pink-500 text-white animate-spin-slow' : 'bg-black/30 text-white/70'}`}>{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}</button>
-        {audioError && (<div className="text-[10px] text-red-300 bg-black/50 px-2 py-1 rounded-md flex items-center gap-1"><AlertCircle size={10} /> 播放失败</div>)}
-      </div>
+      {/* 音效控制面板 - 使用可复用组件 */}
+      <AudioControlPanel
+        isPlaying={isPlaying}
+        isMuted={isMuted}
+        onPlayPause={handlePlayPause}
+        onToggleMute={handleToggleMute}
+        enabled={config.enableSound}
+        position="bottom-right"
+        size="sm"
+      />
 
-      <audio ref={bgAudioRef} src={config.bgMusicUrl} loop crossOrigin="anonymous" onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onError={() => setAudioError(true)} />
+      {/* 背景音乐（由 Hook 管理） */}
+      <audio ref={bgAudioRef} src={config.bgMusicUrl} loop crossOrigin="anonymous" />
       <audio ref={clickAudioRef} src={config.clickSoundUrl} crossOrigin="anonymous" preload="auto" />
 
       <style>{`

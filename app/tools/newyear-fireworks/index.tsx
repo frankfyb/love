@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Settings, X, Sparkles, Type, Palette, Music, Monitor } from "lucide-react";
+import { Settings, X, Sparkles, Type, Palette, Music, Monitor, Volume2 } from "lucide-react";
+import { useAudioControl } from '@/hooks/useAudioControl';
+import AudioControlPanel from '@/components/common/AudioControlPanel';
 
 /**
  * ==============================================================================
@@ -519,26 +521,32 @@ class Particle {
 
 interface DisplayUIProps {
   config: AppConfig;
-  togglePanel: () => void;
 }
 
-export function DisplayUI({ config, togglePanel }: DisplayUIProps) {
+export function DisplayUI({ config }: DisplayUIProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const animationRef = useRef<number>(0);
   const particlesRef = useRef<Particle[]>([]);
   const textPointsRef = useRef<Point[]>([]);
   const launchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 音频处理
+  // 使用可复用的音效 Hook
+  const {
+    audioRef,
+    isPlaying,
+    isMuted,
+    handlePlayPause,
+    handleToggleMute,
+  } = useAudioControl({
+    musicUrl: config.bgMusicUrl,
+    enabled: config.enableSound,
+    volume: config.volume,
+  });
+
+  // 音效音量控制
   useEffect(() => {
     soundEngine.setVolume(config.volume);
-    if (audioRef.current) {
-        audioRef.current.volume = config.enableSound ? config.volume * 0.5 : 0;
-    }
-  }, [config.volume, config.enableSound]);
-
-  // 背景渲染逻辑
+  }, [config.volume]);
   const renderBackground = () => {
     if (config.bgType === 'video' || config.bgValue.endsWith('.mp4') || config.bgValue.endsWith('.webm')) {
         return (
@@ -916,15 +924,26 @@ export function DisplayUI({ config, togglePanel }: DisplayUIProps) {
         loop
       />
 
-      {/* 5. UI 控件层 */}
-      <div className="absolute top-4 right-4 z-50 flex gap-2">
+      {/* 5. 音频控制面板 - 使用可复用组件 */}
+      <AudioControlPanel
+        isPlaying={isPlaying}
+        isMuted={isMuted}
+        onPlayPause={handlePlayPause}
+        onToggleMute={handleToggleMute}
+        enabled={config.enableSound}
+        position="bottom-right"
+        size="sm"
+      />
+
+      {/* 6. UI 控件层 */}
+      {/* <div className="absolute top-4 right-4 z-50 flex gap-2">
         <button 
             onClick={togglePanel}
             className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all border border-white/10 shadow-lg active:scale-95 duration-200"
         >
             <Settings size={20} />
         </button>
-      </div>
+      </div> */}
 
       <div className="absolute bottom-10 left-0 right-0 text-center pointer-events-none z-20 opacity-80 animate-pulse px-4">
         <p className="text-sm sm:text-base font-light tracking-[0.3em] text-orange-200 drop-shadow-[0_0_10px_rgba(255,100,0,0.8)] truncate">
@@ -985,7 +1004,7 @@ export default function NewYearFireworksPage() {
     <main className="relative w-screen h-screen bg-black overflow-hidden font-sans">
       <DisplayUI 
         config={config} 
-        togglePanel={() => setIsPanelOpen(true)} 
+        // togglePanel={() => setIsPanelOpen(true)} 
       />
     </main>
   );

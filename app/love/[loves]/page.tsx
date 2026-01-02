@@ -7,8 +7,6 @@ import ModalImport from '@/components/common/Modal';
 import { GenericConfigPanel } from '@/components/generic/GenericConfigPanel';
 import { FloatingActionBar } from '@/components/generic/FloatingActionBar';
 import type { ToolConfigMetadata } from '@/types/genericConfig';
-import { PRESETS as christmasTreeCardPresets } from '@/tools/christmas-tree-card/index';
-import { THEME_PRESETS as warmTextCardThemePresets } from '@/tools/warm-text-card/index';
 import { 
   Plus, 
   Trash2, 
@@ -110,6 +108,7 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
   const [showTemplates, setShowTemplates] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [isSharedConfig, setIsSharedConfig] = useState(false); // 新增：检测是否是分享配置
 
   // Initialize
   useEffect(() => {
@@ -123,8 +122,10 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       if (encoded) {
         const parsed = JSON.parse(decodeURIComponent(encoded));
         if (parsed && typeof parsed === 'object') {
+          // 加载分享配置，保持原始的 enableSound 设置
           setConfig(parsed);
-          setIsOpen(false); 
+          setIsOpen(false);
+          setIsSharedConfig(true);
           setTimeout(() => showToastMsg('已加载分享的配置，沉浸式体验中...'), 500);
         }
       }
@@ -143,20 +144,20 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
   };
 
   // 处理背景预设变更
-  const handleBackgroundPresetChange = (preset: any) => {
-    if (preset.type === 'color') {
-      setConfig((prev: any) => ({ ...prev, bgType: 'color', bgValue: preset.value }));
-    } else if (preset.type === 'image') {
-      setConfig((prev: any) => ({ ...prev, bgType: 'image', bgValue: preset.value }));
-    } else if (preset.type === 'video') {
-      setConfig((prev: any) => ({ ...prev, bgType: 'video', bgValue: preset.value }));
-    }
-  };
+  // const handleBackgroundPresetChange = (preset: any) => {
+  //   if (preset.type === 'color') {
+  //     setConfig((prev: any) => ({ ...prev, bgType: 'color', bgValue: preset.value }));
+  //   } else if (preset.type === 'image') {
+  //     setConfig((prev: any) => ({ ...prev, bgType: 'image', bgValue: preset.value }));
+  //   } else if (preset.type === 'video') {
+  //     setConfig((prev: any) => ({ ...prev, bgType: 'video', bgValue: preset.value }));
+  //   }
+  // };
 
-  // 处理温馨文字卡片的主题预设变更
-  const handleThemePresetChange = (preset: any) => {
-    setConfig((prev: any) => ({ ...prev, theme: preset.value }));
-  };
+  // // 处理温馨文字卡片的主题预设变更
+  // const handleThemePresetChange = (preset: any) => {
+  //   setConfig((prev: any) => ({ ...prev, theme: preset.value }));
+  // };
 
   const saveCurrentTemplate = () => {
     const name = window.prompt('给这段回忆起个名字吧...', new Date().toLocaleString());
@@ -217,16 +218,19 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* ================= FLOATING ACTION BAR ================= */}
-      <FloatingActionBar 
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-        onNavigateHome={goHome}
-        onNavigateLibrary={goLibrary}
-        onNavigateProfile={goProfile}
-        onToggleTemplates={() => setShowTemplates(true)}
-        onShare={copyShareLink}
-        onReset={() => setConfig(defaultConfig)}
-      />
+      {/* 分享配置时隐藏 FloatingActionBar */}
+      {!isSharedConfig && (
+        <FloatingActionBar 
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          onNavigateHome={goHome}
+          onNavigateLibrary={goLibrary}
+          onNavigateProfile={goProfile}
+          onToggleTemplates={() => setShowTemplates(true)}
+          onShare={copyShareLink}
+          onReset={() => setConfig(defaultConfig)}
+        />
+      )}
 
       {/* ================= Templates Modal ================= */}
       <Modal 
@@ -287,16 +291,37 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       </div>
 
       {/* ================= Configuration Side Panel ================= */}
-      {/* PC端：左侧侧边栏 | 移动端：底部抽屉 */}
-      <div 
-        className={`
-          absolute top-0 left-0 h-full z-40
-          transition-transform duration-500 ease-in-out will-change-transform
-          md:block hidden
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
-      >
-        <div className="h-full relative shadow-2xl">
+      {/* PC端：左侧侧边栏 | 移动端：顶部抽屉 | 分享配置时隐藏 */}
+      {!isSharedConfig && (
+        <div 
+          className={`
+            absolute top-0 left-0 h-full z-40
+            transition-transform duration-500 ease-in-out will-change-transform
+            md:block hidden
+            ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          `}
+        >
+          <div className="h-full relative shadow-2xl">
+            {configMetadata ? (
+              <GenericConfigPanel 
+                config={config} 
+                configMetadata={configMetadata} 
+                onChange={handleConfigChange} 
+                isOpen={isOpen} 
+                setIsOpen={setIsOpen}
+              />
+            ) : (
+              <div className="w-[320px] md:w-[420px] h-full bg-gray-900/90 backdrop-blur-md flex items-center justify-center border-r border-white/10">
+                <p className="text-gray-500 text-sm">此工具暂无配置项</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 移动端配置面板 | 分享配置时隐藏 */}
+      {!isSharedConfig && (
+        <div className="md:hidden">
           {configMetadata ? (
             <GenericConfigPanel 
               config={config} 
@@ -305,26 +330,9 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
               isOpen={isOpen} 
               setIsOpen={setIsOpen}
             />
-          ) : (
-            <div className="w-[320px] md:w-[420px] h-full bg-gray-900/90 backdrop-blur-md flex items-center justify-center border-r border-white/10">
-              <p className="text-gray-500 text-sm">此工具暂无配置项</p>
-            </div>
-          )}
+          ) : null}
         </div>
-      </div>
-
-      {/* 移动端配置面板 */}
-      <div className="md:hidden">
-        {configMetadata ? (
-          <GenericConfigPanel 
-            config={config} 
-            configMetadata={configMetadata} 
-            onChange={handleConfigChange} 
-            isOpen={isOpen} 
-            setIsOpen={setIsOpen}
-          />
-        ) : null}
-      </div>
+      )}
 
     </main>
   );

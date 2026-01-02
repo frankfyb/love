@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { useAudioControl } from '@/hooks/useAudioControl';
+import AudioControlPanel from '@/components/common/AudioControlPanel';
 
 /**
  * ==============================================================================
@@ -86,21 +88,19 @@ export const newYearCountdownCardConfigMetadata = {
     explosionRange: { category: 'visual' as const, type: 'slider' as const, label: '烟花爆炸范围', min: 5, max: 30, step: 1 },
     fireworkDensity: { category: 'visual' as const, type: 'slider' as const, label: '烟花发射密度', min: 10, max: 60, step: 5, help: '数值越小越密集' },
     
-    enableSound: { category: 'audio' as const, type: 'switch' as const, label: '启用音效' },
-    bgMusicUrl: { category: 'audio' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
+    enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
+    bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
   },
   tabs: [
     { id: 'content' as const, label: '定制', icon: null },
     { id: 'background' as const, label: '背景', icon: null },
     { id: 'visual' as const, label: '视觉', icon: null },
-    { id: 'audio' as const, label: '音频', icon: null },
   ],
   mobileSteps: [
     { id: 1, label: '专属定制', icon: null, fields: ['recipientName' as const, 'titleText' as const, 'targetDate' as const] },
     { id: 2, label: '祝福语', icon: null, fields: ['greetings' as const] },
-    { id: 3, label: '背景场景', icon: null, fields: ['bgValue' as const] },
+    { id: 3, label: '背景场景', icon: null, fields: ['bgValue' as const], bgMusicUrl: 'bgMusicUrl' as const },
     { id: 4, label: '视觉调整', icon: null, fields: ['explosionRange' as const, 'fireworkDensity' as const] },
-    { id: 5, label: '音频', icon: null, fields: ['bgMusicUrl' as const, 'enableSound' as const] },
   ],
 };
 
@@ -365,14 +365,23 @@ export function DisplayUI({ config }: { config: AppConfig }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const soundManagerRef = useRef<SoundManager | null>(null);
-  const bgAudioRef = useRef<HTMLAudioElement | null>(null);
   
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [isTimeUp, setIsTimeUp] = useState(false); // 新增：是否到达目标时间
-  const [currentGreetingIndex, setCurrentGreetingIndex] = useState(0); // 新增：当前祝福语索引
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  const [currentGreetingIndex, setCurrentGreetingIndex] = useState(0);
   
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(!config.enableSound);
+  // 使用可复用的音效 Hook
+  const {
+    audioRef: bgAudioRef,
+    isPlaying,
+    isMuted,
+    handlePlayPause: toggleMusic,
+    handleToggleMute: toggleMute,
+  } = useAudioControl({
+    musicUrl: config.bgMusicUrl,
+    enabled: config.enableSound,
+    volume: 0.5,
+  });
 
   const shells = useRef<Shell[]>([]);
   const particles = useRef<Particle[]>([]);
@@ -552,9 +561,6 @@ export function DisplayUI({ config }: { config: AppConfig }) {
   }, [config, bgType, isTimeUp, getGreetingList]); // 添加依赖
 
   const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
-    if (bgAudioRef.current && bgAudioRef.current.paused && isPlaying) {
-        bgAudioRef.current.play().catch(()=>{});
-    }
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -573,16 +579,6 @@ export function DisplayUI({ config }: { config: AppConfig }) {
     const startX = random(rect.width * 0.1, rect.width * 0.9);
     shells.current.push(new Shell(startX, rect.height, x, y));
     soundManagerRef.current?.play('lift');
-  };
-
-  const toggleMusic = () => {
-    if (!bgAudioRef.current) return;
-    if (isPlaying) {
-      bgAudioRef.current.pause();
-    } else {
-      bgAudioRef.current.play().catch(() => {});
-    }
-    setIsPlaying(!isPlaying);
   };
 
   const greetingList = getGreetingList();
@@ -658,30 +654,18 @@ export function DisplayUI({ config }: { config: AppConfig }) {
          )}
       </div>
 
-      {/* 4. 控制按钮 */}
-      <div className="absolute bottom-6 right-6 z-30 flex items-center gap-3 pointer-events-auto">
-        <button onClick={toggleMusic} className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 text-white transition-all active:scale-95">
-           {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
-        </button>
-        <button onClick={() => setIsMuted(!isMuted)} className="p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/10 text-white transition-all active:scale-95">
-           {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-        </button>
-      </div>
+      {/* 4. 音效控制面板 - 使用可复用组件 */}
+      <AudioControlPanel
+        isPlaying={isPlaying}
+        isMuted={isMuted}
+        onPlayPause={toggleMusic}
+        onToggleMute={toggleMute}
+        enabled={config.enableSound}
+        position="bottom-right"
+        size="sm"
+      />
 
-      <audio ref={bgAudioRef} src={config.bgMusicUrl} loop onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
-      
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@200;600&display=swap');
-        .animate-fade-in { animation: fadeIn 1s ease-out forwards; }
-        .animate-slide-up { animation: slideUp 1.5s ease-out forwards; }
-        .animate-pulse-slow { animation: pulseSlow 3s infinite; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseSlow { 
-          0%, 100% { opacity: 1; transform: scale(1); } 
-          50% { opacity: 0.85; transform: scale(1.05); } 
-        }
-      `}</style>
+      {/* 5. 背景音乐（由 Hook 管理） */}
     </div>
   );
 }
