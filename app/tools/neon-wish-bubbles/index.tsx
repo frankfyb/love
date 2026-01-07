@@ -1,18 +1,22 @@
-
 'use client';
-import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
 
-// ==========================================
-// 1. 类型定义与默认配置 (Architecture)
-// ==========================================
+import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
+import { useAudioControl } from '@/hooks/useAudioControl';
+import AudioControlPanel from '@/components/common/AudioControlPanel';
+import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
+import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
+import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
+import type { StandardBgConfig } from '@/types/background';
 
 /**
- * 许愿气泡配置接口
+ * ==============================================================================
+ * 1. 核心配置与元数据 (Core Configuration & Metadata)
+ * ==============================================================================
  */
+
 export interface AppConfig {
   // 内容类
-  wishTexts: string; // 许愿文案池，用竖线 | 分隔
+  wishTexts: string[]; // 许愿文案池
   
   // 视觉动效类
   textDensity: number; // 屏幕文字密度 (5-30)
@@ -23,19 +27,25 @@ export interface AppConfig {
   maxFontSize: number; // 最大字体
 
   // 背景类 (通用)
-  bgValue: string; 
+  bgConfig?: StandardBgConfig;
+  bgValue?: string; 
 
   // 音效类 (通用)
   bgMusicUrl: string;
   enableSound: boolean;
 }
 
-/**
- * 默认配置
- */
+export const PRESETS = {
+  backgrounds: GLOBAL_BG_PRESETS.getToolPresets('neon-wish-bubbles'),
+  music: [
+    { label: '春风轻语', value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/audio/spring-wind.mp3' },
+    { label: 'Peaceful Piano', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
+  ],
+};
+
 export const DEFAULT_CONFIG: AppConfig = {
   // 内容
-  wishTexts: '平安喜乐|万事胜意|前程似锦|好运连连|心想事成|未来可期|岁岁平安|暴富暴瘦',
+  wishTexts: ['平安喜乐', '万事胜意', '前程似锦', '好运连连', '心想事成', '未来可期', '岁岁平安', '暴富暴瘦'],
   
   // 视觉
   textDensity: 12,
@@ -46,28 +56,33 @@ export const DEFAULT_CONFIG: AppConfig = {
   maxFontSize: 64,
 
   // 背景：蓝粉渐变海上晚霞风格
+  bgConfig: createBgConfigWithOverlay(
+    { 
+      type: 'color' as const, 
+      value: 'linear-gradient(to bottom, #2c3e50, #4ca1af, #c471ed, #f64f59)', 
+    },
+    0.1
+  ),
   bgValue: 'linear-gradient(to bottom, #2c3e50, #4ca1af, #c471ed, #f64f59)', 
   
   // 音效
-  bgMusicUrl: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/audio/spring-wind.mp3', // 示例轻音乐
+  bgMusicUrl: PRESETS.music[0].value,
   enableSound: true,
 };
 
-/**
- * 配置面板元数据
- */
-export const floatingWishesConfigMetadata = {
+export const neonWishBubblesConfigMetadata = {
   panelTitle: '霓虹许愿气泡',
   panelSubtitle: '点亮夜空中的专属祝福',
   configSchema: {
     // 内容分类
     wishTexts: {
       category: 'content' as const,
-      type: 'textarea' as const,
+      type: 'list' as const,
       label: '祝福语录',
-      placeholder: '输入祝福语，用 | 分隔',
-      description: '随机显示的祝福文字池，使用竖线 "|" 分隔不同词条',
+      placeholder: '输入祝福语',
+      description: '随机显示的祝福文字池，每行一句',
     },
+    
     // 视觉分类
     textDensity: {
       category: 'visual' as const,
@@ -95,7 +110,14 @@ export const floatingWishesConfigMetadata = {
       step: 1,
       description: '文字光晕的扩散范围',
     },
-    // 字体大小范围
+    particleCount: {
+      category: 'visual' as const,
+      type: 'slider' as const,
+      label: '粒子密度',
+      min: 1,
+      max: 5,
+      step: 1,
+    },
     minFontSize: {
       category: 'visual' as const,
       type: 'slider' as const,
@@ -116,13 +138,10 @@ export const floatingWishesConfigMetadata = {
     // 背景分类
     bgValue: {
       category: 'background' as const,
-      type: 'background-picker' as const, // 假设通用面板支持此类
+      type: 'media-grid' as const,
       label: '背景风格',
-      defaultItems: [
-        { label: '海上晚霞', value: 'linear-gradient(to bottom, #203a43, #2c5364, #ff7e5f, #feb47b)' },
-        { label: '梦幻极光', value: 'linear-gradient(to bottom, #000000, #434343, #5e60ce, #6930c3)' },
-        { label: '深海幽蓝', value: '#0f172a' },
-      ],
+      mediaType: 'background' as const,
+      defaultItems: PRESETS.backgrounds,
     },
     enableSound: {
       category: 'background' as const,
@@ -131,8 +150,10 @@ export const floatingWishesConfigMetadata = {
     },
     bgMusicUrl: {
       category: 'background' as const,
-      type: 'text' as const, // 简化为输入框，实际可用 media-picker
-      label: '背景音乐URL',
+      type: 'media-picker' as const,
+      label: '背景音乐',
+      mediaType: 'music' as const,
+      defaultItems: PRESETS.music,
     },
   },
   tabs: [
@@ -141,23 +162,18 @@ export const floatingWishesConfigMetadata = {
     { id: 'background' as const, label: '环境', icon: null },
   ],
   mobileSteps: [
-    { id: 1, label: '写祝福', fields: ['wishTexts'] },
-    { id: 2, label: '调氛围', fields: ['textDensity', 'floatSpeed', 'glowIntensity', 'minFontSize', 'maxFontSize'] },
-    { id: 3, label: '定背景', fields: ['bgValue', 'enableSound', 'bgMusicUrl'] },
+    { id: 1, label: '写祝福', icon: null, fields: ['wishTexts' as const] },
+    { id: 2, label: '调氛围', icon: null, fields: ['textDensity' as const, 'floatSpeed' as const, 'glowIntensity' as const, 'particleCount' as const, 'minFontSize' as const, 'maxFontSize' as const] },
+    { id: 3, label: '定背景', icon: null, fields: ['bgValue' as const, 'enableSound' as const, 'bgMusicUrl' as const] },
   ],
 };
 
-// ==========================================
-// 2. 核心显示组件 (DisplayUI)
-// ==========================================
+/**
+ * ==============================================================================
+ * 2. 粒子类定义 (Particle System)
+ * ==============================================================================
+ */
 
-interface DisplayUIProps {
-  config: AppConfig;
-  isPanelOpen: boolean;
-  onConfigChange?: (key: string, value: any) => void;
-}
-
-// 粒子类定义
 class HeartParticle {
   x: number;
   y: number;
@@ -212,7 +228,12 @@ class HeartParticle {
   }
 }
 
-// 漂浮文字类定义
+/**
+ * ==============================================================================
+ * 3. 漂浮文字类定义 (Floating Text System)
+ * ==============================================================================
+ */
+
 class FloatingText {
   text: string;
   x: number;
@@ -277,49 +298,61 @@ class FloatingText {
   }
 }
 
+/**
+ * ==============================================================================
+ * 4. 主显示组件 (DisplayUI)
+ * ==============================================================================
+ */
+
+interface DisplayUIProps {
+  config: AppConfig;
+  isPanelOpen?: boolean;
+  onConfigChange?: (key: string, value: any) => void;
+}
+
 export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // 状态管理
-  const [isPlaying, setIsPlaying] = useState(false);
   const textsRef = useRef<FloatingText[]>([]);
   const particlesRef = useRef<HeartParticle[]>([]);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
   const timeRef = useRef<number>(0);
   
   // 拆分文字池
   const textPool = useMemo(() => {
-    return config.wishTexts.split('|').filter(t => t.trim() !== '');
+    if (Array.isArray(config.wishTexts)) {
+      return config.wishTexts.filter(t => t.trim() !== '');
+    }
+    // 兼容旧格式（字符串用 | 分隔）
+    if (typeof config.wishTexts === 'string') {
+      return (config.wishTexts as string).split('|').filter((t: string) => t.trim() !== '');
+    }
+    return [];
   }, [config.wishTexts]);
 
-  // 音频控制
-  useEffect(() => {
-    if (audioRef.current) {
-      if (config.enableSound) {
-        // 尝试播放（可能被浏览器阻挡，需要用户交互）
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-        }
-      } else {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    }
-  }, [config.enableSound, config.bgMusicUrl]);
+  // 使用音效 Hook
+  const {
+    isPlaying,
+    isMuted,
+    handlePlayPause: toggleMusic,
+    handleToggleMute: toggleMute,
+  } = useAudioControl({
+    musicUrl: config.bgMusicUrl,
+    enabled: config.enableSound,
+    volume: 0.5,
+  });
 
-  // 切换播放状态的手动处理
-  const toggleAudio = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error(e));
+  // 获取有效的背景配置
+  const effectiveBgConfig = useMemo(() => {
+    if (config.bgValue) {
+      return parseBgValueToConfig(config.bgValue);
     }
-  };
+    if (config.bgConfig) {
+      return config.bgConfig;
+    }
+    return DEFAULT_CONFIG.bgConfig!;
+  }, [config.bgValue, config.bgConfig]);
 
   // 初始化画布与动画循环
   useEffect(() => {
@@ -351,7 +384,6 @@ export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => 
     window.addEventListener('resize', resize);
 
     // 初始化背景文字
-    // 只有当当前数量少于配置数量时才添加，避免重置时闪烁
     const initBackgroundTexts = () => {
         const currentBgCount = textsRef.current.filter(t => !t.isInteractive).length;
         const diff = config.textDensity - currentBgCount;
@@ -359,13 +391,11 @@ export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => 
         if (diff > 0) {
             for (let i = 0; i < diff; i++) {
                 const text = textPool[Math.floor(Math.random() * textPool.length)];
-                // 随机分布在屏幕各个位置，不仅仅是底部
                 const t = new FloatingText(width, height, text, config, false);
                 t.y = Math.random() * height; // 初始铺满屏幕
                 textsRef.current.push(t);
             }
         } else if (diff < 0) {
-            // 如果配置减少，随机移除一些背景文字
             let removeCount = Math.abs(diff);
             textsRef.current = textsRef.current.filter(t => {
                 if (!t.isInteractive && removeCount > 0) {
@@ -387,15 +417,12 @@ export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => 
       ctx.clearRect(0, 0, width, height);
 
       // 1. 绘制和更新文字
-      // 设置霓虹文字样式
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      // 遍历倒序，方便移除
       for (let i = textsRef.current.length - 1; i >= 0; i--) {
         const t = textsRef.current[i];
         
-        // 更新位置
         t.update(height, timeRef.current);
 
         // 边界检测
@@ -405,46 +432,37 @@ export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => 
             continue;
           }
         } else {
-          // 背景文字循环：完全移出顶部后，回到底部
+          // 背景文字循环
           if (t.y < -t.fontSize) {
             t.y = height + t.fontSize + Math.random() * 100;
             t.baseX = Math.random() * width;
-            // 重新随机内容
             t.text = textPool[Math.floor(Math.random() * textPool.length)];
           }
         }
 
-        // 生成拖尾粒子 (简单的频率控制)
+        // 生成拖尾粒子
         if (timeRef.current % (6 - Math.min(5, config.particleCount)) === 0) {
-            // 粒子颜色淡粉色
             particlesRef.current.push(new HeartParticle(t.x, t.y + t.fontSize/2, '#fbcfe8'));
         }
 
-        // 绘制
+        // 绘制霓虹文字
         ctx.save();
         ctx.globalAlpha = t.opacity;
         ctx.font = `bold ${t.fontSize}px sans-serif`;
         
-        // --- 优化后的霓虹效果 ---
-        
-        // 1. 第一层：强光晕描边 (营造发光氛围)
-        // 使用高饱和度粉色，配合模糊，制造霓虹漫射感
+        // 第一层：强光晕描边
         ctx.shadowColor = '#ff7eb3'; 
-        ctx.shadowBlur = config.glowIntensity * 1.2; // 增强光晕范围
+        ctx.shadowBlur = config.glowIntensity * 1.2;
         ctx.lineWidth = 3;
-        // 描边本身半透明，让光晕更柔和
         ctx.strokeStyle = 'rgba(255, 182, 193, 0.5)'; 
         ctx.strokeText(t.text, t.x, t.y);
 
-        // 2. 第二层：通透填充 (制造玻璃/空气感)
-        // 清除阴影，只绘制填充
+        // 第二层：通透填充
         ctx.shadowBlur = 0; 
-        // 极低透明度的白色，实现"字体透明"效果
         ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; 
         ctx.fillText(t.text, t.x, t.y);
         
-        // 3. 第三层：核心亮边 (勾勒清晰轮廓)
-        // 使用亮白色细线条，让文字在发光中依然清晰可辨
+        // 第三层：核心亮边
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)'; 
         ctx.strokeText(t.text, t.x, t.y);
@@ -473,7 +491,7 @@ export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => 
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [config, textPool]); // 当配置变化时重新建立循环逻辑，但尽量保持状态
+  }, [config, textPool]);
 
   // 点击生成气泡
   const handleInteraction = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -508,83 +526,49 @@ export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => 
 
   }, [config, textPool]);
 
-  // 处理背景样式
-  const getBackgroundStyle = () => {
-    const value = config.bgValue;
-    if (value.startsWith('#') || value.startsWith('rgb')) {
-      return { backgroundColor: value };
-    } else if (value.includes('gradient')) {
-      return { backgroundImage: value };
-    } else {
-      return { backgroundImage: `url(${value})`, backgroundSize: 'cover', backgroundPosition: 'center' };
-    }
-  };
-
   return (
-    <div 
-      ref={containerRef}
-      className={`relative w-full h-full overflow-hidden select-none touch-none transition-all duration-500`}
-      style={getBackgroundStyle()}
-      onClick={handleInteraction}
-      onTouchStart={handleInteraction}
-    >
-      {/* 画布层 */}
+    <div ref={containerRef} className="fixed inset-0 w-full h-full overflow-hidden select-none">
+      {/* 1. 背景层 */}
+      <div className="absolute inset-0 z-0">
+        <BackgroundRenderer config={effectiveBgConfig} />
+      </div>
+
+      {/* 2. Canvas 层 */}
       <canvas 
         ref={canvasRef}
-        className="absolute top-0 left-0 w-full h-full block pointer-events-none"
+        className="absolute top-0 left-0 w-full h-full block pointer-events-auto cursor-pointer touch-none z-10"
+        onClick={handleInteraction}
+        onTouchStart={handleInteraction}
       />
 
-      {/* 音效控件 - 悬浮在右上角 */}
-      {config.enableSound && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleAudio();
-          }}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/80 hover:bg-white/20 transition-all"
-        >
-          {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
-        </button>
-      )}
-
-      {/* 音频元素 */}
-      <audio 
-        ref={audioRef}
-        src={config.bgMusicUrl}
-        loop
-        crossOrigin="anonymous"
-      />
-
-      {/* 提示文案 - 仅当没有任何文字时或初始引导 */}
-      <div className="absolute bottom-8 w-full text-center pointer-events-none opacity-60">
+      {/* 3. 提示文案 */}
+      <div className="absolute bottom-8 w-full text-center pointer-events-none z-20">
         <p className="text-white/70 text-sm font-light tracking-widest" style={{ textShadow: '0 0 10px rgba(255,192,203, 0.5)' }}>
           点 击 屏 幕 · 许 下 心 愿
         </p>
       </div>
+
+      {/* 4. 音效控制面板 */}
+      <AudioControlPanel
+        isPlaying={isPlaying}
+        isMuted={isMuted}
+        onPlayPause={toggleMusic}
+        onToggleMute={toggleMute}
+        enabled={config.enableSound}
+        position="bottom-right"
+        size="sm"
+      />
     </div>
   );
 };
 
-// ==========================================
-// 3. 宿主环境模拟 (App Component)
-// ==========================================
+/**
+ * ==============================================================================
+ * 5. 默认导出（用于独立页面）
+ * ==============================================================================
+ */
 
-export default function App() {
-  const [config, setConfig] = useState(DEFAULT_CONFIG);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-
-  // 模拟配置修改
-  const handleConfigChange = (key: string, value: any) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
-  };
-
-  return (
-    <div className="w-full h-screen bg-black">
-       <DisplayUI 
-         config={config} 
-         isPanelOpen={isPanelOpen} 
-         onConfigChange={handleConfigChange}
-       />
-    </div>
-  );
+export default function NeonWishBubblesPage() {
+  const [config] = useState<AppConfig>(DEFAULT_CONFIG);
+  return <DisplayUI config={config} />;
 }

@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
+import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
+import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
+import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
+import type { StandardBgConfig } from '@/types/background';
 
 /**
  * ==============================================================================
@@ -18,24 +21,17 @@ export interface AppConfig {
   fireworkDensity: number; 
   explosionRange: number;
   greetings: string[];
-  bgValue: string;        // 背景配置值 (颜色/图片URL/视频URL)
+  bgConfig?: StandardBgConfig;    // 新：标准化背景配置
+  bgValue?: string;               // 旧：公述兼容
   bgMusicUrl: string;
   enableSound: boolean;
 }
 
 export type BgType = 'image' | 'video' | 'color';
 
-// 预设资源库
+// 新、优化后：介于各工具需求，直接常用全局预设
 export const PRESETS = {
-  backgrounds: [
-    { label: '极致深黑 (纯色)', value: '#05050f', type: 'color', thumbnail: '' },
-    { label: '午夜深蓝 (纯色)', value: '#0f172a', type: 'color', thumbnail: '' },
-    { label: '皇家紫 (纯色)', value: '#240a34', type: 'color', thumbnail: '' },
-    { label: '唯美飘雪 (动态)', value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/20471-309698211.mp4', type: 'video' },
-    { label: '温馨壁炉 (动态)', value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/23881-337972830_small.mp4', type: 'video' },
-    { label: '极光雪夜', value: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2670&auto=format&fit=crop', type: 'image' },
-    { label: '繁华都市', value: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2670&auto=format&fit=crop', type: 'image' },
-  ],
+  backgrounds: GLOBAL_BG_PRESETS.getToolPresets('newyear-countdown'),
   music: [
     { label: 'We Wish You Merry Christmas', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
     { label: 'Jingle Bells (Upbeat)', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
@@ -61,7 +57,16 @@ export const DEFAULT_CONFIG: AppConfig = {
   fireworkDensity: 25, 
   explosionRange: 16, 
   greetings: PRESETS.greetingTemplates,
-  bgValue: PRESETS.backgrounds[1].value, // 默认午夜深蓝
+  // 新：标准化背景配置（优先级更高）
+  bgConfig: createBgConfigWithOverlay(
+    { 
+      type: 'color' as const, 
+      value: '#0f172a', // 默认午夜深蓝
+    },
+    0.2 // 可选覆盖层
+  ),
+  // 旧：向后兼容字段（配置面板使用此字段）
+  bgValue: '#0f172a',
   bgMusicUrl: PRESETS.music[0].value, 
   enableSound: true,
 };
@@ -76,13 +81,14 @@ export const newYearCountdownCardConfigMetadata = {
     targetDate: { category: 'content' as const, type: 'datetime' as const, label: '目标日期', timeType: 'datetime' as const, description: '选择倒计时的目标日期和时间' },
     greetings: { category: 'content' as const, type: 'list' as const, label: '爆炸祝福语', placeholder: '输入祝福语', description: '每行一句，随机出现' },
     
-    // Background Category
+    // 背景配置（使用 bgValue 字段与 MediaGridControl 兼容）
     bgValue: { 
       category: 'background' as const, 
       type: 'media-grid' as const, 
       label: '背景场景', 
       mediaType: 'background' as const, 
-      defaultItems: PRESETS.backgrounds 
+      defaultItems: PRESETS.backgrounds,
+      description: '选择你最喜爱的背景氛围'
     },
 
     explosionRange: { category: 'visual' as const, type: 'slider' as const, label: '烟花爆炸范围', min: 5, max: 30, step: 1 },
@@ -361,7 +367,13 @@ class TextEmber {
  * ==============================================================================
  */
 
-export function DisplayUI({ config }: { config: AppConfig }) {
+interface DisplayUIProps {
+  config: AppConfig;
+  isPanelOpen?: boolean;
+  onConfigChange?: (key: keyof AppConfig, value: any) => void;
+}
+
+export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const soundManagerRef = useRef<SoundManager | null>(null);
@@ -388,14 +400,20 @@ export function DisplayUI({ config }: { config: AppConfig }) {
   const texts = useRef<TextEmber[]>([]);
   const timer = useRef(0);
 
-  // 稳健的背景类型检测
-  const bgType = (() => {
-    const val = config.bgValue || '';
-    if (val.startsWith('#') || val.startsWith('rgb')) return 'color';
-    if (/\.(mp4|webm|ogg|mov)$/i.test(val)) return 'video';
-    if (val.includes('/video/')) return 'video';
-    return 'image';
-  })();
+  // 获取有效的背景配置（优先 bgValue，回退到 bgConfig）
+  const effectiveBgConfig = useMemo(() => {
+    // ✅ 优先级：bgValue > bgConfig > DEFAULT
+    if (config.bgValue) {
+      return parseBgValueToConfig(config.bgValue);
+    }
+    if (config.bgConfig) {
+      return config.bgConfig;
+    }
+    return DEFAULT_CONFIG.bgConfig!;
+  }, [config.bgValue, config.bgConfig]);
+
+  // 背景类型检测
+  const bgType = effectiveBgConfig.type;
 
   // 统一获取祝福语列表
   const getGreetingList = useCallback(() => {
@@ -474,8 +492,9 @@ export function DisplayUI({ config }: { config: AppConfig }) {
 
       // 画布清除逻辑
       if (bgType === 'color') {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; 
+        // ✅ 使用 destination-out 让背景颜色显示出来
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
         ctx.fillRect(0, 0, width, height);
       } else {
         ctx.globalCompositeOperation = 'destination-out';
@@ -584,23 +603,10 @@ export function DisplayUI({ config }: { config: AppConfig }) {
   const greetingList = getGreetingList();
 
   return (
-    <div ref={containerRef} className="fixed inset-0 w-full h-full overflow-hidden select-none bg-black">
+    <div ref={containerRef} className="fixed inset-0 w-full h-full overflow-hidden select-none">
       {/* 1. 背景层 */}
       <div className="absolute inset-0 z-0">
-        {bgType === 'color' && <div className="w-full h-full transition-colors duration-500" style={{ background: config.bgValue }} />}
-        {bgType === 'image' && <img src={config.bgValue} className="w-full h-full object-cover animate-fadeIn" alt="bg" />}
-        {bgType === 'video' && (
-          <video 
-            key={config.bgValue} 
-            src={config.bgValue} 
-            className="w-full h-full object-cover animate-fadeIn" 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-          />
-        )}
-        {(bgType === 'image' || bgType === 'video') && <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />}
+        <BackgroundRenderer config={effectiveBgConfig} />
       </div>
 
       {/* 2. Canvas 层 */}

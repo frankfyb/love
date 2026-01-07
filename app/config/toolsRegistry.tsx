@@ -77,11 +77,15 @@ const ChristmasTreeCardDisplayUI = dynamic(() => import('@/tools/christmas-tree-
 import { DEFAULT_CONFIG as newyearCountdownDefault, newYearCountdownCardConfigMetadata as newyearCountdownMetadata } from '@/tools/newyear-countdown/index';
 const NewYearCountdownDisplayUI = dynamic(() => import('@/tools/newyear-countdown').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
+// 霓虹许愿气泡
+import { DEFAULT_CONFIG as neonWishBubblesDefault, neonWishBubblesConfigMetadata as neonWishBubblesMetadata } from '@/tools/neon-wish-bubbles/index';
+const NeonWishBubblesDisplayUI = dynamic(() => import('@/tools/neon-wish-bubbles').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
 // ========================== 2. 类型定义（扩展，新增configMetadata）==========================
 /**
  * 工具基础配置项类型（扩展：新增configMetadata）
  */
-type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks' | 'newyear-fireworks' | 'time-tunnel' | 'galaxy-weaver' | 'koi-blessing-pool' | 'christmas-fireplace' | 'romantic-christmas' | 'christmas-tree-card' | 'newyear-countdown';
+type ToolKey = 'christmas-card' | 'warm-text-card' | 'rain-snow-ripple' | 'christmas-avatar' | 'birthday-romance-v2' | 'axuyuantree' | 'eve-goodnight-apple' | 'eve-multi-apple-blessing' | 'eve-santa-walk' | 'eve-wish-fireworks' | 'newyear-fireworks' | 'time-tunnel' | 'galaxy-weaver' | 'koi-blessing-pool' | 'christmas-fireplace' | 'romantic-christmas' | 'christmas-tree-card' | 'newyear-countdown' | 'neon-wish-bubbles';
 
 interface ToolBasicConfig<T = any> {
   // 原有字段
@@ -210,6 +214,12 @@ const toolRegistry: Record<ToolKey, ToolBasicConfig> = {
     DisplayUI: NewYearCountdownDisplayUI,
     defaultConfig: newyearCountdownDefault,
     configMetadata: newyearCountdownMetadata,
+  },
+  'neon-wish-bubbles': {
+    name: '霓虹许愿气泡',
+    DisplayUI: NeonWishBubblesDisplayUI,
+    defaultConfig: neonWishBubblesDefault,
+    configMetadata: neonWishBubblesMetadata,
   },
 };
 
