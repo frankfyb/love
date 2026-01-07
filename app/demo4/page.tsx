@@ -8,7 +8,7 @@ import { Volume2, VolumeX } from 'lucide-react';
 // ==========================================
 
 /**
- * 许愿气泡配置接口
+ * 浮光祈愿置接口
  */
 export interface AppConfig {
   // 内容类
