@@ -94,12 +94,8 @@ export const GLOBAL_BG_PRESETS = {
       case 'neon-wish-bubbles':
         // 霓虹许愿气泡：渐变背景为主
         return [
-          { label: '海上晚霞', value: 'linear-gradient(to bottom, #2c3e50, #4ca1af, #c471ed, #f64f59)', type: 'color' as const },
-          { label: '梦幻极光', value: 'linear-gradient(to bottom, #000000, #434343, #5e60ce, #6930c3)', type: 'color' as const },
-          { label: '深海幽蓝', value: 'linear-gradient(to bottom, #0f172a, #1e3a8a, #3b82f6)', type: 'color' as const },
-          { label: '粉紫幻境', value: 'linear-gradient(to bottom, #5b21b6, #7c3aed, #ec4899, #f9a8d4)', type: 'color' as const },
-          { label: '橙红热浪', value: 'linear-gradient(to bottom, #7c2d12, #ea580c, #fb923c, #fbbf24)', type: 'color' as const },
-          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 3),
+          ...GLOBAL_BG_PRESETS.basicColors,
+          ...GLOBAL_BG_PRESETS.festivalVideos,
           ...GLOBAL_BG_PRESETS.commonImages,
         ];
       case 'christmas-card':
