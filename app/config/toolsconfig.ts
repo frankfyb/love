@@ -218,6 +218,15 @@ export const TOOL_METADATA: ToolMetadata[] = [
     sort: 19,
     cover: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=300&fit=crop',
   },
+  {
+    id: 'neon-wish-bubbles',
+    toolName: '霓虹许愿气泡',
+    isActive: true,
+    description: '点击屏幕让祝福气泡升起，霓虹光效的漂浮文字和爱心粒子，营造梦幻般的许愿氛围',
+    tag: ['新品', '视觉特效', '表白专属'],
+    sort: 20,
+    cover: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&h=300&fit=crop',
+  },
 ];
 
 /** 分类-工具关联配置 */
@@ -243,6 +252,8 @@ export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
   { id: 'rel18', toolId: 'romantic-christmas', categoryId: 'festival' },
   { id: 'rel19', toolId: 'christmas-tree-card', categoryId: 'festival' },
   { id: 'rel20', toolId: 'newyear-countdown', categoryId: 'festival' },
+  { id: 'rel21', toolId: 'neon-wish-bubbles', categoryId: 'confession' },
+  { id: 'rel22', toolId: 'neon-wish-bubbles', categoryId: 'festival' },
 ];
 
 // ====================== 3. 辅助函数（适配数组标签） ======================
