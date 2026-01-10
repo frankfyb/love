@@ -21,7 +21,7 @@ const HomePage = ({ navigateTo }: HomePageProps) => (
       </div>
       <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-800 tracking-tight leading-tight">
         记录每一个 <span className="text-rose-500 relative inline-block">
-          心动瞬间
+          我们的爱情轨迹
           <svg className="absolute w-full h-3 -bottom-1 left-0 text-rose-200/50 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none">
             <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="8" fill="none" />
           </svg>
