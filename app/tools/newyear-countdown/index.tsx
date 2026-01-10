@@ -53,7 +53,7 @@ export const PRESETS = {
 export const DEFAULT_CONFIG: AppConfig = {
   targetDate: new Date(new Date().getFullYear() + 1, 0, 1).toISOString(),
   titleText: '距离 2026 跨年还有',
-  recipientName: '致 最特别的你',
+  recipientName: '致 2026 最爱的你小曾',
   fireworkDensity: 25, 
   explosionRange: 16, 
   greetings: PRESETS.greetingTemplates,
