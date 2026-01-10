@@ -28,7 +28,7 @@ const HomePage = ({ navigateTo }: HomePageProps) => (
         </span>
       </h1>
       <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
-        无论是表白、纪念日还是日常的小确幸，我们为您提供全套的浪漫工具，
+        我愿做我们爱情的调味师，调进朝朝暮暮，让我们的日常，欢乐有趣，浪漫不止，
         让每一份心意都闪闪发光。
       </p>
       <div className="flex flex-wrap justify-center gap-4 pt-4">
