@@ -1,7 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Maximize, Minimize, Settings, Sparkles, X, Palette, Zap, Type, MessageSquare } from 'lucide-react';
+import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
+import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
+import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
+import type { StandardBgConfig } from '@/types/background';
+import { useAudioControl } from '@/hooks/useAudioControl';
+import AudioControlPanel from '@/components/common/AudioControlPanel';
 
 /**
  * ==============================================================================
@@ -17,6 +23,10 @@ export interface AppConfig {
   maxCards: number;
   fontSizeScale: number;
   customMessages: string[];
+  bgConfig?: StandardBgConfig;    // 新：标准化背景配置
+  bgValue?: string;               // 旧：向后兼容
+  bgMusicUrl: string;             // 背景音乐 URL
+  enableSound: boolean;           // 是否启用音效
 }
 
 export type CardData = {
@@ -29,6 +39,108 @@ export type CardData = {
   zIndex: number;
   bgIndex: number;
 };
+
+export const THEMES = {
+  warm: {
+    name: '暖阳午后',
+    bgConfig: createBgConfigWithOverlay({ type: 'color' as const, value: '#fff7ed' }, 0),
+    cardBg: ['bg-white', 'bg-orange-50', 'bg-yellow-50', 'bg-rose-50'],
+    textColor: 'text-orange-900',
+    shadow: 'shadow-orange-200/50',
+    decoration: 'none',
+  },
+  forest: {
+    name: '静谧森林',
+    bgConfig: createBgConfigWithOverlay({ type: 'color' as const, value: '#ecfdf5' }, 0),
+    cardBg: ['bg-white', 'bg-emerald-50', 'bg-teal-50', 'bg-green-50'],
+    textColor: 'text-emerald-900',
+    shadow: 'shadow-emerald-200/50',
+    decoration: 'none',
+  },
+  night: {
+    name: '星河入梦',
+    bgConfig: createBgConfigWithOverlay({ type: 'color' as const, value: '#0f172a' }, 0),
+    cardBg: ['bg-slate-800', 'bg-purple-900/80', 'bg-indigo-900/80', 'bg-slate-700'],
+    textColor: 'text-indigo-100',
+    shadow: 'shadow-purple-900/50',
+    decoration: 'stars',
+  },
+  minimal: {
+    name: '极简白白',
+    bgConfig: createBgConfigWithOverlay({ type: 'color' as const, value: '#f9fafb' }, 0),
+    cardBg: ['bg-white'],
+    textColor: 'text-gray-800',
+    shadow: 'shadow-gray-200',
+    decoration: 'none',
+  },
+  eve: {
+    name: '平安夜',
+    bgConfig: createBgConfigWithOverlay({ type: 'color' as const, value: '#0f172a' }, 0),
+    cardBg: ['bg-[#1e293b]', 'bg-[#334155]', 'bg-[#172554]', 'bg-[#312e81]/80'],
+    textColor: 'text-amber-100',
+    shadow: 'shadow-blue-900/50',
+    decoration: 'snow',
+  },
+  christmas: {
+    name: '圣诞快乐',
+    bgConfig: createBgConfigWithOverlay({ type: 'color' as const, value: '#fef2f2' }, 0),
+    cardBg: ['bg-white', 'bg-red-50', 'bg-green-50', 'bg-amber-50'],
+    textColor: 'text-red-900',
+    shadow: 'shadow-red-200/50',
+    decoration: 'holly',
+  },
+};
+
+// 新：统一使用全局背景预设系统
+export const PRESETS = {
+  backgrounds: GLOBAL_BG_PRESETS.getToolPresets('warm-text-card'),
+  music: [
+    { label: 'Peaceful Piano', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
+    { label: 'Soft Acoustic', value: 'https://cdn.pixabay.com/audio/2022/03/15/audio_b88f533c35.mp3' },
+    { label: 'Calm Background', value: 'https://cdn.pixabay.com/audio/2023/01/02/audio_0b50b0e6b2.mp3' },
+    { label: 'Jingle Bells', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
+  ],
+};
+
+// 主题快速预设（用于配置面板的主题切换）
+export const THEME_PRESETS = [
+  {
+    label: '暖阳午后',
+    value: 'warm',
+    type: 'theme' as const,
+    bgConfig: THEMES.warm.bgConfig,
+  },
+  {
+    label: '静谧森林',
+    value: 'forest',
+    type: 'theme' as const,
+    bgConfig: THEMES.forest.bgConfig,
+  },
+  {
+    label: '星河入梦',
+    value: 'night',
+    type: 'theme' as const,
+    bgConfig: THEMES.night.bgConfig,
+  },
+  {
+    label: '极简白白',
+    value: 'minimal',
+    type: 'theme' as const,
+    bgConfig: THEMES.minimal.bgConfig,
+  },
+  {
+    label: '平安夜',
+    value: 'eve',
+    type: 'theme' as const,
+    bgConfig: THEMES.eve.bgConfig,
+  },
+  {
+    label: '圣诞快乐',
+    value: 'christmas',
+    type: 'theme' as const,
+    bgConfig: THEMES.christmas.bgConfig,
+  },
+];
 
 export const DEFAULT_CONFIG: AppConfig = {
   theme: 'warm',
@@ -44,98 +156,13 @@ export const DEFAULT_CONFIG: AppConfig = {
     '平安喜乐',
     '岁岁常欢愉',
   ],
+  // 新：标准化背景配置（优先级更高）
+  bgConfig: THEMES.warm.bgConfig,
+  // 旧：向后兼容字段（配置面板使用此字段）
+  bgValue: '#fff7ed',
+  bgMusicUrl: PRESETS.music[0].value,
+  enableSound: true,
 };
-
-export const THEMES = {
-  warm: {
-    name: '暖阳午后',
-    bg: 'bg-gradient-to-br from-orange-50 to-amber-100',
-    cardBg: ['bg-white', 'bg-orange-50', 'bg-yellow-50', 'bg-rose-50'],
-    textColor: 'text-orange-900',
-    shadow: 'shadow-orange-200/50',
-    decoration: 'none',
-  },
-  forest: {
-    name: '静谧森林',
-    bg: 'bg-gradient-to-br from-emerald-50 to-teal-100',
-    cardBg: ['bg-white', 'bg-emerald-50', 'bg-teal-50', 'bg-green-50'],
-    textColor: 'text-emerald-900',
-    shadow: 'shadow-emerald-200/50',
-    decoration: 'none',
-  },
-  night: {
-    name: '星河入梦',
-    bg: 'bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900',
-    cardBg: ['bg-slate-800', 'bg-purple-900/80', 'bg-indigo-900/80', 'bg-slate-700'],
-    textColor: 'text-indigo-100',
-    shadow: 'shadow-purple-900/50',
-    decoration: 'stars',
-  },
-  minimal: {
-    name: '极简白白',
-    bg: 'bg-gray-50',
-    cardBg: ['bg-white'],
-    textColor: 'text-gray-800',
-    shadow: 'shadow-gray-200',
-    decoration: 'none',
-  },
-  eve: {
-    name: '平安夜',
-    bg: 'bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#312e81]',
-    cardBg: ['bg-[#1e293b]', 'bg-[#334155]', 'bg-[#172554]', 'bg-[#312e81]/80'],
-    textColor: 'text-amber-100',
-    shadow: 'shadow-blue-900/50',
-    decoration: 'snow',
-  },
-  christmas: {
-    name: '圣诞快乐',
-    bg: 'bg-gradient-to-br from-red-50 via-green-50 to-red-100',
-    cardBg: ['bg-white', 'bg-red-50', 'bg-green-50', 'bg-amber-50'],
-    textColor: 'text-red-900',
-    shadow: 'shadow-red-200/50',
-    decoration: 'holly',
-  },
-};
-
-// 主题快速预设数据
-export const THEME_PRESETS = [
-  {
-    label: '暖阳午后',
-    value: 'warm',
-    type: 'gradient',
-    preview: 'linear-gradient(to bottom right, rgb(255, 245, 230), rgb(251, 191, 36))',
-  },
-  {
-    label: '静谧森林',
-    value: 'forest',
-    type: 'gradient',
-    preview: 'linear-gradient(to bottom right, rgb(240, 253, 250), rgb(153, 246, 228))',
-  },
-  {
-    label: '星河入梦',
-    value: 'night',
-    type: 'gradient',
-    preview: 'linear-gradient(to bottom right, rgb(15, 23, 42), rgb(88, 28, 135))',
-  },
-  {
-    label: '极简白白',
-    value: 'minimal',
-    type: 'color',
-    preview: '#f3f4f6',
-  },
-  {
-    label: '平安夜',
-    value: 'eve',
-    type: 'gradient',
-    preview: 'linear-gradient(to bottom, rgb(15, 23, 42), rgb(30, 27, 75), rgb(49, 46, 129))',
-  },
-  {
-    label: '圣诞快乐',
-    value: 'christmas',
-    type: 'gradient',
-    preview: 'linear-gradient(to bottom right, rgb(255, 240, 245), rgb(220, 252, 231))',
-  },
-];
 
 // 添加通用配置元数据
 export const warmTextCardConfigMetadata = {
@@ -143,7 +170,7 @@ export const warmTextCardConfigMetadata = {
   panelSubtitle: 'Design Your Warm Text Card',
   configSchema: {
     theme: {
-      label: '主题风格',
+      label: '卡片风格',
       type: 'select' as const,
       options: [
         { label: '暖阳午后', value: 'warm' },
@@ -185,9 +212,21 @@ export const warmTextCardConfigMetadata = {
       category: 'content' as const,
       placeholder: '输入文案内容',
     },
+    // 背景配置（使用 bgValue 字段与 MediaGridControl 兼容）
+    bgValue: { 
+      category: 'background' as const, 
+      type: 'media-grid' as const, 
+      label: '背景场景', 
+      mediaType: 'background' as const, 
+      defaultItems: PRESETS.backgrounds,
+      description: '支持颜色、图片、视频，可自定义更换'
+    },
+    enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
+    bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
   },
   tabs: [
     { id: 'content' as const, label: '内容', icon: null },
+    { id: 'background' as const, label: '背景', icon: null },
     { id: 'visual' as const, label: '效果', icon: null },
   ],
   mobileSteps: [
@@ -199,7 +238,13 @@ export const warmTextCardConfigMetadata = {
     },
     { 
       id: 2, 
-      label: '效果', 
+      label: '背景场景', 
+      icon: null, 
+      fields: ['bgValue' as const] 
+    },
+    { 
+      id: 3, 
+      label: '效果调节', 
       icon: null, 
       fields: ['theme' as const, 'fontSizeScale' as const, 'speed' as const, 'maxCards' as const] 
     },
@@ -346,6 +391,34 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
   const containerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 使用可复用的音效 Hook
+  const {
+    audioRef: bgAudioRef,
+    isPlaying: isMusicPlaying,
+    isMuted,
+    handlePlayPause: toggleMusic,
+    handleToggleMute: toggleMute,
+  } = useAudioControl({
+    musicUrl: config.bgMusicUrl,
+    enabled: config.enableSound,
+    volume: 0.5,
+  });
+
+  // 获取有效的背景配置（优先 bgValue，回退到主题默认背景）
+  const effectiveBgConfig = useMemo(() => {
+    // 优先级：bgValue > bgConfig > 主题默认背景
+    if (config.bgValue) {
+      return parseBgValueToConfig(config.bgValue);
+    }
+    if (config.bgConfig) {
+      return config.bgConfig;
+    }
+    return THEMES[config.theme]?.bgConfig || THEMES.warm.bgConfig;
+  }, [config.bgValue, config.bgConfig, config.theme]);
+
+  // 背景类型检测
+  const bgType = effectiveBgConfig.type;
+
   const toggleFullScreen = () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
@@ -419,18 +492,24 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
   }, []);
 
   const currentTheme = THEMES[config.theme] || THEMES.warm;
-  const isDark = config.theme === 'night' || config.theme === 'eve';
+  const isDark = bgType === 'video' || bgType === 'image' || config.theme === 'night' || config.theme === 'eve';
   const iconColor = isDark ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-black';
   const glassBg = isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-white/40 hover:bg-white/60';
 
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full h-full overflow-hidden transition-colors duration-1000 ${currentTheme.bg}`}
+      className="relative w-full h-full overflow-hidden"
     >
+      {/* 1. 背景层（使用标准化背景渲染器） */}
+      <div className="absolute inset-0 z-0">
+        <BackgroundRenderer config={effectiveBgConfig} />
+      </div>
+
+      {/* 2. 装饰层（主题特效） */}
       <BackgroundDecoration type={currentTheme.decoration || 'none'} />
 
-      {/* 浮动卡片层 */}
+      {/* 3. 浮动卡片层 */}
       <div className="absolute inset-0 z-10 w-full h-full">
         {cards.map(card => (
           <WordCard 
@@ -442,7 +521,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         ))}
       </div>
 
-      {/* 顶部控制栏 */}
+      {/* 4. 顶部控制栏 */}
       <div className="absolute top-4 right-4 z-50 flex gap-3 safe-area-top">
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
@@ -461,7 +540,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         </button>
       </div>
 
-      {/* 初始引导 */}
+      {/* 5. 初始引导 */}
       {!isPlaying && cards.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none p-4">
           <div className="bg-white/90 backdrop-blur-md p-6 md:p-8 rounded-3xl shadow-xl text-center animate-bounce-slow max-w-sm">
@@ -470,6 +549,17 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
           </div>
         </div>
       )}
+
+      {/* 6. 音效控制面板 - 使用可复用组件 */}
+      <AudioControlPanel
+        isPlaying={isMusicPlaying}
+        isMuted={isMuted}
+        onPlayPause={toggleMusic}
+        onToggleMute={toggleMute}
+        enabled={config.enableSound}
+        position="bottom-right"
+        size="sm"
+      />
 
       <style>{`
         .animate-spin-slow { animation: spin 8s linear infinite; }

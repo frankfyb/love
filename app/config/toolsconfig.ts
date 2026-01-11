@@ -5,7 +5,7 @@
 
 // ====================== 1. 基础类型定义 ======================
 /** 工具标签枚举（限定合法标签，避免随意输入） */
-export type ToolTag = '热门' | '新品' | '节日专属' | '表白专属' | '视觉特效' | 'AI创作' | '灵感' | '记录' | '实用';
+export type ToolTag = '热门' | '新品' | '节日专属' | '表白专属' | '视觉特效' | 'AI创作' | '灵感' | '记录' | '实用' | '文字卡片';
 
 /** 分类主表 */
 export interface Category {
@@ -67,10 +67,9 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'warm-text-card',
     toolName: '暖心文字卡片',
-    isActive: false,
+    isActive: true,
     description: '生成温柔的文字卡片，适合表白、日常暖心问候，传递真挚情感',
-    tag: ['热门', '灵感'],
-    sort: 3,
+    tag: ['热门', '灵感', '文字卡片'],
     cover: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=300&fit=crop',
   },
   {

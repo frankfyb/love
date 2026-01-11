@@ -119,6 +119,14 @@ export const GLOBAL_BG_PRESETS = {
           ...GLOBAL_BG_PRESETS.basicColors.slice(0, 2),
           ...GLOBAL_BG_PRESETS.commonImages,
         ];
+      case 'warm-text-card':
+        // 温馨文字卡片：支持全系列，提供灵活背景选择
+        return [
+          ...GLOBAL_BG_PRESETS.basicColors,
+          ...GLOBAL_BG_PRESETS.lightColors,
+          ...GLOBAL_BG_PRESETS.festivalVideos,
+          ...GLOBAL_BG_PRESETS.commonImages,
+        ];
       default:
         // 默认：仅基础颜色
         return GLOBAL_BG_PRESETS.basicColors;

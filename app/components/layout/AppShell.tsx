@@ -19,8 +19,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
     // Check immersive mode: /love/[toolKey] - all tool pages should be immersive
     const checkImmersive = () => {
-      // 修改判断条件：只要是 /love/ 开头的路径（但不是 /love 本身）就进入沉浸式模式
-      if (pathname?.startsWith('/love/') && pathname !== '/love') {
+      // 修改判断条件：只要是 /love/ 开头的路径（但不是 /love 本身）或者 /demo 开头的路径就进入沉浸式模式
+      if ((pathname?.startsWith('/love/') && pathname !== '/love') || pathname?.startsWith('/demo')) {
         setIsImmersive(true);
         return;
       }

@@ -1,590 +1,449 @@
-
 'use client';
-import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
 
-// ==========================================
-// 1. 类型定义与默认配置 (Architecture)
-// ==========================================
+import React, { useState, useRef, useMemo, useEffect, Suspense } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls, Sparkles, Stars, Float } from '@react-three/drei';
+import * as THREE from 'three';
 
-/**
- * 浮光祈愿置接口
- */
+// ============================================================================
+// 1. 核心配置 (Config)
+// ============================================================================
+
 export interface AppConfig {
-  // 内容类
-  wishTexts: string; // 许愿文案池，用竖线 | 分隔
-  
-  // 视觉动效类
-  textDensity: number; // 屏幕文字密度 (5-30)
-  floatSpeed: number; // 上浮速度 (1-10)
-  glowIntensity: number; // 光效强度 (5-30)
-  particleCount: number; // 粒子产生频率 (1-5)
-  minFontSize: number; // 最小字体
-  maxFontSize: number; // 最大字体
-
-  // 背景类 (通用)
-  bgValue: string; 
-
-  // 音效类 (通用)
+  cardText: string;
+  subText: string;
+  particleCount: number;
+  colorInner: string;
+  colorOuter: string;
+  particleSize: number;
+  beatSpeed: number;
+  bgValue: string;
   bgMusicUrl: string;
   enableSound: boolean;
 }
 
-/**
- * 默认配置
- */
 export const DEFAULT_CONFIG: AppConfig = {
-  // 内容
-  wishTexts: '平安喜乐|万事胜意|前程似锦|好运连连|心想事成|未来可期|岁岁平安|暴富暴瘦',
+  cardText: 'CYBER LOVE',
+  subText: 'Digital Heartbeat',
   
-  // 视觉
-  textDensity: 12,
-  floatSpeed: 3,
-  glowIntensity: 15,
-  particleCount: 2,
-  minFontSize: 24,
-  maxFontSize: 64,
-
-  // 背景：蓝粉渐变海上晚霞风格
-  bgValue: 'linear-gradient(to bottom, #2c3e50, #4ca1af, #c471ed, #f64f59)', 
+  // 视觉配置
+  particleCount: 20000,       
+  colorInner: '#a0e0ff',      
+  colorOuter: '#b020ff',      
+  particleSize: 1.6,          
+  beatSpeed: 1.0,             
   
-  // 音效
-  bgMusicUrl: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/audio/spring-wind.mp3', // 示例轻音乐
+  bgValue: '#020205',         
+  bgMusicUrl: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/audio/spring-cherry.mp3',
   enableSound: true,
 };
 
-/**
- * 配置面板元数据
- */
-export const floatingWishesConfigMetadata = {
-  panelTitle: '霓虹许愿气泡',
-  panelSubtitle: '点亮夜空中的专属祝福',
+export const dynamicHeartParticleConfigMetadata = {
+  panelTitle: '赛博星云爱心',
+  panelSubtitle: '全息数字构建',
   configSchema: {
-    // 内容分类
-    wishTexts: {
-      category: 'content' as const,
-      type: 'textarea' as const,
-      label: '祝福语录',
-      placeholder: '输入祝福语，用 | 分隔',
-      description: '随机显示的祝福文字池，使用竖线 "|" 分隔不同词条',
-    },
-    // 视觉分类
-    textDensity: {
-      category: 'visual' as const,
-      type: 'slider' as const,
-      label: '气泡密度',
-      min: 1,
-      max: 30,
-      step: 1,
-      description: '屏幕中同时漂浮的背景文字数量',
-    },
-    floatSpeed: {
-      category: 'visual' as const,
-      type: 'slider' as const,
-      label: '上浮速度',
-      min: 1,
-      max: 10,
-      step: 0.5,
-    },
-    glowIntensity: {
-      category: 'visual' as const,
-      type: 'slider' as const,
-      label: '霓虹强度',
-      min: 0,
-      max: 50,
-      step: 1,
-      description: '文字光晕的扩散范围',
-    },
-    // 字体大小范围
-    minFontSize: {
-      category: 'visual' as const,
-      type: 'slider' as const,
-      label: '最小字体',
-      min: 12,
-      max: 40,
-      step: 2,
-    },
-    maxFontSize: {
-      category: 'visual' as const,
-      type: 'slider' as const,
-      label: '最大字体',
-      min: 40,
-      max: 120,
-      step: 5,
-    },
-
-    // 背景分类
-    bgValue: {
-      category: 'background' as const,
-      type: 'background-picker' as const, // 假设通用面板支持此类
-      label: '背景风格',
-      defaultItems: [
-        { label: '海上晚霞', value: 'linear-gradient(to bottom, #203a43, #2c5364, #ff7e5f, #feb47b)' },
-        { label: '梦幻极光', value: 'linear-gradient(to bottom, #000000, #434343, #5e60ce, #6930c3)' },
-        { label: '深海幽蓝', value: '#0f172a' },
-      ],
-    },
-    enableSound: {
-      category: 'background' as const,
-      type: 'switch' as const,
-      label: '启用音效',
-    },
-    bgMusicUrl: {
-      category: 'background' as const,
-      type: 'text' as const, // 简化为输入框，实际可用 media-picker
-      label: '背景音乐URL',
-    },
+    cardText: { category: 'content', type: 'input', label: '全息文字' },
+    subText: { category: 'content', type: 'input', label: '数字寄语' },
+    particleCount: { category: 'visual', type: 'slider', min: 5000, max: 30000, step: 1000, label: '数据密度' },
+    particleSize: { category: 'visual', type: 'slider', min: 0.5, max: 5, step: 0.1, label: '粒子光强' },
+    colorInner: { category: 'visual', type: 'color', label: '核心能级' },
+    colorOuter: { category: 'visual', type: 'color', label: '外层辉光' },
+    bgValue: { category: 'background', type: 'color', label: '虚空底色' },
+    enableSound: { category: 'background', type: 'switch', label: '背景音乐' },
   },
   tabs: [
-    { id: 'content' as const, label: '祝福', icon: null },
-    { id: 'visual' as const, label: '光效', icon: null },
-    { id: 'background' as const, label: '环境', icon: null },
+      { id: 'content', label: '内容', icon: null },
+      { id: 'visual', label: '视觉', icon: null },
+      { id: 'background', label: '背景', icon: null }
   ],
-  mobileSteps: [
-    { id: 1, label: '写祝福', fields: ['wishTexts'] },
-    { id: 2, label: '调氛围', fields: ['textDensity', 'floatSpeed', 'glowIntensity', 'minFontSize', 'maxFontSize'] },
-    { id: 3, label: '定背景', fields: ['bgValue', 'enableSound', 'bgMusicUrl'] },
-  ],
+  mobileSteps: [{ id: 1, label: '定制', fields: ['cardText', 'colorOuter'] }]
 };
 
-// ==========================================
-// 2. 核心显示组件 (DisplayUI)
-// ==========================================
+// ============================================================================
+// 2. 赛博晶体着色器 (Shader) - 整体心跳版
+// ============================================================================
 
-interface DisplayUIProps {
-  config: AppConfig;
-  isPanelOpen: boolean;
-  onConfigChange?: (key: string, value: any) => void;
-}
-
-// 粒子类定义
-class HeartParticle {
-  x: number;
-  y: number;
-  size: number;
-  speedX: number;
-  speedY: number;
-  opacity: number;
-  fadeSpeed: number;
-  color: string;
-
-  constructor(x: number, y: number, color: string) {
-    this.x = x;
-    this.y = y;
-    this.size = Math.random() * 3 + 2; // 2px - 5px
-    this.speedX = (Math.random() - 0.5) * 1;
-    this.speedY = Math.random() * 1 + 0.5; // 向下落或飘散
-    this.opacity = 1;
-    this.fadeSpeed = Math.random() * 0.02 + 0.01;
-    this.color = color;
-  }
-
-  update() {
-    this.x += this.speedX;
-    this.y += this.speedY; // 粒子轻微下沉或随风
-    this.opacity -= this.fadeSpeed;
-  }
-
-  draw(ctx: CanvasRenderingContext2D) {
-    if (this.opacity <= 0) return;
-    ctx.save();
-    ctx.globalAlpha = this.opacity;
-    ctx.fillStyle = this.color;
-    
-    // 绘制爱心路径
-    const x = this.x;
-    const y = this.y;
-    const s = this.size;
-    
-    ctx.beginPath();
-    ctx.moveTo(x, y + s / 4);
-    ctx.quadraticCurveTo(x, y, x + s / 4, y);
-    ctx.quadraticCurveTo(x + s / 2, y, x + s / 2, y + s / 4);
-    ctx.quadraticCurveTo(x + s / 2, y, x + s * 3/4, y);
-    ctx.quadraticCurveTo(x + s, y, x + s, y + s / 4);
-    ctx.quadraticCurveTo(x + s, y + s / 2, x + s * 3/4, y + s * 3/4);
-    ctx.lineTo(x + s / 2, y + s);
-    ctx.lineTo(x + s / 4, y + s * 3/4);
-    ctx.quadraticCurveTo(x, y + s / 2, x, y + s / 4);
-    ctx.fill();
-    
-    ctx.restore();
-  }
-}
-
-// 漂浮文字类定义
-class FloatingText {
-  text: string;
-  x: number;
-  y: number;
-  baseX: number;
-  fontSize: number;
-  speed: number;
-  opacity: number;
-  swayOffset: number;
-  swaySpeed: number;
-  isInteractive: boolean; // true: 点击生成的, false: 背景循环的
-
-  constructor(
-    w: number, 
-    h: number, 
-    text: string, 
-    config: AppConfig, 
-    isInteractive: boolean = false, 
-    startX?: number, 
-    startY?: number
-  ) {
-    this.text = text;
-    this.isInteractive = isInteractive;
-    
-    this.fontSize = Math.random() * (config.maxFontSize - config.minFontSize) + config.minFontSize;
-    
-    // 如果是点击生成的，位置固定；否则随机
-    if (isInteractive && startX !== undefined && startY !== undefined) {
-      this.baseX = startX;
-      this.y = startY;
-      this.opacity = 1;
-    } else {
-      this.baseX = Math.random() * w;
-      this.y = Math.random() * h + h; // 从下方开始或随机分布
-      this.opacity = Math.random() * 0.5 + 0.5; // 初始不透明度
-    }
-
-    this.x = this.baseX;
-    this.speed = (config.floatSpeed * 0.5) + (Math.random() * config.floatSpeed * 0.5) + (this.fontSize / 50); // 大字稍快
-    this.swayOffset = Math.random() * 100;
-    this.swaySpeed = Math.random() * 0.02 + 0.01;
-  }
-
-  update(h: number, time: number) {
-    // 向上移动
-    this.y -= this.speed;
-    
-    // 左右摇摆
-    this.x = this.baseX + Math.sin(time * this.swaySpeed + this.swayOffset) * 20;
-
-    // 交互生成的会逐渐消失
-    if (this.isInteractive) {
-      this.opacity -= 0.002;
-    }
-  }
-
-  isDead(h: number) {
-    if (this.isInteractive) {
-      return this.opacity <= 0 || this.y < -100;
-    }
-    return false; // 背景文字在外部循环逻辑处理
-  }
-}
-
-export const DisplayUI: React.FC<DisplayUIProps> = ({ config, isPanelOpen }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+const CyberVertexShader = `
+  uniform float uTime;
+  uniform float uBeatSpeed;
   
-  // 状态管理
-  const [isPlaying, setIsPlaying] = useState(false);
-  const textsRef = useRef<FloatingText[]>([]);
-  const particlesRef = useRef<HeartParticle[]>([]);
-  const animationFrameRef = useRef<number>();
-  const timeRef = useRef<number>(0);
+  attribute vec3 aPositionTarget; 
+  attribute vec3 aPositionStart;  
+  attribute float aRandom;
+  attribute float aSize;
+  attribute float aColorMix; 
   
-  // 拆分文字池
-  const textPool = useMemo(() => {
-    return config.wishTexts.split('|').filter(t => t.trim() !== '');
-  }, [config.wishTexts]);
+  uniform vec3 uColorInner;
+  uniform vec3 uColorOuter;
+  
+  varying vec3 vColor;
+  varying float vAlpha;
 
-  // 音频控制
-  useEffect(() => {
-    if (audioRef.current) {
-      if (config.enableSound) {
-        // 尝试播放（可能被浏览器阻挡，需要用户交互）
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-        }
+  float easeOutQuart(float x) {
+    return 1.0 - pow(1.0 - x, 4.0);
+  }
+
+  void main() {
+    // --- 汇聚动画 ---
+    float gatherDuration = 3.5;
+    float startDelay = aRandom * 1.2; 
+    float progressRaw = (uTime - startDelay) / gatherDuration;
+    float progress = clamp(progressRaw, 0.0, 1.0);
+    float easeProgress = easeOutQuart(progress);
+
+    vec3 currentPos = mix(aPositionStart, aPositionTarget, easeProgress);
+    float activeState = smoothstep(0.8, 1.0, easeProgress); 
+    
+    // --- [核心升级] 整体同步心跳算法 ---
+    // 1. 基础时间轴
+    float timeCycle = uTime * uBeatSpeed * 4.0;
+    
+    // 2. 极微小的空间延迟 (Micro Delay)
+    // 之前延迟很大(0.08)，导致只有内部在动。现在改为 0.01，几乎同步，但保留一点点有机感
+    float distDelay = length(aPositionTarget) * 0.01;
+    float localTime = timeCycle - distDelay;
+    
+    // 3. 有力的双波峰 (Strong Lub-Dub)
+    // 收缩相
+    float systole = pow(0.5 + 0.5 * sin(localTime), 8.0);
+    // 舒张相
+    float diastole = pow(0.5 + 0.5 * sin(localTime - 1.2), 8.0) * 0.5;
+    
+    // 4. 弹性回弹 (Elastic Recoil)
+    float recoil = sin(localTime * 2.0 + 3.14) * 0.08 * systole;
+    
+    float heartBeatWave = (systole + diastole + recoil) * activeState;
+    
+    // 5. [关键修改] 整体缩放 (Global Scaling)
+    // 使用乘法 scaling，让整个心形一起变大变小，而不是局部位移
+    // 0.12 是膨胀系数，意味着最大膨胀 12%
+    float beatScale = 1.0 + heartBeatWave * 0.12;
+    
+    // 应用整体缩放
+    currentPos *= beatScale;
+    
+    // 6. 额外的 Z 轴呼吸 (Volume Breathing)
+    // 让厚度变化稍微滞后一点点，增加 3D 韧性
+    float zBreathing = 1.0 + sin(localTime) * 0.02 * activeState;
+    currentPos.z *= zBreathing;
+    
+    // --- 悬浮流体 ---
+    float flowFrequency = 0.8;
+    float flowAmp = 0.06 * activeState;
+    float flowX = sin(uTime * flowFrequency + currentPos.y + aRandom * 10.0);
+    float flowY = cos(uTime * flowFrequency * 0.8 + currentPos.x + aRandom * 20.0);
+    float flowZ = sin(uTime * flowFrequency * 1.2 + currentPos.z + aRandom * 30.0);
+    currentPos += vec3(flowX, flowY, flowZ) * flowAmp;
+
+    vec3 baseColor = mix(uColorInner, uColorOuter, aColorMix);
+    
+    // 能量闪烁：心跳收缩最强时，核心亮一度
+    float beatFlash = 1.0 + systole * 1.2;
+    float gatherFlash = 1.0 + sin(progress * 3.14159) * 0.5; 
+    
+    vColor = baseColor * gatherFlash * beatFlash;
+
+    vec4 mvPosition = modelViewMatrix * vec4(currentPos, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+    
+    float twinkle = 0.8 + sin(uTime * 6.0 + aRandom * 50.0) * 0.3;
+    
+    float distScale = (200.0 / -mvPosition.z);
+    gl_PointSize = aSize * distScale * twinkle;
+    
+    vAlpha = 1.0; 
+  }
+`;
+
+const CyberFragmentShader = `
+  varying vec3 vColor;
+  varying float vAlpha;
+
+  void main() {
+    vec2 uv = gl_PointCoord - vec2(0.5);
+    float dist = length(uv);
+    
+    if (dist > 0.5) discard;
+    
+    // 晶体核心
+    float core = 1.0 - smoothstep(0.05, 0.1, dist);
+    
+    // 锐利光晕
+    float glow = 1.0 - smoothstep(0.0, 0.45, dist);
+    glow = pow(glow, 10.0); 
+    
+    vec3 finalColor = mix(vColor, vec3(1.0), core * 0.8);
+    
+    float finalAlpha = core * 1.0 + glow * 0.4;
+    
+    gl_FragColor = vec4(finalColor, finalAlpha * vAlpha);
+  }
+`;
+
+// ============================================================================
+// 3. 场景逻辑
+// ============================================================================
+
+function getHeartPosition(target: THREE.Vector3) {
+  const t = Math.random() * Math.PI * 2;
+  let x = 16 * Math.pow(Math.sin(t), 3);
+  let y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+  
+  const r = Math.random();
+  const fill = Math.pow(r, 0.35); 
+  
+  x *= fill;
+  y *= fill;
+  
+  const zThickness = 9.0 * Math.sqrt(1.0 - fill); 
+  let z = (Math.random() - 0.5) * zThickness;
+
+  target.set(x, y, z).multiplyScalar(0.35); 
+  return { pos: target, mix: r };
+}
+
+function getRandomStartPosition(target: THREE.Vector3) {
+  const theta = Math.random() * Math.PI * 2;
+  const r = 60 + Math.random() * 40; 
+  const y = (Math.random() - 0.5) * 50; 
+  
+  target.x = r * Math.cos(theta);
+  target.z = r * Math.sin(theta);
+  target.y = y;
+  return target;
+}
+
+const CyberGalaxyHeart = ({ config }: { config: AppConfig }) => {
+  const shaderRef = useRef<THREE.ShaderMaterial>(null);
+  const pointsRef = useRef<THREE.Points>(null);
+  
+  const attributes = useMemo(() => {
+    const count = config.particleCount;
+    const posTarget = new Float32Array(count * 3);
+    const posStart = new Float32Array(count * 3);
+    const colorMix = new Float32Array(count);
+    const randoms = new Float32Array(count);
+    const sizes = new Float32Array(count);
+    const dummy = new THREE.Vector3();
+
+    for (let i = 0; i < count; i++) {
+      const { pos: p, mix } = getHeartPosition(dummy);
+      posTarget[i * 3] = p.x;
+      posTarget[i * 3 + 1] = p.y;
+      posTarget[i * 3 + 2] = p.z;
+      
+      getRandomStartPosition(dummy);
+      posStart[i * 3] = dummy.x;
+      posStart[i * 3 + 1] = dummy.y;
+      posStart[i * 3 + 2] = dummy.z;
+      
+      colorMix[i] = mix; 
+      randoms[i] = Math.random();
+      
+      const rSize = Math.random();
+      if (rSize < 0.92) {
+          sizes[i] = config.particleSize * (0.3 + Math.random() * 0.6);
       } else {
-        audioRef.current.pause();
-        setIsPlaying(false);
+          sizes[i] = config.particleSize * (1.2 + Math.random() * 1.0);
       }
     }
-  }, [config.enableSound, config.bgMusicUrl]);
+    return { posTarget, posStart, colorMix, randoms, sizes };
+  }, [config.particleCount, config.particleSize]);
 
-  // 切换播放状态的手动处理
-  const toggleAudio = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error(e));
+  useFrame((state) => {
+    if (shaderRef.current) {
+      shaderRef.current.uniforms.uTime.value = state.clock.getElapsedTime();
+      shaderRef.current.uniforms.uBeatSpeed.value = config.beatSpeed;
+      shaderRef.current.uniforms.uColorInner.value.set(config.colorInner);
+      shaderRef.current.uniforms.uColorOuter.value.set(config.colorOuter);
     }
-  };
-
-  // 初始化画布与动画循环
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let width = 0;
-    let height = 0;
-
-    // 响应式调整大小
-    const resize = () => {
-      const parent = containerRef.current;
-      if (parent) {
-        width = parent.clientWidth;
-        height = parent.clientHeight;
-        // 处理高清屏
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
-        ctx.scale(dpr, dpr);
-      }
-    };
-    
-    resize();
-    window.addEventListener('resize', resize);
-
-    // 初始化背景文字
-    // 只有当当前数量少于配置数量时才添加，避免重置时闪烁
-    const initBackgroundTexts = () => {
-        const currentBgCount = textsRef.current.filter(t => !t.isInteractive).length;
-        const diff = config.textDensity - currentBgCount;
-        
-        if (diff > 0) {
-            for (let i = 0; i < diff; i++) {
-                const text = textPool[Math.floor(Math.random() * textPool.length)];
-                // 随机分布在屏幕各个位置，不仅仅是底部
-                const t = new FloatingText(width, height, text, config, false);
-                t.y = Math.random() * height; // 初始铺满屏幕
-                textsRef.current.push(t);
-            }
-        } else if (diff < 0) {
-            // 如果配置减少，随机移除一些背景文字
-            let removeCount = Math.abs(diff);
-            textsRef.current = textsRef.current.filter(t => {
-                if (!t.isInteractive && removeCount > 0) {
-                    removeCount--;
-                    return false;
-                }
-                return true;
-            });
-        }
-    };
-
-    initBackgroundTexts();
-
-    // 动画循环
-    const animate = () => {
-      timeRef.current += 1;
-      
-      // 清空画布
-      ctx.clearRect(0, 0, width, height);
-
-      // 1. 绘制和更新文字
-      // 设置霓虹文字样式
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      // 遍历倒序，方便移除
-      for (let i = textsRef.current.length - 1; i >= 0; i--) {
-        const t = textsRef.current[i];
-        
-        // 更新位置
-        t.update(height, timeRef.current);
-
-        // 边界检测
-        if (t.isInteractive) {
-          if (t.isDead(height)) {
-            textsRef.current.splice(i, 1);
-            continue;
-          }
-        } else {
-          // 背景文字循环：完全移出顶部后，回到底部
-          if (t.y < -t.fontSize) {
-            t.y = height + t.fontSize + Math.random() * 100;
-            t.baseX = Math.random() * width;
-            // 重新随机内容
-            t.text = textPool[Math.floor(Math.random() * textPool.length)];
-          }
-        }
-
-        // 生成拖尾粒子 (简单的频率控制)
-        if (timeRef.current % (6 - Math.min(5, config.particleCount)) === 0) {
-            // 粒子颜色淡粉色
-            particlesRef.current.push(new HeartParticle(t.x, t.y + t.fontSize/2, '#fbcfe8'));
-        }
-
-        // 绘制
-        ctx.save();
-        ctx.globalAlpha = t.opacity;
-        ctx.font = `bold ${t.fontSize}px sans-serif`;
-        
-        // --- 优化后的霓虹效果 ---
-        
-        // 1. 第一层：强光晕描边 (营造发光氛围)
-        // 使用高饱和度粉色，配合模糊，制造霓虹漫射感
-        ctx.shadowColor = '#ff7eb3'; 
-        ctx.shadowBlur = config.glowIntensity * 1.2; // 增强光晕范围
-        ctx.lineWidth = 3;
-        // 描边本身半透明，让光晕更柔和
-        ctx.strokeStyle = 'rgba(255, 182, 193, 0.5)'; 
-        ctx.strokeText(t.text, t.x, t.y);
-
-        // 2. 第二层：通透填充 (制造玻璃/空气感)
-        // 清除阴影，只绘制填充
-        ctx.shadowBlur = 0; 
-        // 极低透明度的白色，实现"字体透明"效果
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)'; 
-        ctx.fillText(t.text, t.x, t.y);
-        
-        // 3. 第三层：核心亮边 (勾勒清晰轮廓)
-        // 使用亮白色细线条，让文字在发光中依然清晰可辨
-        ctx.lineWidth = 1.5;
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)'; 
-        ctx.strokeText(t.text, t.x, t.y);
-        
-        ctx.restore();
-      }
-
-      // 2. 绘制和更新粒子
-      for (let i = particlesRef.current.length - 1; i >= 0; i--) {
-        const p = particlesRef.current[i];
-        p.update();
-        p.draw(ctx);
-        if (p.opacity <= 0) {
-          particlesRef.current.splice(i, 1);
-        }
-      }
-
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      window.removeEventListener('resize', resize);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [config, textPool]); // 当配置变化时重新建立循环逻辑，但尽量保持状态
-
-  // 点击生成气泡
-  const handleInteraction = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const parent = containerRef.current;
-    if (!parent) return;
-
-    let clientX, clientY;
-    if ('touches' in e) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-    } else {
-        clientX = (e as React.MouseEvent).clientX;
-        clientY = (e as React.MouseEvent).clientY;
+    if (pointsRef.current) {
+        pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.15;
     }
-
-    const rect = parent.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
-
-    const text = textPool[Math.floor(Math.random() * textPool.length)];
-    const newWish = new FloatingText(rect.width, rect.height, text, config, true, x, y);
-    
-    // 点击生成的稍微大一点，显眼一点
-    newWish.fontSize = Math.min(newWish.fontSize * 1.2, config.maxFontSize * 1.2);
-    
-    textsRef.current.push(newWish);
-
-    // 同时也生成一爆粒子增强点击反馈
-    for(let i=0; i<8; i++) {
-        particlesRef.current.push(new HeartParticle(x + (Math.random()-0.5)*20, y + (Math.random()-0.5)*20, '#fff'));
-    }
-
-  }, [config, textPool]);
-
-  // 处理背景样式
-  const getBackgroundStyle = () => {
-    const value = config.bgValue;
-    if (value.startsWith('#') || value.startsWith('rgb')) {
-      return { backgroundColor: value };
-    } else if (value.includes('gradient')) {
-      return { backgroundImage: value };
-    } else {
-      return { backgroundImage: `url(${value})`, backgroundSize: 'cover', backgroundPosition: 'center' };
-    }
-  };
+  });
 
   return (
-    <div 
-      ref={containerRef}
-      className={`relative w-full h-full overflow-hidden select-none touch-none transition-all duration-500`}
-      style={getBackgroundStyle()}
-      onClick={handleInteraction}
-      onTouchStart={handleInteraction}
-    >
-      {/* 画布层 */}
-      <canvas 
-        ref={canvasRef}
-        className="absolute top-0 left-0 w-full h-full block pointer-events-none"
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={attributes.posTarget.length/3} array={attributes.posTarget} itemSize={3} />
+        <bufferAttribute attach="attributes-aPositionTarget" count={attributes.posTarget.length/3} array={attributes.posTarget} itemSize={3} />
+        <bufferAttribute attach="attributes-aPositionStart" count={attributes.posStart.length/3} array={attributes.posStart} itemSize={3} />
+        <bufferAttribute attach="attributes-aColorMix" count={attributes.colorMix.length} array={attributes.colorMix} itemSize={1} />
+        <bufferAttribute attach="attributes-aRandom" count={attributes.randoms.length} array={attributes.randoms} itemSize={1} />
+        <bufferAttribute attach="attributes-aSize" count={attributes.sizes.length} array={attributes.sizes} itemSize={1} />
+      </bufferGeometry>
+      <shaderMaterial
+        ref={shaderRef}
+        vertexShader={CyberVertexShader}
+        fragmentShader={CyberFragmentShader}
+        uniforms={{
+          uTime: { value: 0 },
+          uBeatSpeed: { value: 1.0 },
+          uColorInner: { value: new THREE.Color(config.colorInner) },
+          uColorOuter: { value: new THREE.Color(config.colorOuter) }
+        }}
+        transparent
+        depthWrite={false}
+        blending={THREE.AdditiveBlending} 
       />
+    </points>
+  );
+};
 
-      {/* 音效控件 - 悬浮在右上角 */}
-      {config.enableSound && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleAudio();
+// 全息涟漪底座
+const HolographicBase = ({ color }: { color: string }) => {
+    const groupRef = useRef<THREE.Group>(null);
+    useFrame((state) => {
+        if(groupRef.current) {
+            groupRef.current.rotation.z = state.clock.getElapsedTime() * 0.05;
+        }
+    });
+
+    return (
+        <group ref={groupRef} position={[0, -9, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <mesh>
+                <ringGeometry args={[6, 6.05, 128]} />
+                <meshBasicMaterial color="#a0e0ff" transparent opacity={0.5} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
+            </mesh>
+            <mesh position={[0, 0, -0.2]}>
+                <ringGeometry args={[4, 9, 64]} />
+                <meshBasicMaterial color={color} transparent opacity={0.1} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
+            </mesh>
+            <mesh rotation={[0, 0, 1]} position={[0,0,0.1]}>
+                 <ringGeometry args={[7.5, 7.53, 128]} />
+                 <meshBasicMaterial color="#ffffff" transparent opacity={0.25} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
+            </mesh>
+            <gridHelper args={[20, 10, 0x112244, 0x000000]} rotation={[-Math.PI/2, 0, 0]} position={[0, 0, 0.2]} />
+        </group>
+    );
+}
+
+// ============================================================================
+// 4. UI 界面层 (HTML Overlay)
+// ============================================================================
+
+const CyberOverlay = ({ config }: { config: AppConfig }) => {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 select-none">
+      <div className="relative mt-[42vh] text-center animate-fade-in-slow mix-blend-screen">
+        <h1 
+          className="text-5xl md:text-8xl font-black tracking-widest text-transparent bg-clip-text"
+          style={{ 
+            fontFamily: "'Montserrat', sans-serif",
+            backgroundImage: `linear-gradient(180deg, #fff 0%, ${config.colorInner} 40%, ${config.colorOuter} 100%)`,
+            filter: 'drop-shadow(0 0 10px rgba(160, 224, 255, 0.6)) drop-shadow(0 0 30px rgba(176, 32, 255, 0.4))',
+            WebkitBackgroundClip: 'text',
+            letterSpacing: '0.2em'
           }}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white/80 hover:bg-white/20 transition-all"
         >
-          {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
-        </button>
-      )}
-
-      {/* 音频元素 */}
-      <audio 
-        ref={audioRef}
-        src={config.bgMusicUrl}
-        loop
-        crossOrigin="anonymous"
-      />
-
-      {/* 提示文案 - 仅当没有任何文字时或初始引导 */}
-      <div className="absolute bottom-8 w-full text-center pointer-events-none opacity-60">
-        <p className="text-white/70 text-sm font-light tracking-widest" style={{ textShadow: '0 0 10px rgba(255,192,203, 0.5)' }}>
-          点 击 屏 幕 · 许 下 心 愿
-        </p>
+          {config.cardText}
+        </h1>
+        
+        <div className="inline-block mt-6 px-4 py-1 border border-blue-400/30 bg-blue-900/10 backdrop-blur-sm rounded-full">
+            <p 
+            className="text-xs md:text-sm tracking-[0.5em] font-medium text-cyan-200"
+            style={{ textShadow: `0 0 8px ${config.colorInner}` }}
+            >
+            {config.subText.toUpperCase()}
+            </p>
+        </div>
+      </div>
+      
+      <div className="absolute bottom-8 text-[10px] text-cyan-100/30 tracking-[0.4em] font-light uppercase">
+        System Online • Interactive
       </div>
     </div>
   );
 };
 
-// ==========================================
-// 3. 宿主环境模拟 (App Component)
-// ==========================================
+// ============================================================================
+// 5. 主入口
+// ============================================================================
 
-export default function App() {
-  const [config, setConfig] = useState(DEFAULT_CONFIG);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+const CameraRig = () => {
+    const { camera, mouse } = useThree();
+    useFrame(() => {
+        camera.position.x += (mouse.x * 2.5 - camera.position.x) * 0.03;
+        camera.position.y += (mouse.y * 2.5 - camera.position.y) * 0.03;
+        camera.lookAt(0, -1, 0); 
+    });
+    return null;
+}
 
-  // 模拟配置修改
-  const handleConfigChange = (key: string, value: any) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
-  };
+export const DisplayUI = ({ 
+  config = DEFAULT_CONFIG, 
+  isPanelOpen = false 
+}: { 
+  config?: AppConfig 
+  isPanelOpen?: boolean
+}) => {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!mounted || !config.enableSound) return;
+    const audio = new Audio(config.bgMusicUrl);
+    audio.loop = true;
+    audio.volume = 0.4;
+    const play = () => { audio.play().catch(() => {}); document.removeEventListener('click', play); };
+    document.addEventListener('click', play);
+    return () => { audio.pause(); document.removeEventListener('click', play); };
+  }, [mounted, config.bgMusicUrl, config.enableSound]);
+
+  if (!mounted) return <div className="w-full h-full bg-black" />;
 
   return (
-    <div className="w-full h-screen bg-black">
-       <DisplayUI 
-         config={config} 
-         isPanelOpen={isPanelOpen} 
-         onConfigChange={handleConfigChange}
-       />
+    <div className="relative w-full h-full min-h-[500px] bg-black overflow-hidden">
+      <CyberOverlay config={config} />
+
+      <Canvas 
+        dpr={[1, 2]} 
+        camera={{ position: [0, 0, 22], fov: 38 }} 
+        gl={{ 
+            antialias: true, 
+            alpha: false, 
+            powerPreference: "high-performance" 
+        }}
+      >
+        <Suspense fallback={null}>
+            <color attach="background" args={[config.bgValue]} />
+            <fog attach="fog" args={[config.bgValue, 15, 90]} /> 
+            
+            <ambientLight intensity={0.1} />
+
+            <CyberGalaxyHeart config={config} />
+            
+            <HolographicBase color={config.colorOuter} />
+
+            <Stars radius={120} depth={20} count={1500} factor={3} saturation={0} fade speed={0.5} />
+            
+            <CameraRig />
+            <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.4} maxPolarAngle={Math.PI/1.6} minPolarAngle={Math.PI/2.5}/>
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+};
+
+if (typeof document !== 'undefined') {
+  const style = document.createElement("style");
+  style.innerText = `
+    @keyframes fade-in-slow {
+      0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-fade-in-slow {
+      animation: fade-in-slow 4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      animation-delay: 1.5s; /* 配合粒子汇聚时间 */
+      opacity: 0;
+    }
+  `;
+  document.head.appendChild(style);
+}
+export default function Demo4Page() {
+  return (
+    <div className="fixed inset-0 w-screen h-screen">
+      <DisplayUI config={DEFAULT_CONFIG} isPanelOpen={false} />
     </div>
   );
 }
