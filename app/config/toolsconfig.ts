@@ -58,7 +58,7 @@ export const TOOL_METADATA: ToolMetadata[] = [
   {
     id: 'rain-snow-ripple',
     toolName: '雨雪波纹特效',
-    isActive: false,
+    isActive: true,
     description: '添加浪漫的雨雪波纹背景，适配节日氛围，营造温馨浪漫的视觉效果',
     tag: ['热门', '视觉特效'],
     sort: 2,
@@ -73,77 +73,13 @@ export const TOOL_METADATA: ToolMetadata[] = [
     cover: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=300&fit=crop',
   },
   {
-    id: 'ai-poetry',
-    toolName: 'AI浪漫诗集',
-    isActive: false,
-    description: 'AI生成专属浪漫诗集，支持自定义主题，为爱人创作独一无二的情诗',
-    tag: ['新品', 'AI创作'],
-    sort: 4,
-    cover: 'https://images.unsplash.com/photo-1497534547324-0ebb3f052e83?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'axuyuantree',
-    toolName: '许愿元树',
-    isActive: false,
-    description: '在星光树下许下心愿，让愿望随星光闪耀，见证爱情的美好时刻',
-    tag: ['热门', '节日专属', '表白专属'],
-    sort: 5,
-    cover: 'https://images.unsplash.com/photo-1512361738903-8ca45a2ec809?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'eve-goodnight-apple',
-    toolName: '晚安平安果',
-    isActive: false,
-    description: '在宁静夜晚送上一颗温暖的平安果，伴你入梦，传递深情晚安祝福',
-    tag: ['节日专属', '表白专属'],
-    sort: 6,
-    cover: 'https://images.unsplash.com/photo-1606787995577-90325e1a2d4d?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'eve-multi-apple-blessing',
-    toolName: '多重苹果祝福',
-    isActive: false,
-    description: '打开礼盒，收获多重惊喜祝福，层层递进的情感表达更显用心',
-    tag: ['节日专属', '表白专属'],
-    sort: 7,
-    cover: 'https://images.unsplash.com/photo-1606787995588-0f3c1c4e3f4a?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'eve-santa-walk',
-    toolName: '圣诞老人漫步',
-    isActive: false,
-    description: '与圣诞老人互动，收获节日惊喜，增添圣诞夜的神秘与欢乐',
-    tag: ['节日专属', '视觉特效'],
-    sort: 8,
-    cover: 'https://images.unsplash.com/photo-1543548342-f7f4b6d7de8d?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'eve-wish-fireworks',
-    toolName: '许愿烟花',
-    isActive: false,
-    description: '点燃烟花，许下心中美好愿望，在绚烂烟火中见证爱的誓言',
-    tag: ['节日专属', '视觉特效'],
-    sort: 9,
-    cover: 'https://images.unsplash.com/photo-1512361738903-8ca45a2ec809?w=400&h=300&fit=crop',
-  },
-  // 新增的工具配置
-  {
-    id: 'christmas-avatar',
-    toolName: '圣诞头像工坊',
-    isActive: false,
-    description: '制作个性化的圣诞主题头像，为社交媒体增添节日气氛',
-    tag: ['节日专属', '实用'],
-    sort: 10,
-    cover: 'https://images.unsplash.com/photo-1543548342-f7f4b6d7de8d?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'birthday-romance-v2',
-    toolName: '生日浪漫生成器 V2',
-    isActive: false,
-    description: '为特殊的日子创造浪漫的生日祝福，定制专属的生日惊喜体验',
-    tag: ['表白专属', '节日专属'],
-    sort: 11,
-    cover: 'https://images.unsplash.com/photo-1543548042-63f5badc8b48?w=400&h=300&fit=crop',
+    id: 'money-swirl',
+    toolName: '招财进宝',
+    isActive: true,
+    description: '3D 沉浸式金钱雨特效，许愿财运滚滚，富贵吉祥',
+    tag: ['视觉特效', '节日专属'],
+    sort: 14,
+    cover: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=400&h=300&fit=crop',
   },
   {
     id: 'newyear-fireworks',
@@ -155,49 +91,13 @@ export const TOOL_METADATA: ToolMetadata[] = [
     cover: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=300&fit=crop',
   },
   {
-    id: 'time-tunnel',
-    toolName: '时光隧道',
-    isActive: false,
-    description: '穿越时空的视觉体验，回顾美好回忆，重温恋爱历程的重要时刻',
-    tag: ['视觉特效', '灵感'],
-    sort: 13,
-    cover: 'https://images.unsplash.com/photo-1497534547324-0ebb3f052e83?w=400&h=300&fit=crop',
-  },
-  {
     id: 'galaxy-weaver',
     toolName: '银河工坊',
-    isActive: false,
+    isActive: true,
     description: '创造属于你的璀璨银河，用星辰大海表达永恒的爱意',
-    tag: ['视觉特效', 'AI创作'],
+    tag: ['表白专属', '视觉特效'],
     sort: 14,
     cover: 'https://images.unsplash.com/photo-1512361738903-8ca45a2ec809?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'koi-blessing-pool',
-    toolName: '锦鲤祝福池',
-    isActive: false,
-    description: '在锦鲤池中许下心愿，收获满满祝福，寓意着好运与爱情双丰收',
-    tag: ['节日专属', '表白专属'],
-    sort: 15,
-    cover: 'https://images.unsplash.com/photo-1518006336073-55b36a3d8b95?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'christmas-fireplace',
-    toolName: '圣诞壁炉',
-    isActive: false,
-    description: '温暖的圣诞壁炉，营造节日氛围，在温馨火光中享受二人世界',
-    tag: ['节日专属', '视觉特效'],
-    sort: 16,
-    cover: 'https://images.unsplash.com/photo-1543548342-f7f4b6d7de8d?w=400&h=300&fit=crop',
-  },
-  {
-    id: 'romantic-christmas',
-    toolName: '浪漫圣诞树',
-    isActive: false,
-    description: '装饰专属于你们的浪漫圣诞树，共同点亮爱的圣诞奇迹',
-    tag: ['节日专属', '表白专属', '视觉特效'],
-    sort: 17,
-    cover: 'https://images.unsplash.com/photo-1543548042-63f5badc8b48?w=400&h=300&fit=crop',
   },
   {
     id: 'christmas-tree-card',
@@ -226,33 +126,193 @@ export const TOOL_METADATA: ToolMetadata[] = [
     sort: 20,
     cover: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=400&h=300&fit=crop',
   },
+  {
+    id: 'romantic-heart-3d',
+    toolName: '3D 红色爱心',
+    isActive: true,
+    description: '3D 粒子爱心特效，搭配浪漫文字与音乐，真挚表白的完美选择',
+    tag: ['表白专属', '视觉特效'],
+    sort: 30,
+    cover: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
+  },
+  // ====================== 新增工具 ======================
+  {
+    id: 'spring-festival',
+    toolName: '新春快乐',
+    isActive: true,
+    description: '3D烟花粒子文字效果，红红火火迎新年，祝福新春快乐',
+    tag: ['节日专属', '视觉特效'],
+    sort: 21,
+    cover: 'https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'lantern-fireworks',
+    toolName: '孔明灯与烟花',
+    isActive: true,
+    description: '孔明灯升空与烟花绽放的浪漫结合，许愿祈福的美好时刻',
+    tag: ['节日专属', '视觉特效'],
+    sort: 22,
+    cover: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'brilliant-fireworks',
+    toolName: '璀璨烟花',
+    isActive: true,
+    description: '高级烟花物理模拟，真实璀璨的烟花绽放效果',
+    tag: ['视觉特效', '节日专属'],
+    sort: 23,
+    cover: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'tsparticles-fireworks',
+    toolName: '梦幻粒子烟花',
+    isActive: true,
+    description: '基于tsParticles的梦幻烟花效果，细腻流畅的粒子动画',
+    tag: ['视觉特效'],
+    sort: 24,
+    cover: 'https://images.unsplash.com/photo-1533628635777-112b2239b1c7?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'countdown-3d-fireworks',
+    toolName: '3D烟花倒计时',
+    isActive: true,
+    description: '集成3D粒子效果与倒计时功能，震撼的新年庆典体验',
+    tag: ['节日专属', '视觉特效'],
+    sort: 25,
+    cover: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'romantic-fireworks',
+    toolName: '浪漫烟花',
+    isActive: true,
+    description: '高级烟花配合打字机效果，专为浪漫告白设计的烟花秀',
+    tag: ['表白专属', '视觉特效'],
+    sort: 26,
+    cover: 'https://images.unsplash.com/photo-1516589091380-5d8e87df6999?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'text-fireworks',
+    toolName: '文字烟花',
+    isActive: true,
+    description: '文字点阵烟花效果，用绚烂烟花写下专属祝福',
+    tag: ['视觉特效', '表白专属'],
+    sort: 27,
+    cover: 'https://images.unsplash.com/photo-1546484396-fb3fc6f95f98?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'city-fireworks',
+    toolName: '城市烟花',
+    isActive: true,
+    description: '城市夜景烟花效果，在璀璨城市上空绽放浪漫',
+    tag: ['视觉特效', '节日专属'],
+    sort: 28,
+    cover: 'https://images.unsplash.com/photo-1470790376778-a9fbc86d70e2?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'aurora-fireworks',
+    toolName: '极光烟花',
+    isActive: true,
+    description: 'tsParticles增强版烟花效果，极光般绚丽的视觉盛宴',
+    tag: ['视觉特效'],
+    sort: 29,
+    cover: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'firework-show-3d',
+    toolName: '3D烟花秀',
+    isActive: true,
+    description: '沉浸式3D烟花体验，全方位欣赏烟花绽放',
+    tag: ['视觉特效', '节日专属'],
+    sort: 31,
+    cover: 'https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'custom-fireworks',
+    toolName: '定制烟花',
+    isActive: true,
+    description: '专属定制烟花秀，送给最爱的人最独特的祝福',
+    tag: ['新品', '表白专属', '视觉特效'],
+    sort: 32,
+    cover: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop',
+  },
+  // ====================== 浪漫爱心类工具 ======================
+  {
+    id: 'romantic-hearts',
+    toolName: '浪漫爱心',
+    isActive: true,
+    description: '多种浪漫爱心效果，心跳脉动、流星浪漫、黑客风格、漂浮文字，表达浓浓爱意',
+    tag: ['新品', '表白专属', '视觉特效'],
+    sort: 33,
+    cover: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'particle-hearts',
+    toolName: '粒子爱心',
+    isActive: true,
+    description: '粒子双心、钻石轨迹、脉动光晕，用粒子编织爱的形状',
+    tag: ['新品', '表白专属', '视觉特效'],
+    sort: 34,
+    cover: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
+  },
+  // ====================== 生日祝福类工具 ======================
+  {
+    id: 'birthday-wish',
+    toolName: '生日祝福',
+    isActive: true,
+    description: '烟花文字、气球派对、聚光舞台、爱心祝福，多种生日祝福效果任你选择',
+    tag: ['新品', '节日专属', '视觉特效'],
+    sort: 35,
+    cover: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop',
+  },
+  // ====================== 时空穿梭类工具 ======================
+  {
+    id: 'time-tunnel',
+    toolName: '时空隧道',
+    isActive: true,
+    description: '年份数字螺旋穿梭隧道，穿越时空遇见你，科幻浪漫的视觉盛宴',
+    tag: ['新品', '视觉特效', '表白专属'],
+    sort: 36,
+    cover: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&h=300&fit=crop',
+  },
 ];
 
 /** 分类-工具关联配置 */
 export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
+  // 基础工具关联
   { id: 'rel1', toolId: 'christmas-card', categoryId: 'festival' },
   { id: 'rel2', toolId: 'rain-snow-ripple', categoryId: 'festival' },
   { id: 'rel3', toolId: 'warm-text-card', categoryId: 'confession' },
-  { id: 'rel4', toolId: 'ai-poetry', categoryId: 'ai' },
-  { id: 'rel5', toolId: 'warm-text-card', categoryId: 'memory' },
-  { id: 'rel6', toolId: 'axuyuantree', categoryId: 'festival' },
-  { id: 'rel7', toolId: 'eve-goodnight-apple', categoryId: 'festival' },
-  { id: 'rel8', toolId: 'eve-multi-apple-blessing', categoryId: 'festival' },
-  { id: 'rel9', toolId: 'eve-santa-walk', categoryId: 'festival' },
-  { id: 'rel10', toolId: 'eve-wish-fireworks', categoryId: 'festival' },
-  // 新增的工具关联配置
-  { id: 'rel11', toolId: 'christmas-avatar', categoryId: 'festival' },
-  { id: 'rel12', toolId: 'birthday-romance-v2', categoryId: 'confession' },
+
+  // 节日工具关联
   { id: 'rel13', toolId: 'newyear-fireworks', categoryId: 'festival' },
-  { id: 'rel14', toolId: 'time-tunnel', categoryId: 'memory' },
-  { id: 'rel15', toolId: 'galaxy-weaver', categoryId: 'ai' },
-  { id: 'rel16', toolId: 'koi-blessing-pool', categoryId: 'festival' },
-  { id: 'rel17', toolId: 'christmas-fireplace', categoryId: 'festival' },
-  { id: 'rel18', toolId: 'romantic-christmas', categoryId: 'festival' },
   { id: 'rel19', toolId: 'christmas-tree-card', categoryId: 'festival' },
   { id: 'rel20', toolId: 'newyear-countdown', categoryId: 'festival' },
+  { id: 'rel31', toolId: 'spring-festival', categoryId: 'festival' },
+  { id: 'rel32', toolId: 'lantern-fireworks', categoryId: 'festival' },
+  { id: 'rel33', toolId: 'brilliant-fireworks', categoryId: 'festival' },
+  { id: 'rel34', toolId: 'countdown-3d-fireworks', categoryId: 'festival' },
+  { id: 'rel35', toolId: 'city-fireworks', categoryId: 'festival' },
+  { id: 'rel36', toolId: 'firework-show-3d', categoryId: 'festival' },
+  { id: 'rel37', toolId: 'birthday-wish', categoryId: 'festival' },
+  { id: 'rel38', toolId: 'money-swirl', categoryId: 'festival' },
+
+  // 表白工具关联
   { id: 'rel21', toolId: 'neon-wish-bubbles', categoryId: 'confession' },
-  { id: 'rel22', toolId: 'neon-wish-bubbles', categoryId: 'festival' },
+  { id: 'rel30', toolId: 'romantic-heart-3d', categoryId: 'confession' },
+  { id: 'rel40', toolId: 'galaxy-weaver', categoryId: 'confession' },
+  { id: 'rel41', toolId: 'romantic-fireworks', categoryId: 'confession' },
+  { id: 'rel42', toolId: 'text-fireworks', categoryId: 'confession' },
+  { id: 'rel43', toolId: 'custom-fireworks', categoryId: 'confession' },
+  { id: 'rel44', toolId: 'romantic-hearts', categoryId: 'confession' },
+  { id: 'rel45', toolId: 'particle-hearts', categoryId: 'confession' },
+  { id: 'rel46', toolId: 'time-tunnel', categoryId: 'confession' },
+
+  // 纪念工具关联
+  { id: 'rel50', toolId: 'time-tunnel', categoryId: 'memory' },
+  { id: 'rel51', toolId: 'birthday-wish', categoryId: 'memory' },
+
+  // AI创作工具关联
+  { id: 'rel15', toolId: 'galaxy-weaver', categoryId: 'ai' },
 ];
 
 // ====================== 3. 辅助函数（适配数组标签） ======================
@@ -260,14 +320,14 @@ export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
 export const getCategoryById = (categoryId: string) => CATEGORIES.find(cat => cat.id === categoryId);
 
 /** 根据工具ID获取关联的所有分类ID */
-export const getCategoryIdsByToolId = (toolId: string) => 
+export const getCategoryIdsByToolId = (toolId: string) =>
   TOOL_CATEGORY_RELATIONS.filter(rel => rel.toolId === toolId).map(rel => rel.categoryId);
 
 /** 根据分类ID获取关联的工具（过滤未启用） */
 export const getToolsByCategoryId = (categoryId = '') => {
   const activeTools = TOOL_METADATA.filter(tool => tool.isActive);
   if (!categoryId) return activeTools.sort((a, b) => (a.sort || 999) - (b.sort || 999));
-  
+
   const relatedToolIds = TOOL_CATEGORY_RELATIONS.filter(rel => rel.categoryId === categoryId).map(rel => rel.toolId);
   return activeTools
     .filter(tool => relatedToolIds.includes(tool.id))
@@ -277,7 +337,7 @@ export const getToolsByCategoryId = (categoryId = '') => {
 /** 搜索工具（支持标签模糊匹配） */
 export const searchTools = (keyword = '') => {
   if (!keyword) return getToolsByCategoryId();
-  
+
   const lowerKeyword = keyword.toLowerCase();
   return TOOL_METADATA.filter(tool => {
     if (!tool.isActive) return false;

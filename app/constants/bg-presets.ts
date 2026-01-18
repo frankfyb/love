@@ -35,15 +35,15 @@ export const GLOBAL_BG_PRESETS = {
    * 高级功能，需要视频支持
    */
   festivalVideos: [
-    { 
-      label: '唯美飘雪', 
-      value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/20471-309698211.mp4', 
+    {
+      label: '唯美飘雪',
+      value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/20471-309698211.mp4',
       type: 'video' as const,
       description: '温柔飘落的雪花动画',
     },
-    { 
-      label: '温馨壁炉', 
-      value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/23881-337972830_small.mp4', 
+    {
+      label: '温馨壁炉',
+      value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/23881-337972830_small.mp4',
       type: 'video' as const,
       description: '温暖的壁炉火焰',
     },
@@ -54,15 +54,15 @@ export const GLOBAL_BG_PRESETS = {
    * 来自 Unsplash 的免费高质量图片
    */
   commonImages: [
-    { 
-      label: '极光雪夜', 
-      value: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2670&auto=format&fit=crop', 
+    {
+      label: '极光雪夜',
+      value: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?q=80&w=2670&auto=format&fit=crop',
       type: 'image' as const,
       description: '北极光点缀的雪地夜景',
     },
-    { 
-      label: '繁华都市', 
-      value: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2670&auto=format&fit=crop', 
+    {
+      label: '繁华都市',
+      value: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?q=80&w=2670&auto=format&fit=crop',
       type: 'image' as const,
       description: '璀璨的城市夜景',
     },
@@ -126,6 +126,61 @@ export const GLOBAL_BG_PRESETS = {
           ...GLOBAL_BG_PRESETS.lightColors,
           ...GLOBAL_BG_PRESETS.festivalVideos,
           ...GLOBAL_BG_PRESETS.commonImages,
+        ];
+      case 'romantic-heart-3d':
+        // 浪漫3D爱心：深色背景为主，营造浪漫氛围
+        return [
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 3), // 深黑、深蓝、皇家紫
+          ...GLOBAL_BG_PRESETS.festivalVideos, // 飘雪、壁炉等浪漫场景
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('极光') || img.label.includes('星辰')
+          ),
+        ];
+      case 'spring-festival':
+        // 新春快乐：深色背景为主，以更好展示烟花和粒子效果
+        return [
+          { label: '纯黑', value: '#000000', type: 'color' as const },
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 3), // 深黑、深蓝、皇家紫
+          ...GLOBAL_BG_PRESETS.festivalVideos,
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('星辰') || img.label.includes('极光')
+          ),
+        ];
+      case 'lantern-fireworks':
+        // 孔明灯与烟花：深色夜空背景，让灯光和烟花更突出
+        return [
+          { label: '深邃夜空', value: '#0a0a1a', type: 'color' as const },
+          { label: '午夜蓝', value: '#0a0a2e', type: 'color' as const },
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 3),
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('星辰')
+          ),
+        ];
+      case 'galaxy-weaver':
+        // 银河工坊：深色星空为主
+        return [
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 3),
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('星辰')
+          ),
+        ];
+      case 'brilliant-fireworks':
+        // 璀璨烟花：纯黑背景最佳，让烟花效果最突出
+        return [
+          { label: '纯黑', value: '#000000', type: 'color' as const },
+          { label: '深空', value: '#050510', type: 'color' as const },
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 2),
+        ];
+      case 'tsparticles-fireworks':
+        // 梦幻粒子烟花：纯黑和深色背景，让流畅烟花效果更加梦幻
+        return [
+          { label: '纯黑', value: '#000000', type: 'color' as const },
+          { label: '深邃夜空', value: '#0a0a1a', type: 'color' as const },
+          { label: '深空', value: '#050510', type: 'color' as const },
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 2),
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('星辰')
+          ),
         ];
       default:
         // 默认：仅基础颜色

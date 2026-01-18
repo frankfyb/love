@@ -22,12 +22,12 @@ export const BackgroundRenderer: React.FC<BackgroundRendererProps> = ({
   style = {},
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { 
-    type, 
-    value, 
-    videoAutoPlay = true, 
-    videoLoop = true, 
-    videoMuted = true, 
+  const {
+    type,
+    value,
+    videoAutoPlay = true,
+    videoLoop = true,
+    videoMuted = true,
     imageFit = 'cover',
     overlayColor = 'rgba(0, 0, 0, 1)',
     overlayOpacity = 0,
@@ -36,7 +36,7 @@ export const BackgroundRenderer: React.FC<BackgroundRendererProps> = ({
   // 视频自动播放逻辑（兼容浏览器策略）
   useEffect(() => {
     if (type !== 'video' || !videoRef.current) return;
-    
+
     const playVideo = async () => {
       try {
         await videoRef.current?.play();
@@ -69,26 +69,30 @@ export const BackgroundRenderer: React.FC<BackgroundRendererProps> = ({
   const renderContent = () => {
     switch (type) {
       case 'color':
+        const isGradient = value.includes('gradient');
         return (
-          <div 
+          <div
             className={`w-full h-full ${className}`}
-            style={{ ...style, backgroundColor: value }}
+            style={{
+              ...style,
+              [isGradient ? 'backgroundImage' : 'backgroundColor']: value
+            }}
           />
         );
       case 'image':
         return (
           <div className={`w-full h-full relative overflow-hidden ${className}`} style={style}>
-            <div 
+            <div
               className="w-full h-full bg-cover bg-center"
-              style={{ 
+              style={{
                 backgroundImage: `url(${value})`,
                 backgroundSize: imageFit,
               }}
             />
             {/* 覆盖层 */}
             {overlayOpacity > 0 && (
-              <div 
-                className="absolute inset-0" 
+              <div
+                className="absolute inset-0"
                 style={overlayStyle}
               />
             )}
@@ -108,8 +112,8 @@ export const BackgroundRenderer: React.FC<BackgroundRendererProps> = ({
             />
             {/* 覆盖层 */}
             {overlayOpacity > 0 && (
-              <div 
-                className="absolute inset-0" 
+              <div
+                className="absolute inset-0"
                 style={overlayStyle}
               />
             )}
@@ -144,11 +148,11 @@ export const LegacyBgRenderer: React.FC<{
     } else if (value) {
       type = 'image';
     }
-    return { 
-      type, 
-      value, 
-      videoAutoPlay: true, 
-      videoLoop: true, 
+    return {
+      type,
+      value,
+      videoAutoPlay: true,
+      videoLoop: true,
       videoMuted: true,
       overlayOpacity: type === 'image' || type === 'video' ? overlayOpacity : 0,
     };
