@@ -56,3 +56,22 @@ export interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }
+
+// 组合作品项数据
+export interface ComboItemData {
+  toolKey: string;
+  toolName: string;
+  title: string;
+  config: any;
+  duration: number;
+}
+
+// 保存的组合数据
+export interface ComboData {
+  id: string;
+  name: string;
+  items: ComboItemData[];
+  createdAt: number;
+  totalDuration: number;
+}
+

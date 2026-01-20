@@ -7,10 +7,10 @@ import ModalImport from '@/components/common/Modal';
 import { GenericConfigPanel } from '@/components/generic/GenericConfigPanel';
 import { FloatingActionBar } from '@/components/generic/FloatingActionBar';
 import type { ToolConfigMetadata } from '@/types/genericConfig';
-import { 
-  Plus, 
-  Trash2, 
-  Play, 
+import {
+  Plus,
+  Trash2,
+  Play,
   Check,
   ChevronLeft,
   X
@@ -43,7 +43,7 @@ const getToolFullConfig = (key: string) => {
         </div>
       ),
       defaultConfig: { demo: true },
-      configMetadata: { 
+      configMetadata: {
         configSchema: {},
         tabs: []
       } as ToolConfigMetadata<any>,
@@ -95,7 +95,7 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
   const router = useRouter();
   const toolKey = resolvedParams ? decodeURIComponent(resolvedParams.loves) : 'loading...';
   const [isOpen, setIsOpen] = useState(true);
-  
+
   // Memoize tool config
   const tool = useMemo(() => {
     if (!resolvedParams) return null;
@@ -103,18 +103,22 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
   }, [toolKey, resolvedParams]);
 
   // States
-  const [config, setConfig] = useState<any>(null); 
+  const [config, setConfig] = useState<any>(null);
   const { works: templates, addWork, removeWork } = useWorks(String(toolKey));
   const [showTemplates, setShowTemplates] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSharedConfig, setIsSharedConfig] = useState(false); // 新增：检测是否是分享配置
 
+  // 收藏输入模态框状态
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveName, setSaveName] = useState('');
+
   // Initialize
   useEffect(() => {
     if (!tool) return;
     setConfig(tool.defaultConfig);
-    
+
     // Check URL for shared config
     try {
       const search = new URLSearchParams(window.location.search);
@@ -129,7 +133,7 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
           setTimeout(() => showToastMsg('已加载分享的配置，沉浸式体验中...'), 500);
         }
       }
-    } catch {}
+    } catch { }
   }, [tool]);
 
   const handleConfigChange = (key: keyof any, value: any) => {
@@ -159,11 +163,31 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
   //   setConfig((prev: any) => ({ ...prev, theme: preset.value }));
   // };
 
+  // 打开收藏模态框
+  const openSaveModal = () => {
+    setSaveName(new Date().toLocaleString('zh-CN', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }));
+    setShowSaveModal(true);
+  };
+
+  // 确认收藏
+  const confirmSave = () => {
+    if (!saveName.trim()) {
+      showToastMsg('请给这段回忆起个名字吧');
+      return;
+    }
+    addWork(saveName.trim(), config);
+    setShowSaveModal(false);
+    setSaveName('');
+    showToastMsg('💕 已收藏这段回忆');
+  };
+
   const saveCurrentTemplate = () => {
-    const name = window.prompt('给这段回忆起个名字吧...', new Date().toLocaleString());
-    if (!name) return;
-    addWork(name, config);
-    showToastMsg('已收藏这段回忆');
+    openSaveModal();
   };
 
   const loadTemplate = (t: any) => {
@@ -202,8 +226,8 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
     return (
       <main className="flex h-screen w-full items-center justify-center bg-black text-white">
         <div className="flex flex-col items-center gap-4">
-           <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
-           <p className="text-gray-400 text-sm">正在加载魔法...</p>
+          <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm">正在加载魔法...</p>
         </div>
       </main>
     );
@@ -213,34 +237,35 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
 
   return (
     <main className="relative flex h-screen w-full bg-black font-sans text-slate-100 overflow-hidden">
-      
+
       {/* Background Ambience */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-pink-900/20 blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* ================= FLOATING ACTION BAR ================= */}
       {/* 分享配置时隐藏 FloatingActionBar */}
       {!isSharedConfig && (
-        <FloatingActionBar 
+        <FloatingActionBar
           isOpen={isOpen}
           setIsOpen={setIsOpen}
           onNavigateHome={goHome}
           onNavigateLibrary={goLibrary}
           onNavigateProfile={goProfile}
-          onToggleTemplates={() => setShowTemplates(true)}
+          onToggleTemplates={saveCurrentTemplate}
+          onViewTemplates={() => setShowTemplates(true)}
           onShare={copyShareLink}
           onReset={() => setConfig(defaultConfig)}
         />
       )}
 
       {/* ================= Templates Modal ================= */}
-      <Modal 
-        isOpen={showTemplates} 
-        onClose={() => setShowTemplates(false)} 
+      <Modal
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
         title="珍藏的瞬间"
         theme="dark"
       >
         <div className="space-y-4">
-          <button 
+          <button
             onClick={saveCurrentTemplate}
             className="w-full flex items-center justify-center gap-2 py-3 border border-dashed border-white/20 rounded-xl text-gray-400 hover:text-pink-200 hover:border-pink-500/30 hover:bg-pink-500/5 transition-all group"
           >
@@ -261,14 +286,14 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
                   <span className="text-xs text-gray-500">{new Date(Number(t.id)).toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button 
+                  <button
                     onClick={() => loadTemplate(t)}
                     className="p-2 rounded-full hover:bg-pink-500/20 text-gray-400 hover:text-pink-300 transition-colors"
                     title="重现"
                   >
                     <Play className="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => deleteTemplate(t.id)}
                     className="p-2 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-300 transition-colors"
                     title="遗忘"
@@ -279,6 +304,52 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
               </div>
             ))}
           </div>
+        </div>
+      </Modal>
+
+      {/* ================= Save Memory Modal (收藏输入模态框) ================= */}
+      <Modal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        title="收藏这段回忆"
+        theme="dark"
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="text-gray-400 text-sm mb-4">给这段浪漫时刻起个名字吧...</p>
+            <div className="relative">
+              <input
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && confirmSave()}
+                placeholder="例如：第一次约会的惊喜"
+                autoFocus
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-pink-100 placeholder-gray-500 focus:outline-none focus:border-pink-500/50 focus:ring-2 focus:ring-pink-500/20 transition-all text-center"
+              />
+              <div className="absolute inset-0 -z-10 bg-gradient-to-r from-pink-500/5 via-purple-500/5 to-pink-500/5 rounded-xl blur-xl" />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowSaveModal(false)}
+              className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+            >
+              取消
+            </button>
+            <button
+              onClick={confirmSave}
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              <span>收藏</span>
+            </button>
+          </div>
+
+          <p className="text-center text-xs text-gray-500">
+            按 Enter 键可快速收藏
+          </p>
         </div>
       </Modal>
 
@@ -293,7 +364,7 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       {/* ================= Configuration Side Panel ================= */}
       {/* PC端：左侧侧边栏 | 移动端：顶部抽屉 | 分享配置时隐藏 */}
       {!isSharedConfig && (
-        <div 
+        <div
           className={`
             absolute top-0 left-0 h-full z-40
             transition-transform duration-500 ease-in-out will-change-transform
@@ -303,11 +374,11 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
         >
           <div className="h-full relative shadow-2xl">
             {configMetadata ? (
-              <GenericConfigPanel 
-                config={config} 
-                configMetadata={configMetadata} 
-                onChange={handleConfigChange} 
-                isOpen={isOpen} 
+              <GenericConfigPanel
+                config={config}
+                configMetadata={configMetadata}
+                onChange={handleConfigChange}
+                isOpen={isOpen}
                 setIsOpen={setIsOpen}
               />
             ) : (
@@ -323,11 +394,11 @@ export default function ToolPage({ params }: { params: Promise<{ loves: string }
       {!isSharedConfig && (
         <div className="md:hidden">
           {configMetadata ? (
-            <GenericConfigPanel 
-              config={config} 
-              configMetadata={configMetadata} 
-              onChange={handleConfigChange} 
-              isOpen={isOpen} 
+            <GenericConfigPanel
+              config={config}
+              configMetadata={configMetadata}
+              onChange={handleConfigChange}
+              isOpen={isOpen}
               setIsOpen={setIsOpen}
             />
           ) : null}

@@ -158,8 +158,8 @@ export const TOOL_METADATA: ToolMetadata[] = [
     id: 'brilliant-fireworks',
     toolName: '璀璨烟花',
     isActive: true,
-    description: '高级烟花物理模拟，真实璀璨的烟花绽放效果',
-    tag: ['视觉特效', '节日专属'],
+    description: '绚烂璀璨的高级烟花秀，多种烟花类型自由选择，为你点亮最浪漫的夜空',
+    tag: ['热门', '视觉特效', '节日专属', '表白专属'],
     sort: 23,
     cover: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&h=300&fit=crop',
   },
@@ -176,8 +176,8 @@ export const TOOL_METADATA: ToolMetadata[] = [
     id: 'countdown-3d-fireworks',
     toolName: '3D烟花倒计时',
     isActive: true,
-    description: '集成3D粒子效果与倒计时功能，震撼的新年庆典体验',
-    tag: ['节日专属', '视觉特效'],
+    description: '震撼的3D烟花与浪漫倒计时，为你的特别时刻绽放最美烟火',
+    tag: ['热门', '节日专属', '表白专属', '视觉特效'],
     sort: 25,
     cover: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop',
   },
@@ -212,8 +212,8 @@ export const TOOL_METADATA: ToolMetadata[] = [
     id: 'aurora-fireworks',
     toolName: '极光烟花',
     isActive: true,
-    description: 'tsParticles增强版烟花效果，极光般绚丽的视觉盛宴',
-    tag: ['视觉特效'],
+    description: '浪漫极光烟花夜，飘落的爱心与璀璨星空交织，为你点亮最浪漫的夜晚',
+    tag: ['热门', '表白专属', '视觉特效'],
     sort: 29,
     cover: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&h=300&fit=crop',
   },
@@ -259,8 +259,8 @@ export const TOOL_METADATA: ToolMetadata[] = [
     id: 'birthday-wish',
     toolName: '生日祝福',
     isActive: true,
-    description: '烟花文字、气球派对、聚光舞台、爱心祝福，多种生日祝福效果任你选择',
-    tag: ['新品', '节日专属', '视觉特效'],
+    description: '为你的爱人送上最浪漫的生日惊喜，烟花绽放、气球飘飞、爱心满屏的专属祝福',
+    tag: ['热门', '节日专属', '表白专属', '视觉特效'],
     sort: 35,
     cover: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop',
   },
@@ -272,6 +272,71 @@ export const TOOL_METADATA: ToolMetadata[] = [
     description: '年份数字螺旋穿梭隧道，穿越时空遇见你，科幻浪漫的视觉盛宴',
     tag: ['新品', '视觉特效', '表白专属'],
     sort: 36,
+    cover: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&h=300&fit=crop',
+  },
+  // ====================== 情侣浪漫类工具 ======================
+  {
+    id: 'couples-agreement',
+    toolName: '情侣协议书',
+    isActive: true,
+    description: '浪漫甜蜜的爱情约定，自定义协议条款和透明度，制作专属于你们的爱情契约',
+    tag: ['热门', '表白专属'],
+    sort: 37,
+    cover: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'festive-projection-diy',
+    toolName: '新年好运投射',
+    isActive: true,
+    description: '贴纸雨撒向人物的浪漫效果，支持喜庆/浪漫/混合风格，为爱人送上新年祈福',
+    tag: ['热门', '节日专属', '表白专属'],
+    sort: 38,
+    cover: 'https://images.unsplash.com/photo-1549880338-65ddcdfd017b?w=400&h=300&fit=crop',
+  },
+  // ====================== 甜蜜互动类工具 ======================
+  {
+    id: 'princess-welcome',
+    toolName: '公主请开心',
+    isActive: true,
+    description: '专属公主的浪漫祝福卡片，精美三卡片设计搭配蝴蝶动效，送给最重要的她',
+    tag: ['新品', '表白专属'],
+    sort: 39,
+    cover: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'love-clock-diy',
+    toolName: '专属恋爱时钟',
+    isActive: true,
+    description: '用12张照片组成专属恋爱时钟，每一秒都是与你的甜蜜回忆',
+    tag: ['新品', '表白专属', '记录'],
+    sort: 40,
+    cover: 'https://images.unsplash.com/photo-1516589091380-5d8e87df6999?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'reasons-to-love',
+    toolName: '爱你的理由',
+    isActive: true,
+    description: '心形文字特效，用52个理由告诉TA为什么爱，浪漫告白必备',
+    tag: ['热门', '表白专属', '视觉特效'],
+    sort: 41,
+    cover: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'traffic-light-birthday',
+    toolName: '红绿灯生日倒数',
+    isActive: true,
+    description: '创意红绿灯生日祝福，挥别过去迎接新岁，每一岁都珍贵',
+    tag: ['新品', '节日专属'],
+    sort: 42,
+    cover: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'photo-planet',
+    toolName: '星球滚动相册',
+    isActive: true,
+    description: '3D旋转照片星球，裹着心的光，让回忆在星空中永恒旋转',
+    tag: ['新品', '表白专属', '视觉特效'],
+    sort: 43,
     cover: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&h=300&fit=crop',
   },
 ];
@@ -306,13 +371,44 @@ export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
   { id: 'rel44', toolId: 'romantic-hearts', categoryId: 'confession' },
   { id: 'rel45', toolId: 'particle-hearts', categoryId: 'confession' },
   { id: 'rel46', toolId: 'time-tunnel', categoryId: 'confession' },
+  { id: 'rel47', toolId: 'aurora-fireworks', categoryId: 'confession' },
+  { id: 'rel48', toolId: 'birthday-wish', categoryId: 'confession' },
+  { id: 'rel49', toolId: 'brilliant-fireworks', categoryId: 'confession' },
+  { id: 'rel55', toolId: 'countdown-3d-fireworks', categoryId: 'confession' },
 
   // 纪念工具关联
   { id: 'rel50', toolId: 'time-tunnel', categoryId: 'memory' },
   { id: 'rel51', toolId: 'birthday-wish', categoryId: 'memory' },
+  { id: 'rel52', toolId: 'countdown-3d-fireworks', categoryId: 'memory' },
 
   // AI创作工具关联
   { id: 'rel15', toolId: 'galaxy-weaver', categoryId: 'ai' },
+
+  // 情侣浪漫工具关联
+  { id: 'rel60', toolId: 'couples-agreement', categoryId: 'confession' },
+  { id: 'rel61', toolId: 'couples-agreement', categoryId: 'memory' },
+
+  // 新年投射工具关联
+  { id: 'rel62', toolId: 'festive-projection-diy', categoryId: 'festival' },
+  { id: 'rel63', toolId: 'festive-projection-diy', categoryId: 'confession' },
+
+  // 公主请开心工具关联
+  { id: 'rel64', toolId: 'princess-welcome', categoryId: 'confession' },
+
+  // 专属恋爱时钟工具关联
+  { id: 'rel65', toolId: 'love-clock-diy', categoryId: 'confession' },
+  { id: 'rel66', toolId: 'love-clock-diy', categoryId: 'memory' },
+
+  // 爱你的理由工具关联
+  { id: 'rel67', toolId: 'reasons-to-love', categoryId: 'confession' },
+
+  // 红绿灯生日倒数工具关联
+  { id: 'rel68', toolId: 'traffic-light-birthday', categoryId: 'festival' },
+  { id: 'rel69', toolId: 'traffic-light-birthday', categoryId: 'memory' },
+
+  // 星球滚动相册工具关联
+  { id: 'rel70', toolId: 'photo-planet', categoryId: 'confession' },
+  { id: 'rel71', toolId: 'photo-planet', categoryId: 'memory' },
 ];
 
 // ====================== 3. 辅助函数（适配数组标签） ======================

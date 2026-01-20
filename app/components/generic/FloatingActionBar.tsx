@@ -6,6 +6,7 @@ import {
   User,
   Settings2,
   BookHeart,
+  FolderHeart,
   Copy,
   RotateCcw,
   Share2,
@@ -21,6 +22,7 @@ interface ActionBarProps {
   onNavigateLibrary: () => void;
   onNavigateProfile: () => void;
   onToggleTemplates: () => void;
+  onViewTemplates?: () => void;  // 新增：查看已收藏的模板
   onShare: () => void;
   onReset: () => void;
   variant?: 'desktop' | 'mobile' | 'both'; // 'both' = responsive
@@ -53,10 +55,9 @@ const ActionButton: React.FC<ActionButtonProps> = ({
       onClick={onClick}
       className={`
         group relative flex items-center justify-center ${sizeClass} rounded-full transition-all duration-300 pointer-events-auto
-        ${
-          isActive
-            ? 'bg-pink-500/20 text-pink-200 ring-1 ring-pink-500/50'
-            : 'hover:bg-white/10 text-gray-400 hover:text-pink-100'
+        ${isActive
+          ? 'bg-pink-500/20 text-pink-200 ring-1 ring-pink-500/50'
+          : 'hover:bg-white/10 text-gray-400 hover:text-pink-100'
         }
         ${danger ? 'hover:text-red-300 hover:bg-red-500/20' : ''}
       `}
@@ -92,6 +93,7 @@ const DesktopBar: React.FC<ActionBarProps> = ({
   onNavigateLibrary,
   onNavigateProfile,
   onToggleTemplates,
+  onViewTemplates,
   onShare,
   onReset
 }) => {
@@ -125,8 +127,13 @@ const DesktopBar: React.FC<ActionBarProps> = ({
         isActive={isOpen}
       />
 
-      {/* Heart - Memories */}
-      <ActionButton icon={BookHeart} label="回忆收藏" onClick={onToggleTemplates} />
+      {/* Heart - Save Memory */}
+      <ActionButton icon={BookHeart} label="收藏当前" onClick={onToggleTemplates} />
+
+      {/* View Saved Memories */}
+      {onViewTemplates && (
+        <ActionButton icon={FolderHeart} label="查看收藏" onClick={onViewTemplates} />
+      )}
 
       {/* Copy - Share */}
       <ActionButton icon={Copy} label="分享瞬间" onClick={onShare} />
@@ -146,6 +153,7 @@ const MobileBar: React.FC<ActionBarProps> = ({
   onNavigateLibrary,
   onNavigateProfile,
   onToggleTemplates,
+  onViewTemplates,
   onShare,
   onReset
 }) => {
@@ -178,7 +186,10 @@ const MobileBar: React.FC<ActionBarProps> = ({
           isActive={isOpen}
           size="sm"
         />
-        <ActionButton icon={BookHeart} label="回忆收藏" onClick={onToggleTemplates} size="sm" />
+        <ActionButton icon={BookHeart} label="收藏" onClick={onToggleTemplates} size="sm" />
+        {onViewTemplates && (
+          <ActionButton icon={FolderHeart} label="收藏夹" onClick={onViewTemplates} size="sm" />
+        )}
         <ActionButton icon={Share2} label="分享瞬间" onClick={onShare} size="sm" />
         <ActionButton icon={RotateCcw} label="重置" onClick={onReset} size="sm" />
       </div>

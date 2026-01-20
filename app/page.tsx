@@ -28,8 +28,7 @@ const HomePage = ({ navigateTo }: HomePageProps) => (
         </span>
       </h1>
       <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
-        我愿做我们爱情的调味师，调进朝朝暮暮，让我们的日常，欢乐有趣，浪漫不止，
-        让每一份心意都闪闪发光。
+        让生活更美好，让每一份心意，都闪闪发亮
       </p>
       <div className="flex flex-wrap justify-center gap-4 pt-4">
         <Button variant="primary" className="px-8 text-lg" onClick={() => navigateTo('love')}>开始创作</Button>
@@ -70,6 +69,6 @@ export default function Home() {
   const navigateTo = (page: PageKey) => {
     router.push('/love');
   };
-  
+
   return <HomePage navigateTo={navigateTo} />;
 }

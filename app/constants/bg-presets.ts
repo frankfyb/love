@@ -165,11 +165,23 @@ export const GLOBAL_BG_PRESETS = {
           ),
         ];
       case 'brilliant-fireworks':
-        // 璀璨烟花：纯黑背景最佳，让烟花效果最突出
+        // 璀璨烟花：深色背景让烟花效果最突出，添加浪漫氛围选项
         return [
           { label: '纯黑', value: '#000000', type: 'color' as const },
           { label: '深空', value: '#050510', type: 'color' as const },
+          { label: '浪漫深紫', value: '#0a0515', type: 'color' as const },
+          { label: '午夜蓝', value: '#050a15', type: 'color' as const },
+          { label: '深邃星空', value: '#080812', type: 'color' as const },
           ...GLOBAL_BG_PRESETS.basicColors.slice(0, 2),
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('星辰') || img.label.includes('都市')
+          ),
+          {
+            label: '城市夜景',
+            value: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?q=80&w=2670&auto=format&fit=crop',
+            type: 'image' as const,
+            description: '繁华都市的夜空',
+          },
         ];
       case 'tsparticles-fireworks':
         // 梦幻粒子烟花：纯黑和深色背景，让流畅烟花效果更加梦幻
@@ -178,6 +190,84 @@ export const GLOBAL_BG_PRESETS = {
           { label: '深邃夜空', value: '#0a0a1a', type: 'color' as const },
           { label: '深空', value: '#050510', type: 'color' as const },
           ...GLOBAL_BG_PRESETS.basicColors.slice(0, 2),
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('星辰')
+          ),
+        ];
+      case 'countdown-3d-fireworks':
+        // 3D烟花倒计时：深邃夜空背景，突出3D烟花效果和倒计时文字
+        return [
+          { label: '纯黑', value: '#000000', type: 'color' as const },
+          { label: '浪漫深紫', value: '#0a0518', type: 'color' as const },
+          { label: '午夜星空', value: '#050515', type: 'color' as const },
+          { label: '节日红黑', value: '#0a0508', type: 'color' as const },
+          { label: '极光深蓝', value: '#051020', type: 'color' as const },
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 2),
+          ...GLOBAL_BG_PRESETS.festivalVideos,
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('星辰') || img.label.includes('极光')
+          ),
+          {
+            label: '新年烟花',
+            value: 'https://images.unsplash.com/photo-1467810563316-b5476525c0f9?q=80&w=2669&auto=format&fit=crop',
+            type: 'image' as const,
+            description: '绚丽的新年烟花夜空',
+          },
+        ];
+      case 'aurora-fireworks':
+        // 极光烟花：浪漫极光和星空背景，配合飘落爱心效果
+        return [
+          { label: '浪漫紫夜', value: '#0a0015', type: 'color' as const },
+          { label: '深邃星空', value: '#050510', type: 'color' as const },
+          { label: '极光深蓝', value: '#0a1628', type: 'color' as const },
+          { label: '神秘紫色', value: '#1a0a2e', type: 'color' as const },
+          { label: '午夜玫瑰', value: '#1a0a1a', type: 'color' as const },
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 3),
+          ...GLOBAL_BG_PRESETS.festivalVideos,
+          ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
+            img.label.includes('极光') || img.label.includes('星辰')
+          ),
+          {
+            label: '浪漫星河',
+            value: 'https://images.unsplash.com/photo-1507400492013-162706c8c05e?q=80&w=2670&auto=format&fit=crop',
+            type: 'image' as const,
+            description: '梦幻的银河星空',
+          },
+          {
+            label: '极光之夜',
+            value: 'https://images.unsplash.com/photo-1483086431886-3590a88317fe?q=80&w=2670&auto=format&fit=crop',
+            type: 'image' as const,
+            description: '绚丽的北极光夜景',
+          },
+        ];
+      case 'birthday-wish':
+        // 生日祝福：浪漫派对氛围，温馨生日主题
+        return [
+          { label: '纯黑背景', value: '#000000', type: 'color' as const },
+          { label: '浪漫粉夜', value: '#1a0a15', type: 'color' as const },
+          { label: '温馨紫罗兰', value: '#150a1a', type: 'color' as const },
+          { label: '派对深蓝', value: '#0a1020', type: 'color' as const },
+          { label: '梦幻玫瑰', value: '#200a18', type: 'color' as const },
+          ...GLOBAL_BG_PRESETS.basicColors.slice(0, 3),
+          ...GLOBAL_BG_PRESETS.festivalVideos,
+          {
+            label: '生日气球',
+            value: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=2670&auto=format&fit=crop',
+            type: 'image' as const,
+            description: '五彩缤纷的生日气球',
+          },
+          {
+            label: '浪漫蛋糕',
+            value: 'https://images.unsplash.com/photo-1558636508-e0db3814bd1d?q=80&w=2670&auto=format&fit=crop',
+            type: 'image' as const,
+            description: '精美的生日蛋糕',
+          },
+          {
+            label: '派对彩带',
+            value: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=2670&auto=format&fit=crop',
+            type: 'image' as const,
+            description: '欢乐的派对装饰',
+          },
           ...GLOBAL_BG_PRESETS.commonImages.filter(img =>
             img.label.includes('星辰')
           ),

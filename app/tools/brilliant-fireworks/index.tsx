@@ -10,17 +10,26 @@ import type { StandardBgConfig } from '@/types/background';
 
 /**
  * ==============================================================================
- * 璀璨烟花 - 高级3D烟花模拟
- * 灵感来源：CodePen Fireworks (多种烟花类型、粒子系统、闪光效果)
+ * 璀璨烟花 - 高级浪漫3D烟花秀
+ * 灵感来源：CodePen Fireworks
+ * 特点:
+ *   - 多种烟花类型（菊花/棕榈/环形/柳叶等）
+ *   - 响应式设计（移动端/PC端完美适配）
+ *   - 浪漫的飘落爱心与璀璨星光
+ *   - 真实的物理模拟和闪光效果
+ *   - 点击屏幕互动燃放
  * ==============================================================================
  */
 
 export interface AppConfig {
     titleText: string;
     recipientName: string;
+    greetings: string[];
     shellType: 'Random' | 'Crysanthemum' | 'Palm' | 'Ring' | 'Crossette' | 'Crackle' | 'Willow';
     shellSize: number;
     autoLaunch: boolean;
+    showFloatingHearts: boolean;
+    showSparkles: boolean;
     bgConfig?: StandardBgConfig;
     bgValue?: string;
     bgMusicUrl: string;
@@ -30,27 +39,38 @@ export interface AppConfig {
 export const PRESETS = {
     backgrounds: GLOBAL_BG_PRESETS.getToolPresets('brilliant-fireworks'),
     music: [
-        { label: '新年喜庆音乐', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-        { label: '欢快节日', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-        { label: '浪漫钢琴', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
+        { label: '浪漫星空', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
+        { label: '新年喜庆', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
+        { label: '梦幻夜曲', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
+        { label: '甘蜜时光', value: 'https://cdn.pixabay.com/audio/2023/06/15/audio_c6a2d98b88.mp3' },
     ],
     shellTypes: [
-        { label: '随机', value: 'Random' },
-        { label: '菊花', value: 'Crysanthemum' },
-        { label: '棕榈', value: 'Palm' },
-        { label: '环形', value: 'Ring' },
-        { label: '十字', value: 'Crossette' },
-        { label: '爆裂', value: 'Crackle' },
-        { label: '柳叶', value: 'Willow' },
+        { label: '🎆 随机', value: 'Random' },
+        { label: '🌼 菊花', value: 'Crysanthemum' },
+        { label: '🌴 棕榈', value: 'Palm' },
+        { label: '🔵 环形', value: 'Ring' },
+        { label: '✨ 十字', value: 'Crossette' },
+        { label: '💥 爆裂', value: 'Crackle' },
+        { label: '🌿 柳叶', value: 'Willow' },
+    ],
+    greetingTemplates: [
+        '✨ 愿你的每一天都如烟花般璀璨 ✨',
+        '💕 你是我心中最美的风景 💕',
+        '🌟 与你相遇是最美的意外 🌟',
+        '❤️ 余生请多指教 ❤️',
+        '💫 愿所有美好如期而至 💫',
     ],
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
     titleText: '璀璨烟花夜',
     recipientName: '亲爱的你',
+    greetings: PRESETS.greetingTemplates,
     shellType: 'Random',
     shellSize: 2,
     autoLaunch: true,
+    showFloatingHearts: true,
+    showSparkles: true,
     bgConfig: createBgConfigWithOverlay({
         type: 'color' as const,
         value: '#000000',
@@ -275,9 +295,8 @@ class BrilliantFireworksEngine {
             this.trailsCanvas.style.width = `${this.width}px`;
             this.trailsCanvas.style.height = `${this.height}px`;
 
-            // 初始化trails画布为黑色
-            this.trailsCtx.fillStyle = '#000';
-            this.trailsCtx.fillRect(0, 0, this.width * this.dpr, this.height * this.dpr);
+            // trails画布使用透明背景，让背景层可见
+            this.trailsCtx.clearRect(0, 0, this.width * this.dpr, this.height * this.dpr);
         }
     }
 
@@ -676,9 +695,9 @@ class BrilliantFireworksEngine {
         this.trailsCtx.scale(dpr, dpr);
         this.mainCtx.scale(dpr, dpr);
 
-        // 透明淡出效果
-        this.trailsCtx.globalCompositeOperation = 'source-over';
-        this.trailsCtx.fillStyle = `rgba(0, 0, 0, ${0.1 * speed})`;
+        // 淡出效果 - 使用半透明清除实现尾迹效果
+        this.trailsCtx.globalCompositeOperation = 'destination-out';
+        this.trailsCtx.fillStyle = `rgba(0, 0, 0, ${0.08 * speed})`;
         this.trailsCtx.fillRect(0, 0, width, height);
         this.trailsCtx.globalCompositeOperation = 'lighter';
 
@@ -873,44 +892,73 @@ export function DisplayUI({ config }: DisplayUIProps) {
 
             {/* 3. 欢迎界面 */}
             {showWelcome && (
-                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center">
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50" />
-                    <div className="relative text-center px-4">
-                        <div className="mb-6">
-                            <span className="text-5xl md:text-7xl">🎆</span>
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center safe-area-inset">
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60" />
+                    <div className="relative text-center px-4 sm:px-8 max-w-lg sm:max-w-2xl">
+                        {/* 动态光环 */}
+                        <div className="relative mb-6 sm:mb-8">
+                            <div
+                                className="absolute inset-0 blur-3xl opacity-40"
+                                style={{
+                                    background: 'conic-gradient(from 0deg, #ff0043, #ffae00, #ff69b4, #a855f7, #ff0043)',
+                                    animation: 'spin 10s linear infinite',
+                                    borderRadius: '50%',
+                                    transform: 'scale(1.5)',
+                                }}
+                            />
+                            <span
+                                className="relative text-6xl sm:text-7xl md:text-8xl block"
+                                style={{
+                                    filter: 'drop-shadow(0 0 30px #ff0043) drop-shadow(0 0 60px #ffae00)',
+                                    animation: 'bounce-slow 3s ease-in-out infinite',
+                                }}
+                            >
+                                🎆
+                            </span>
+                            <span
+                                className="absolute -right-2 sm:-right-4 top-0 text-xl sm:text-2xl"
+                                style={{ animation: 'float 2s ease-in-out infinite' }}
+                            >
+                                💕
+                            </span>
                         </div>
+
                         {config.recipientName && (
                             <div
-                                className="text-3xl md:text-5xl mb-4 font-serif tracking-widest"
+                                className="text-2xl sm:text-3xl md:text-5xl mb-3 sm:mb-4 font-serif tracking-wider sm:tracking-widest"
                                 style={{
-                                    background: 'linear-gradient(to right, #ffae00, #ff0043)',
+                                    background: 'linear-gradient(to right, #ff69b4, #ffae00, #ff0043)',
+                                    backgroundSize: '200% auto',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
+                                    animation: 'gradient-flow 3s ease infinite',
                                     textShadow: '0 0 30px rgba(255,174,0,0.5)',
                                 }}
                             >
-                                {config.recipientName}
+                                💕 {config.recipientName} 💕
                             </div>
                         )}
-                        <h1 className="text-white/70 text-lg md:text-xl mb-10 tracking-[0.3em] font-light">
+                        <h1 className="text-white/70 text-base sm:text-lg md:text-xl mb-8 sm:mb-10 tracking-[0.2em] sm:tracking-[0.3em] font-light">
                             {config.titleText}
                         </h1>
                         <button
                             onClick={startAnimation}
-                            className="relative px-8 py-4 text-white rounded-full text-lg font-medium overflow-hidden group"
+                            className="relative px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full text-base sm:text-lg font-medium overflow-hidden group transition-all duration-300 hover:scale-105 active:scale-95"
                             style={{
-                                background: 'linear-gradient(135deg, #ff0043 0%, #ffae00 100%)',
-                                boxShadow: '0 0 30px rgba(255,0,67,0.4), 0 0 60px rgba(255,174,0,0.2)',
+                                background: 'linear-gradient(135deg, #ff0043 0%, #ffae00 50%, #ff69b4 100%)',
+                                backgroundSize: '200% 200%',
+                                animation: 'gradient-flow 3s ease infinite',
+                                boxShadow: '0 0 30px rgba(255,0,67,0.4), 0 0 60px rgba(255,174,0,0.2), 0 4px 20px rgba(0,0,0,0.3)',
                             }}
                         >
-                            <span className="relative z-10 flex items-center gap-2">
-                                <span>✨</span>
-                                点击燃放烟花
-                                <span>✨</span>
+                            <span className="relative z-10 flex items-center gap-2 sm:gap-3">
+                                <span className="text-lg sm:text-xl">✨</span>
+                                点燃浪漫烟花夜
+                                <span className="text-lg sm:text-xl">✨</span>
                             </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                         </button>
-                        <p className="mt-6 text-white/50 text-sm">点击屏幕可手动燃放 🎇</p>
+                        <p className="mt-6 sm:mt-8 text-white/50 text-xs sm:text-sm">点击屏幕可手动燃放 🎇</p>
                     </div>
                 </div>
             )}
@@ -925,6 +973,37 @@ export function DisplayUI({ config }: DisplayUIProps) {
                 position="bottom-right"
                 size="sm"
             />
+
+            {/* 自定义动画样式 */}
+            <style jsx global>{`
+                @keyframes spin {
+                    from { transform: rotate(0deg) scale(1.5); }
+                    to { transform: rotate(360deg) scale(1.5); }
+                }
+
+                @keyframes bounce-slow {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+
+                @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(-5deg); }
+                    50% { transform: translateY(-10px) rotate(5deg); }
+                }
+
+                @keyframes gradient-flow {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+
+                .safe-area-inset {
+                    padding-top: env(safe-area-inset-top);
+                    padding-bottom: env(safe-area-inset-bottom);
+                    padding-left: env(safe-area-inset-left);
+                    padding-right: env(safe-area-inset-right);
+                }
+            `}</style>
         </div>
     );
 }
@@ -932,19 +1011,26 @@ export function DisplayUI({ config }: DisplayUIProps) {
 // 配置面板元数据
 export const brilliantFireworksConfigMetadata = {
     panelTitle: '璀璨烟花配置',
-    panelSubtitle: 'Brilliant Fireworks',
+    panelSubtitle: 'Brilliant Fireworks Romantic Experience',
     configSchema: {
         recipientName: {
             category: 'content' as const,
             type: 'input' as const,
-            label: '送给谁',
-            placeholder: '例如：亲爱的小曾'
+            label: '送给谁 💕',
+            placeholder: '例如：亲爱的宝贝'
         },
         titleText: {
             category: 'content' as const,
             type: 'input' as const,
             label: '标题',
             placeholder: '璀璨烟花夜'
+        },
+        greetings: {
+            category: 'content' as const,
+            type: 'list' as const,
+            label: '浪漫祝福语',
+            placeholder: '输入祝福语',
+            description: '每行一句，缓缓展示你的心意'
         },
         shellType: {
             category: 'visual' as const,
@@ -965,6 +1051,16 @@ export const brilliantFireworksConfigMetadata = {
             category: 'visual' as const,
             type: 'switch' as const,
             label: '自动燃放'
+        },
+        showFloatingHearts: {
+            category: 'visual' as const,
+            type: 'switch' as const,
+            label: '飘落爱心 💕'
+        },
+        showSparkles: {
+            category: 'visual' as const,
+            type: 'switch' as const,
+            label: '璀璨星光 ✨'
         },
         bgValue: {
             category: 'background' as const,
@@ -987,14 +1083,14 @@ export const brilliantFireworksConfigMetadata = {
         },
     },
     tabs: [
-        { id: 'content' as const, label: '定制', icon: null },
-        { id: 'background' as const, label: '背景', icon: null },
-        { id: 'visual' as const, label: '视觉', icon: null },
+        { id: 'content' as const, label: '💌 定制', icon: null },
+        { id: 'visual' as const, label: '✨ 视觉', icon: null },
+        { id: 'background' as const, label: '🎵 背景', icon: null },
     ],
     mobileSteps: [
-        { id: 1, label: '专属定制', icon: null, fields: ['recipientName', 'titleText'] },
-        { id: 2, label: '烟花效果', icon: null, fields: ['shellType', 'shellSize', 'autoLaunch'] },
-        { id: 3, label: '背景音乐', icon: null, fields: ['bgValue', 'bgMusicUrl', 'enableSound'] },
+        { id: 1, label: '专属定制', icon: null, fields: ['recipientName' as const, 'titleText' as const, 'greetings' as const] },
+        { id: 2, label: '烟花效果', icon: null, fields: ['shellType' as const, 'shellSize' as const, 'autoLaunch' as const, 'showFloatingHearts' as const, 'showSparkles' as const] },
+        { id: 3, label: '背景音乐', icon: null, fields: ['bgValue' as const, 'enableSound' as const, 'bgMusicUrl' as const] },
     ],
 };
 

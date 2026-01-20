@@ -10,8 +10,13 @@ import type { StandardBgConfig } from '@/types/background';
 
 /**
  * ==============================================================================
- * 3D烟花倒计时组件 - 集成3D烟花效果与文字变形动画
- * 参考自: 321倒计时2024烟花代码fireworks_3d
+ * 3D烟花倒计时组件 - 浪漫3D烟花秀
+ * 特点:
+ *   - 震撼的3D烟花粒子效果
+ *   - 响应式设计（移动端/PC端完美适配）
+ *   - 浪漫的文字粒子变形动画
+ *   - 自定义倒计时与庆祝文字
+ *   - 飘落爱心与星光效果
  * ==============================================================================
  */
 
@@ -21,6 +26,8 @@ export interface AppConfig {
     recipientName: string;
     countdownText: string;
     celebrationText: string[] | string;
+    showFloatingHearts: boolean;
+    showSparkles: boolean;
     bgConfig?: StandardBgConfig;
     bgValue?: string;
     bgMusicUrl: string;
@@ -30,18 +37,26 @@ export interface AppConfig {
 export const PRESETS = {
     backgrounds: GLOBAL_BG_PRESETS.getToolPresets('countdown-3d-fireworks'),
     music: [
-        { label: 'We Wish You Merry Christmas', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-        { label: 'Jingle Bells (Upbeat)', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-        { label: 'Peaceful Piano', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
+        { label: '浪漫星空', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
+        { label: '新年喜庆', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
+        { label: '梦幻夜曲', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
+        { label: '甘蜜时光', value: 'https://cdn.pixabay.com/audio/2023/06/15/audio_c6a2d98b88.mp3' },
+    ],
+    celebrationTemplates: [
+        ['2026', '新', '年', '快', '乐'],
+        ['爱', '你', '一', '万', '年'],
+        ['幸', '福', '美', '满'],
     ],
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
     targetDate: new Date(new Date().getFullYear() + 1, 0, 1).toISOString(),
     titleText: '距离 2026 跨年还有',
-    recipientName: '致 2026 最爱的你',
+    recipientName: '💕 致最爱的你 💕',
     countdownText: '3',
     celebrationText: ['2026', '新', '年', '快', '乐'],
+    showFloatingHearts: true,
+    showSparkles: true,
     bgConfig: createBgConfigWithOverlay(
         { type: 'color' as const, value: '#000000' },
         0
@@ -53,13 +68,16 @@ export const DEFAULT_CONFIG: AppConfig = {
 
 export const countdown3dFireworksCardConfigMetadata = {
     panelTitle: '3D烟花倒计时配置',
-    panelSubtitle: '震撼3D效果 浪漫新年祝福',
+    panelSubtitle: 'Romantic 3D Fireworks Countdown',
     configSchema: {
-        recipientName: { category: 'content' as const, type: 'input' as const, label: '接收人姓名', placeholder: '例如：亲爱的你' },
+        recipientName: { category: 'content' as const, type: 'input' as const, label: '送给谁 💕', placeholder: '例如：亲爱的宝贝' },
         titleText: { category: 'content' as const, type: 'input' as const, label: '倒计时标题', placeholder: '距离 2026 跨年还有' },
         targetDate: { category: 'content' as const, type: 'datetime' as const, label: '目标日期', timeType: 'datetime' as const, description: '选择倒计时的目标日期' },
         countdownText: { category: 'content' as const, type: 'input' as const, label: '倒计时秒数', placeholder: '3', description: '从几秒开始倒数（例如3、5、10）' },
-        celebrationText: { category: 'content' as const, type: 'list' as const, label: '庆祝文字', placeholder: '输入庆祝文字', description: '每行一个字或词' },
+        celebrationText: { category: 'content' as const, type: 'list' as const, label: '庆祝文字 🎉', placeholder: '输入庆祝文字', description: '每行一个字或词，逐个展示' },
+
+        showFloatingHearts: { category: 'visual' as const, type: 'switch' as const, label: '飘落爱心 💕' },
+        showSparkles: { category: 'visual' as const, type: 'switch' as const, label: '璀璨星光 ✨' },
 
         bgValue: {
             category: 'background' as const,
@@ -73,12 +91,13 @@ export const countdown3dFireworksCardConfigMetadata = {
         bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
     },
     tabs: [
-        { id: 'content' as const, label: '内容', icon: null },
-        { id: 'background' as const, label: '背景', icon: null },
+        { id: 'content' as const, label: '💌 内容', icon: null },
+        { id: 'visual' as const, label: '✨ 视觉', icon: null },
+        { id: 'background' as const, label: '🎵 背景', icon: null },
     ],
     mobileSteps: [
         { id: 1, label: '基础设置', icon: null, fields: ['recipientName' as const, 'titleText' as const, 'targetDate' as const] },
-        { id: 2, label: '倒计时设置', icon: null, fields: ['countdownText' as const, 'celebrationText' as const] },
+        { id: 2, label: '倒计时设置', icon: null, fields: ['countdownText' as const, 'celebrationText' as const, 'showFloatingHearts' as const, 'showSparkles' as const] },
         { id: 3, label: '背景音乐', icon: null, fields: ['bgValue' as const, 'enableSound' as const, 'bgMusicUrl' as const] },
     ],
 };
@@ -135,10 +154,18 @@ class Dot {
     q: Point[];
 
     constructor(x: number, y: number) {
-        this.p = new Point({ x, y, z: 5, a: 1, h: 0 });
-        this.e = 0.07;
+        this.p = new Point({ x, y, z: 6, a: 1, h: 0 });
+        this.e = 0.12; // 加快粒子移动速度，让文字更快形成
         this.s = true;
-        this.c = new Color(255, 255, 255, this.p.a);
+        // 使用更鲜艳的金色/白色渐变
+        const colors = [
+            [255, 215, 0],   // 金色
+            [255, 255, 255], // 白色
+            [255, 200, 100], // 浅金
+            [255, 180, 80],  // 橙金
+        ];
+        const c = colors[Math.floor(Math.random() * colors.length)];
+        this.c = new Color(c[0], c[1], c[2], this.p.a);
         this.t = new Point({ x: this.p.x, y: this.p.y, z: this.p.z, a: this.p.a, h: this.p.h });
         this.q = [];
     }
@@ -211,11 +238,28 @@ class Dot {
 
     draw(ctx: CanvasRenderingContext2D) {
         this.c.a = this.p.a;
+        const size = this.p.z;
+
+        // 添加发光效果
+        ctx.save();
+        ctx.shadowColor = `rgba(${this.c.r}, ${this.c.g}, ${this.c.b}, 0.8)`;
+        ctx.shadowBlur = size * 3;
+
         ctx.fillStyle = this.c.render();
         ctx.beginPath();
-        ctx.arc(this.p.x, this.p.y, this.p.z, 0, 2 * Math.PI, true);
+        ctx.arc(this.p.x, this.p.y, size, 0, 2 * Math.PI, true);
         ctx.closePath();
         ctx.fill();
+
+        // 绘制内核更亮的部分
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.p.a * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(this.p.x, this.p.y, size * 0.4, 0, 2 * Math.PI, true);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
     }
 
     render(ctx: CanvasRenderingContext2D) {
@@ -600,18 +644,19 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
             const i = Math.floor(Math.random() * tempDots.length);
             const dot = dotsRef.current[d];
 
-            dot.e = fast ? 0.25 : (dot.s ? 0.14 : 0.11);
+            // 大幅加快粒子移动速度
+            dot.e = fast ? 0.35 : 0.25;
 
             if (dot.s) {
                 dot.move(new Point({
-                    z: Math.random() * 20 + 10,
-                    a: Math.random(),
-                    h: 18
+                    z: Math.random() * 15 + 8,
+                    a: Math.random() * 0.5 + 0.5,
+                    h: 5 // 减少中间状态等待
                 }));
             } else {
                 dot.move(new Point({
-                    z: Math.random() * 5 + 5,
-                    h: fast ? 18 : 30
+                    z: Math.random() * 8 + 6,
+                    h: fast ? 5 : 10
                 }));
             }
 
@@ -620,7 +665,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                 x: tempDots[i].x + cx,
                 y: tempDots[i].y + cy,
                 a: 1,
-                z: 5,
+                z: 6, // 稍大的粒子
                 h: 0
             }));
 
@@ -628,23 +673,24 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
             d++;
         }
 
-        // 隐藏多余的粒子
+        // 快速隐藏多余的粒子
         for (let i = d; i < dotsRef.current.length; i++) {
             const dot = dotsRef.current[i];
             if (dot.s) {
+                // 让多余粒子快速飞散并消失
+                dot.e = 0.3; // 加快移动
                 dot.move(new Point({
-                    z: Math.random() * 20 + 10,
-                    a: Math.random(),
-                    h: 20
+                    z: 1,
+                    a: 0,
+                    h: 3
                 }));
 
                 dot.s = false;
-                dot.e = 0.04;
                 dot.move(new Point({
                     x: Math.random() * area.w,
                     y: Math.random() * area.h,
-                    a: 0.3,
-                    z: Math.random() * 4,
+                    a: 0,
+                    z: 0.5,
                     h: 0
                 }));
             }
@@ -705,12 +751,13 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                 switchShape(text || '', isCountdownPhase);
                 currentActionRef.current++;
 
-                const delay = isCountdownPhase ? 1000 : 2000;
+                // 增加显示时间：倒计时1.5秒，庆祝文字3.5秒
+                const delay = isCountdownPhase ? 1500 : 3500;
                 animationTimerRef.current = setTimeout(playNextAnimation, delay);
             } else {
-                // 循环播放庆祝文字
+                // 循环播放庆祝文字，间隔2秒
                 currentActionRef.current = countdownNum;
-                animationTimerRef.current = setTimeout(playNextAnimation, 500);
+                animationTimerRef.current = setTimeout(playNextAnimation, 2000);
             }
         };
 
@@ -805,17 +852,40 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
 
             {/* 倒计时UI - 时间未到时显示 */}
             {!isTimeUp && (
-                <div className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center px-4">
-                    <div className="text-center animate-fade-in">
+                <div className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-center px-4 safe-area-inset">
+                    {/* 添加半透明背景遮罩提高文字可读性 */}
+                    <div
+                        className="text-center animate-fade-in relative px-8 py-10 sm:px-12 sm:py-14 rounded-3xl"
+                        style={{
+                            background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
+                            backdropFilter: 'blur(8px)',
+                            WebkitBackdropFilter: 'blur(8px)',
+                        }}
+                    >
                         {config.recipientName && (
-                            <div className="text-white/90 text-xl md:text-3xl mb-6 font-serif tracking-widest animate-pulse drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                            <div
+                                className="text-lg sm:text-xl md:text-3xl mb-4 sm:mb-6 font-serif tracking-wider sm:tracking-widest relative"
+                                style={{
+                                    background: 'linear-gradient(to right, #ff69b4, #ffae00, #ff0043)',
+                                    backgroundSize: '200% auto',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    animation: 'gradient-flow 3s ease infinite',
+                                    filter: 'drop-shadow(0 0 20px rgba(255,174,0,0.8)) drop-shadow(0 2px 4px rgba(0,0,0,0.9))',
+                                }}
+                            >
                                 {config.recipientName}
                             </div>
                         )}
-                        <h1 className="text-white/80 text-lg md:text-2xl mb-8 tracking-[0.4em] font-light uppercase drop-shadow-lg">
+                        <h1
+                            className="text-white text-sm sm:text-lg md:text-2xl mb-6 sm:mb-8 tracking-[0.2em] sm:tracking-[0.4em] font-light"
+                            style={{
+                                textShadow: '0 0 20px rgba(255,255,255,0.5), 0 2px 8px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.8)',
+                            }}
+                        >
                             {config.titleText}
                         </h1>
-                        <div className="flex items-start justify-center gap-3 md:gap-8">
+                        <div className="flex items-start justify-center gap-2 sm:gap-3 md:gap-8">
                             <TimeUnit num={timeLeft.days} label="DAYS" />
                             <Separator />
                             <TimeUnit num={timeLeft.hours} label="HOURS" />
@@ -853,25 +923,72 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                 position="bottom-right"
                 size="sm"
             />
+
+            {/* 自定义动画样式 */}
+            <style jsx global>{`
+                @keyframes gradient-flow {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+
+                @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(-5deg); }
+                    50% { transform: translateY(-10px) rotate(5deg); }
+                }
+
+                .safe-area-inset {
+                    padding-top: env(safe-area-inset-top);
+                    padding-bottom: env(safe-area-inset-bottom);
+                    padding-left: env(safe-area-inset-left);
+                    padding-right: env(safe-area-inset-right);
+                }
+
+                .animate-fade-in {
+                    animation: fadeIn 1s ease-out;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </div>
     );
 }
 
-const Separator = () => <div className="text-xl md:text-5xl text-white/20 font-light mt-1 md:mt-2">:</div>;
+const Separator = () => (
+    <div
+        className="text-xl md:text-5xl text-white/40 font-light mt-1 md:mt-2"
+        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
+    >
+        :
+    </div>
+);
 
 function TimeUnit({ num, label, isSeconds = false }: { num: number; label: string; isSeconds?: boolean }) {
     return (
         <div className="flex flex-col items-center w-14 md:w-24">
             <span
-                className="font-['Inter'] font-semibold tabular-nums leading-none tracking-tight drop-shadow-[0_0_30px_rgba(255,215,0,0.6)]"
+                className="font-['Inter'] font-semibold tabular-nums leading-none tracking-tight"
                 style={{
                     fontSize: isSeconds ? 'clamp(2.5rem, 6vw, 4.5rem)' : 'clamp(2rem, 5vw, 3.5rem)',
-                    color: isSeconds ? '#FFD700' : '#ffffff'
+                    color: isSeconds ? '#FFD700' : '#ffffff',
+                    textShadow: isSeconds
+                        ? '0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4), 0 2px 8px rgba(0,0,0,0.9)'
+                        : '0 0 20px rgba(255,255,255,0.5), 0 2px 8px rgba(0,0,0,0.9)',
                 }}
             >
                 {num.toString().padStart(2, '0')}
             </span>
-            <span className="text-[9px] md:text-xs text-white/40 mt-2 tracking-widest">{label}</span>
+            <span
+                className="text-[9px] md:text-xs text-white/60 mt-2 tracking-widest"
+                style={{
+                    textShadow: '0 1px 4px rgba(0,0,0,0.8)',
+                }}
+            >
+                {label}
+            </span>
         </div>
     );
 }

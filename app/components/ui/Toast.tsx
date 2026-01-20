@@ -13,6 +13,11 @@ interface ToastProps {
 
 const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }) => {
   const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -34,11 +39,13 @@ const Toast: React.FC<ToastProps> = ({ message, type, duration = 3000, onClose }
     info: 'ℹ️',
   };
 
+  // 只在客户端挂载后渲染 Portal
+  if (!mounted) return null;
+
   return createPortal(
     <div
-      className={`fixed top-4 right-4 z-50 w-80 p-4 border rounded-lg shadow-lg transition-all duration-300 ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-[-20px] opacity-0'
-      } ${typeStyles[type]}`}
+      className={`fixed top-4 right-4 z-50 w-80 p-4 border rounded-lg shadow-lg transition-all duration-300 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-[-20px] opacity-0'
+        } ${typeStyles[type]}`}
     >
       <div className="flex items-center">
         <span className="mr-2 text-xl">{icons[type]}</span>

@@ -54,7 +54,7 @@ const SpringFestivalDisplayUI = dynamic(() => import('@/tools/spring-festival').
 import { DEFAULT_CONFIG as lanternFireworksDefault, lanternFireworksConfigMetadata as lanternFireworksMetadata } from '@/tools/lantern-fireworks/index';
 const LanternFireworksDisplayUI = dynamic(() => import('@/tools/lantern-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
-// 璀璨烟花 (高级烟花模拟)
+// 璀璨烟花 (浪漫烟花秀，多种烟花类型自由选择)
 import { DEFAULT_CONFIG as brilliantFireworksDefault, brilliantFireworksConfigMetadata as brilliantFireworksMetadata } from '@/tools/brilliant-fireworks/index';
 const BrilliantFireworksDisplayUI = dynamic(() => import('@/tools/brilliant-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
@@ -62,7 +62,7 @@ const BrilliantFireworksDisplayUI = dynamic(() => import('@/tools/brilliant-fire
 import { DEFAULT_CONFIG as tsparticlesFireworksDefault, tsparticlesFireworksConfigMetadata as tsparticlesFireworksMetadata } from '@/tools/tsparticles-fireworks/index';
 const TsParticlesFireworksDisplayUI = dynamic(() => import('@/tools/tsparticles-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
-// 3D烟花倒计时 (集成3D粒子效果与倒计时)
+// 3D烟花倒计时 (震撼3D烟花与浪漫倒计时)
 import { DEFAULT_CONFIG as countdown3dFireworksDefault, countdown3dFireworksCardConfigMetadata as countdown3dFireworksMetadata } from '@/tools/countdown-3d-fireworks/index';
 const Countdown3DFireworksDisplayUI = dynamic(() => import('@/tools/countdown-3d-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
@@ -78,7 +78,7 @@ const TextFireworksDisplayUI = dynamic(() => import('@/tools/text-fireworks').th
 import { DEFAULT_CONFIG as cityFireworksDefault, cityFireworksCardConfigMetadata as cityFireworksMetadata } from '@/tools/city-fireworks/index';
 const CityFireworksDisplayUI = dynamic(() => import('@/tools/city-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
-// 极光烟花 (tsParticles增强版烟花效果)
+// 极光烟花 (浪漫极光烟花夜，飘落爱心与璀璨星空)
 import { DEFAULT_CONFIG as auroraFireworksDefault, auroraFireworksCardConfigMetadata as auroraFireworksMetadata } from '@/tools/aurora-fireworks/index';
 const AuroraFireworksDisplayUI = dynamic(() => import('@/tools/aurora-fireworks').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
@@ -98,18 +98,48 @@ const RomanticHeartsDisplayUI = dynamic(() => import('@/tools/romantic-hearts').
 import { DEFAULT_CONFIG as particleHeartsDefault, particleHeartsConfigMetadata as particleHeartsMetadata } from '@/tools/particle-hearts/index';
 const ParticleHeartsDisplayUI = dynamic(() => import('@/tools/particle-hearts').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
-// 生日祝福 (烟花文字/气球派对/聚光舞台/爱心祝福)
+// 生日祝福 (浪漫生日惊喜，烟花/气球/爱心多种效果)
 import { DEFAULT_CONFIG as birthdayWishDefault, birthdayWishConfigMetadata as birthdayWishMetadata } from '@/tools/birthday-wish/index';
 const BirthdayWishDisplayUI = dynamic(() => import('@/tools/birthday-wish').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
 // 时空隧道 (年份数字螺旋隧道穿越效果)
 import { DEFAULT_CONFIG as timeTunnelDefault, timeTunnelConfigMetadata as timeTunnelMetadata } from '@/tools/time-tunnel/index';
 const TimeTunnelDisplayUI = dynamic(() => import('@/tools/time-tunnel').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 情侣协议书
+import { DEFAULT_CONFIG as couplesAgreementDefault, couplesAgreementConfigMetadata as couplesAgreementMetadata } from '@/tools/couples-agreement/index';
+const CouplesAgreementDisplayUI = dynamic(() => import('@/tools/couples-agreement').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 公主请开心
+import { DEFAULT_CONFIG as princessWelcomeDefault, princessWelcomeConfigMetadata as princessWelcomeMetadata } from '@/tools/princess-welcome/index';
+const PrincessWelcomeDisplayUI = dynamic(() => import('@/tools/princess-welcome').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 专属恋爱时钟
+import { DEFAULT_CONFIG as loveClockDiyDefault, loveClockDiyConfigMetadata as loveClockDiyMetadata } from '@/tools/love-clock-diy/index';
+const LoveClockDiyDisplayUI = dynamic(() => import('@/tools/love-clock-diy').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 爱你的理由心形特效
+import { DEFAULT_CONFIG as reasonsToLoveDefault, reasonsToLoveConfigMetadata as reasonsToLoveMetadata } from '@/tools/reasons-to-love/index';
+const ReasonsToLoveDisplayUI = dynamic(() => import('@/tools/reasons-to-love').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 红绿灯生日倒数
+import { DEFAULT_CONFIG as trafficLightBirthdayDefault, trafficLightBirthdayConfigMetadata as trafficLightBirthdayMetadata } from '@/tools/traffic-light-birthday/index';
+const TrafficLightBirthdayDisplayUI = dynamic(() => import('@/tools/traffic-light-birthday').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 新年好运投射
+import { DEFAULT_CONFIG as festiveProjectionDiyDefault, festiveProjectionDiyConfigMetadata as festiveProjectionDiyMetadata } from '@/tools/festive-projection-diy/index';
+const FestiveProjectionDiyDisplayUI = dynamic(() => import('@/tools/festive-projection-diy').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+
+// 星球滚动相册 (3D旋转照片星球)
+import { DEFAULT_CONFIG as photoPlanetDefault, photoPlanetConfigMetadata as photoPlanetMetadata } from '@/tools/photo-planet/index';
+const PhotoPlanetDisplayUI = dynamic(() => import('@/tools/photo-planet').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
 // ========================== 2. 类型定义（扩展，新增configMetadata）==========================
 /**
  * 工具基础配置项类型（扩展：新增configMetadata）
  */
-type ToolKey = 'warm-text-card' | 'rain-snow-ripple' | 'newyear-fireworks' | 'galaxy-weaver' | 'christmas-tree-card' | 'newyear-countdown' | 'neon-wish-bubbles' | 'money-swirl' | 'romantic-heart-3d' | 'spring-festival' | 'lantern-fireworks' | 'brilliant-fireworks' | 'tsparticles-fireworks' | 'countdown-3d-fireworks' | 'romantic-fireworks' | 'text-fireworks' | 'city-fireworks' | 'aurora-fireworks' | 'firework-show-3d' | 'custom-fireworks' | 'romantic-hearts' | 'particle-hearts' | 'birthday-wish' | 'time-tunnel';
+type ToolKey = 'warm-text-card' | 'rain-snow-ripple' | 'newyear-fireworks' | 'galaxy-weaver' | 'christmas-tree-card' | 'newyear-countdown' | 'neon-wish-bubbles' | 'money-swirl' | 'romantic-heart-3d' | 'spring-festival' | 'lantern-fireworks' | 'brilliant-fireworks' | 'tsparticles-fireworks' | 'countdown-3d-fireworks' | 'romantic-fireworks' | 'text-fireworks' | 'city-fireworks' | 'aurora-fireworks' | 'firework-show-3d' | 'custom-fireworks' | 'romantic-hearts' | 'particle-hearts' | 'birthday-wish' | 'time-tunnel' | 'couples-agreement' | 'princess-welcome' | 'love-clock-diy' | 'reasons-to-love' | 'traffic-light-birthday' | 'festive-projection-diy' | 'wishing-jar' | 'photo-planet';
 
 interface ToolBasicConfig<T = any> {
   // 原有字段
@@ -270,6 +300,48 @@ const toolRegistry: Record<ToolKey, ToolBasicConfig> = {
     DisplayUI: TimeTunnelDisplayUI,
     defaultConfig: timeTunnelDefault,
     configMetadata: timeTunnelMetadata,
+  },
+  'couples-agreement': {
+    name: '情侣协议书',
+    DisplayUI: CouplesAgreementDisplayUI,
+    defaultConfig: couplesAgreementDefault,
+    configMetadata: couplesAgreementMetadata,
+  },
+  'princess-welcome': {
+    name: '公主请开心',
+    DisplayUI: PrincessWelcomeDisplayUI,
+    defaultConfig: princessWelcomeDefault,
+    configMetadata: princessWelcomeMetadata,
+  },
+  'love-clock-diy': {
+    name: '专属恋爱时钟',
+    DisplayUI: LoveClockDiyDisplayUI,
+    defaultConfig: loveClockDiyDefault,
+    configMetadata: loveClockDiyMetadata,
+  },
+  'reasons-to-love': {
+    name: '爱你的理由',
+    DisplayUI: ReasonsToLoveDisplayUI,
+    defaultConfig: reasonsToLoveDefault,
+    configMetadata: reasonsToLoveMetadata,
+  },
+  'traffic-light-birthday': {
+    name: '红绿灯生日倒数',
+    DisplayUI: TrafficLightBirthdayDisplayUI,
+    defaultConfig: trafficLightBirthdayDefault,
+    configMetadata: trafficLightBirthdayMetadata,
+  },
+  'festive-projection-diy': {
+    name: '新年好运投射',
+    DisplayUI: FestiveProjectionDiyDisplayUI,
+    defaultConfig: festiveProjectionDiyDefault,
+    configMetadata: festiveProjectionDiyMetadata,
+  },
+  'photo-planet': {
+    name: '星球滚动相册',
+    DisplayUI: PhotoPlanetDisplayUI,
+    defaultConfig: photoPlanetDefault,
+    configMetadata: photoPlanetMetadata,
   },
 };
 
