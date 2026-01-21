@@ -5,9 +5,25 @@ import { RotateCw, XCircle } from 'lucide-react';
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
 
+// 导入配置和工具函数
+import {
+  AppConfig,
+  BgType,
+  DecorationItem,
+  DEFAULT_CONFIG,
+  PRESETS,
+  detectBgType,
+  playFallbackSound,
+} from './config';
+
+// 重新导出配置供外部使用
+export type { AppConfig, BgType, DecorationItem };
+export { DEFAULT_CONFIG, PRESETS };
+export { christmasTreeCardConfigMetadata } from './config';
+
 /**
  * ==============================================================================
- * 0. 原生 Canvas 粒子组件 (Native Canvas Particles)
+ * 原生 Canvas 粒子组件
  * ==============================================================================
  */
 
@@ -25,19 +41,14 @@ const ParticleCanvas = React.memo<ParticleCanvasProps>(({ count, size, speed, co
 
   useEffect(() => {
     if (!enable || !canvasRef.current || !containerRef.current) return;
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     let animationFrameId: number;
     let particles: Array<{
-      x: number;
-      y: number;
-      size: number;
-      speedY: number;
-      speedX: number;
-      opacity: number;
+      x: number; y: number; size: number; speedY: number; speedX: number; opacity: number;
     }> = [];
 
     const resizeCanvas = () => {
@@ -74,10 +85,7 @@ const ParticleCanvas = React.memo<ParticleCanvasProps>(({ count, size, speed, co
         p.y += p.speedY;
         p.x += p.speedX;
 
-        if (p.y > canvas.height) {
-          p.y = -10;
-          p.x = Math.random() * canvas.width;
-        }
+        if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
         if (p.x > canvas.width) p.x = 0;
         if (p.x < 0) p.x = canvas.width;
       });
@@ -110,122 +118,7 @@ ParticleCanvas.displayName = 'ParticleCanvas';
 
 /**
  * ==============================================================================
- * 1. 核心配置定义 (Core Configuration)
- * ==============================================================================
- */
-
-export type BgType = 'image' | 'video' | 'color';
-
-export interface DecorationItem {
-  id: string;
-  type: 'emoji' | 'image';
-  content: string;
-  x: number;
-  y: number;
-  scale: number;
-  rotation: number;
-}
-
-export interface AppConfig {
-  particleCount: number;
-  particleSize: number;
-  particleSpeed: number;
-  particleColor: string;
-  glassBlur: number;
-  glassOpacity: number;
-  bgValue: string;
-  enableSnow: boolean;
-  bgMusicUrl: string;
-  clickSoundUrl: string;
-  enableSound: boolean;
-  decorationPicker: any;
-  capsuleText: string;
-  treeTextLevels: string;
-  treeBottomLetters: string;
-}
-
-export const PRESETS = {
-  backgrounds: [
-    { label: '飘雪视频', value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/20471-309698211.mp4', type: 'video' },
-    { label: '温馨壁炉', value: 'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/video/23881-337972830_small.mp4', type: 'video' },
-    { label: '梦幻雪夜', value: 'https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?q=80&w=2574&auto=format&fit=crop', type: 'image' },
-    { label: '复古红绿', value: '#0f392b', type: 'color' },
-    { label: '午夜深蓝', value: '#0f172a', type: 'color' },
-  ],
-  music: [
-    { label: 'We Wish You Merry Christmas', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-    { label: 'Jingle Bells (Upbeat)', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' }
-  ],
-  clickSounds: [
-    { label: '清脆铃声', value: 'https://cdn.pixabay.com/audio/2022/03/24/audio_c8c8a73467.mp3' },
-    { label: '气泡音', value: 'https://cdn.pixabay.com/audio/2024/08/04/audio_245277864b.mp3' },
-    { label: '魔法音效', value: 'https://cdn.pixabay.com/audio/2022/03/10/audio_c29d0c6f5d.mp3' },
-  ],
-  stickers: [
-    { label: '圣诞袜', value: '🧦', type: 'emoji' },
-    { label: '圣诞树', value: '🎄', type: 'emoji' },
-    { label: '礼物盒', value: '🎁', type: 'emoji' },
-    { label: '圣诞老人', value: '🎅', type: 'emoji' },
-    { label: '麋鹿', value: '🦌', type: 'emoji' },
-    { label: '姜饼人', value: '🍪', type: 'emoji' },
-    { label: '铃铛', value: '🔔', type: 'emoji' },
-    { label: '雪人', value: '⛄', type: 'emoji' },
-  ]
-};
-
-export const DEFAULT_CONFIG: AppConfig = {
-  particleCount: 100,
-  particleSize: 3,
-  particleSpeed: 1,
-  particleColor: '#FFD700',
-  glassBlur: 12,
-  glassOpacity: 0.85,
-  bgValue: '#0f172a',
-  enableSnow: true,
-  bgMusicUrl: PRESETS.music[0].value,
-  clickSoundUrl: PRESETS.clickSounds[0].value,
-  enableSound: true,
-  decorationPicker: null,
-  capsuleText: '我的正每天快乐',
-  treeTextLevels: '圣→诞→圣诞→快乐→圣诞快乐→圣诞快乐→圣诞快乐快乐→圣诞快乐快乐→圣诞快乐圣诞快乐→圣诞快乐圣诞快乐',
-  treeBottomLetters: 'L/H/J/C/Y/E',
-};
-
-export const christmasTreeCardConfigMetadata = {
-  panelTitle: '圣诞树贺卡配置',
-  panelSubtitle: 'Design Your Christmas Tree Card',
-  configSchema: {
-    particleColor: { category: 'visual' as const, type: 'color' as const, label: '主题点缀色' },
-    particleCount: { category: 'visual' as const, type: 'slider' as const, label: '氛围粒子密度', min: 20, max: 300, step: 10 },
-    particleSize: { category: 'visual' as const, type: 'slider' as const, label: '粒子尺寸', min: 1, max: 6, step: 0.5 },
-    particleSpeed: { category: 'visual' as const, type: 'slider' as const, label: '粒子速度', min: 0.1, max: 3, step: 0.1 },
-    glassBlur: { category: 'visual' as const, type: 'slider' as const, label: '卡片磨砂程度', min: 0, max: 24, step: 1 },
-    glassOpacity: { category: 'visual' as const, type: 'slider' as const, label: '卡片透明度', min: 0.1, max: 1, step: 0.05 },
-    enableSnow: { category: 'background' as const, type: 'switch' as const, label: '开启粒子雪花' },
-    bgValue: { category: 'background' as const, type: 'media-grid' as const, label: '背景场景', mediaType: 'background' as const, defaultItems: PRESETS.backgrounds },
-    enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-    bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
-    // decorationPicker: { category: 'decoration' as const, type: 'sticker-picker' as const, label: '添加装饰', options: PRESETS.stickers },
-    capsuleText: { category: 'content' as const, type: 'input' as const, label: '一键祝福', placeholder: '替换"圣诞快乐"' },
-    treeTextLevels: { category: 'content' as const, type: 'textarea' as const, label: '树体文案 (→分隔)' },
-    treeBottomLetters: { category: 'content' as const, type: 'input' as const, label: '树干字母 (/分隔)' },
-  },
-  tabs: [
-    { id: 'visual' as const, label: '视觉', icon: null },
-    { id: 'background' as const, label: '背景', icon: null },
-    // { id: 'decoration' as const, label: '装饰', icon: null },
-    { id: 'content' as const, label: '内容', icon: null },
-  ],
-  mobileSteps: [
-    { id: 1, label: '基础', icon: null, fields: ['bgValue' as const, 'enableSnow' as const] },
-    { id: 2, label: '样式', icon: null, fields: ['particleCount' as const, 'particleColor' as const, 'glassBlur' as const] },
-    { id: 3, label: '内容', icon: null, fields: ['capsuleText' as const, 'treeTextLevels' as const, 'treeBottomLetters' as const] },
-  ],
-};
-
-/**
- * ==============================================================================
- * 2. 核心展示组件 (DisplayUI)
+ * 主组件 (DisplayUI)
  * ==============================================================================
  */
 
@@ -238,18 +131,16 @@ interface DisplayUIProps {
 }
 
 export function DisplayUI({ config, decorations: decorationsProp, setDecorations: setDecorationsProp, isPanelOpen = false, onAddSticker }: DisplayUIProps) {
-  // 内部状态管理装饰品（如果外部没有提供）
   const [internalDecorations, setInternalDecorations] = useState<DecorationItem[]>([]);
   const decorations = decorationsProp ?? internalDecorations;
   const setDecorations = setDecorationsProp ?? setInternalDecorations;
   const [interactionMode, setInteractionMode] = useState<'drag' | 'rotate' | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
-  
+
   const dragOffsetRef = useRef<{ x: number, y: number }>({ x: 0, y: 0 });
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 使用可复用的音效 Hook
   const {
     audioRef: bgAudioRef,
     isPlaying,
@@ -262,18 +153,8 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
     volume: 0.5,
   });
 
-  // Helper: 检测背景类型
-  const detectBgType = (value: string): BgType => {
-    if (!value) return 'color';
-    if (value.startsWith('#') || value.startsWith('rgb')) return 'color';
-    if (value.endsWith('.mp4') || value.endsWith('.webm')) return 'video';
-    if (value.includes('video') || value.includes('mixkit')) return 'video';
-    return 'image';
-  };
-
   const bgType = detectBgType(config.bgValue);
 
-  // 点击音效逻辑
   const playClickSound = useCallback(() => {
     if (!config.enableSound) return;
     if (clickAudioRef.current) {
@@ -284,100 +165,57 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
     }
   }, [config.enableSound]);
 
-  const playFallbackSound = () => {
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
-    } catch (e) {
-      console.error("Web Audio API fallback also failed", e);
-    }
-  };
-
-  // 添加装饰品
   const handleAddSticker = useCallback((sticker: any) => {
-    // 如果外部提供了 onAddSticker，使用外部的
-    if (onAddSticker) {
-      onAddSticker(sticker);
-      return;
-    }
-    
-    // 否则使用内部状态管理
+    if (onAddSticker) { onAddSticker(sticker); return; }
     if (!setDecorations) return;
-    
+
     const newDeco: DecorationItem = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
       type: sticker.type || 'emoji',
       content: sticker.value,
-      x: 50 + (Math.random() - 0.5) * 20,  // 随机位置，中心附近
+      x: 50 + (Math.random() - 0.5) * 20,
       y: 40 + (Math.random() - 0.5) * 20,
       scale: 1,
-      rotation: Math.random() * 30 - 15,  // 随机旋转 -15° 到 15°
+      rotation: Math.random() * 30 - 15,
     };
-    
+
     setDecorations(prev => [...prev, newDeco]);
     playClickSound();
   }, [onAddSticker, setDecorations, playClickSound]);
 
-  // 监听 config.decorationPicker 的变化，当配置面板添加装饰时触发
   useEffect(() => {
     if (config.decorationPicker && typeof config.decorationPicker === 'object') {
       handleAddSticker(config.decorationPicker);
     }
   }, [config.decorationPicker, handleAddSticker]);
 
-  // 删除装饰品
   const handleDelete = (e: React.MouseEvent | React.TouchEvent, id: string) => {
     e.stopPropagation();
-    if (setDecorations) {
-      setDecorations(prev => prev.filter(d => d.id !== id));
-    }
+    if (setDecorations) { setDecorations(prev => prev.filter(d => d.id !== id)); }
     if (activeId === id) setActiveId(null);
   };
 
-  // 交互处理：开始拖拽或旋转
-  const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent, id: string, type: 'drag' | 'rotate', currentData: {x: number, y: number, rotation: number}) => {
+  const handleInteractionStart = (e: React.MouseEvent | React.TouchEvent, id: string, type: 'drag' | 'rotate', currentData: { x: number, y: number, rotation: number }) => {
     e.stopPropagation();
     playClickSound();
-    
     setActiveId(id);
     setInteractionMode(type);
 
     const container = containerRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
-    
+
     let clientX, clientY;
-    if ('touches' in e) {
-       clientX = e.touches[0].clientX;
-       clientY = e.touches[0].clientY;
-    } else {
-       clientX = (e as React.MouseEvent).clientX;
-       clientY = (e as React.MouseEvent).clientY;
-    }
+    if ('touches' in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+    else { clientX = (e as React.MouseEvent).clientX; clientY = (e as React.MouseEvent).clientY; }
 
     if (type === 'drag') {
-        const clickXPercent = ((clientX - rect.left) / rect.width) * 100;
-        const clickYPercent = ((clientY - rect.top) / rect.height) * 100;
-        dragOffsetRef.current = {
-          x: clickXPercent - currentData.x,
-          y: clickYPercent - currentData.y
-        };
+      const clickXPercent = ((clientX - rect.left) / rect.width) * 100;
+      const clickYPercent = ((clientY - rect.top) / rect.height) * 100;
+      dragOffsetRef.current = { x: clickXPercent - currentData.x, y: clickYPercent - currentData.y };
     }
   };
 
-  // 交互处理：全局移动
   useEffect(() => {
     if (!interactionMode || !activeId) return;
     const container = containerRef.current;
@@ -385,44 +223,29 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
 
     const handleGlobalMove = (e: MouseEvent | TouchEvent) => {
       if (e.cancelable) e.preventDefault();
-
       const rect = container.getBoundingClientRect();
       let clientX, clientY;
-
-      if ('touches' in e) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        clientX = (e as MouseEvent).clientX;
-        clientY = (e as MouseEvent).clientY;
-      }
+      if ('touches' in e) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+      else { clientX = (e as MouseEvent).clientX; clientY = (e as MouseEvent).clientY; }
 
       if (!setDecorations) return;
       setDecorations(prev => prev.map(deco => {
         if (deco.id !== activeId) return deco;
-
         if (interactionMode === 'drag') {
-            const mouseXPercent = ((clientX - rect.left) / rect.width) * 100;
-            const mouseYPercent = ((clientY - rect.top) / rect.height) * 100;
-            let newX = mouseXPercent - dragOffsetRef.current.x;
-            let newY = mouseYPercent - dragOffsetRef.current.y;
-            return { ...deco, x: newX, y: newY };
+          const mouseXPercent = ((clientX - rect.left) / rect.width) * 100;
+          const mouseYPercent = ((clientY - rect.top) / rect.height) * 100;
+          return { ...deco, x: mouseXPercent - dragOffsetRef.current.x, y: mouseYPercent - dragOffsetRef.current.y };
         } else if (interactionMode === 'rotate') {
-            const centerX = rect.left + (deco.x / 100) * rect.width;
-            const centerY = rect.top + (deco.y / 100) * rect.height;
-            
-            const angleRad = Math.atan2(clientY - centerY, clientX - centerX);
-            const angleDeg = angleRad * (180 / Math.PI);
-            
-            return { ...deco, rotation: angleDeg + 90 };
+          const centerX = rect.left + (deco.x / 100) * rect.width;
+          const centerY = rect.top + (deco.y / 100) * rect.height;
+          const angleRad = Math.atan2(clientY - centerY, clientX - centerX);
+          return { ...deco, rotation: angleRad * (180 / Math.PI) + 90 };
         }
         return deco;
       }));
     };
 
-    const handleGlobalUp = () => {
-      setInteractionMode(null);
-    };
+    const handleGlobalUp = () => { setInteractionMode(null); };
 
     window.addEventListener('mousemove', handleGlobalMove);
     window.addEventListener('touchmove', handleGlobalMove, { passive: false });
@@ -437,24 +260,17 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
     };
   }, [interactionMode, activeId, setDecorations, decorations]);
 
-  const handleBackgroundClick = () => {
-    setActiveId(null);
-  };
+  const handleBackgroundClick = () => { setActiveId(null); };
 
-  // Glass Card Component
   const GlassCard = ({ children, className = "", variant = 'white' }: any) => {
     const bgColor = variant === 'green' ? `rgba(74, 222, 128, ${config.glassOpacity})` : `rgba(255, 255, 255, ${config.glassOpacity})`;
     return (
-      <div 
+      <div
         onClick={(e) => { e.stopPropagation(); playClickSound(); }}
         className={`relative overflow-hidden rounded-xl shadow-lg cursor-pointer transition-transform hover:scale-105 active:scale-95 text-slate-900 border border-white/40 ${className}`}
-        style={{
-          backdropFilter: `blur(${config.glassBlur}px)`,
-          WebkitBackdropFilter: `blur(${config.glassBlur}px)`,
-          backgroundColor: bgColor,
-        }}
+        style={{ backdropFilter: `blur(${config.glassBlur}px)`, WebkitBackdropFilter: `blur(${config.glassBlur}px)`, backgroundColor: bgColor }}
       >
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/40 to-transparent opacity-50 pointer-events-none"/>
+        <div className="absolute inset-0 bg-gradient-to-tr from-white/40 to-transparent opacity-50 pointer-events-none" />
         <div className="relative z-10 font-bold">{children}</div>
       </div>
     );
@@ -464,11 +280,7 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
   const bottomLetters = config.treeBottomLetters.split('/').map(t => t.trim()).filter(Boolean);
 
   return (
-    <div 
-      ref={containerRef}
-      onClick={handleBackgroundClick}
-      className={`relative w-full h-full overflow-hidden transition-all duration-300 select-none ${isPanelOpen ? 'md:ml-[400px] w-auto' : ''}`}
-    >
+    <div ref={containerRef} onClick={handleBackgroundClick} className={`relative w-full h-full overflow-hidden transition-all duration-300 select-none ${isPanelOpen ? 'md:ml-[400px] w-auto' : ''}`}>
       {/* Background */}
       <div className="absolute inset-0 z-0 bg-black">
         {bgType === 'color' && <div className="w-full h-full transition-colors duration-500" style={{ background: config.bgValue }} />}
@@ -484,46 +296,19 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
         {decorations && decorations.length > 0 && decorations.map(deco => {
           const isSelected = activeId === deco.id;
           return (
-            <div
-              key={deco.id}
-              style={{
-                left: `${deco.x}%`,
-                top: `${deco.y}%`,
-                transform: `translate(-50%, -50%) rotate(${deco.rotation}deg) scale(${deco.scale})`,
-                zIndex: isSelected ? 100 : 50,
-                touchAction: 'none',
-              }}
-              className="absolute group"
-            >
+            <div key={deco.id} style={{ left: `${deco.x}%`, top: `${deco.y}%`, transform: `translate(-50%, -50%) rotate(${deco.rotation}deg) scale(${deco.scale})`, zIndex: isSelected ? 100 : 50, touchAction: 'none' }} className="absolute group">
               <div className={`relative ${isSelected ? 'scale-105' : ''}`}>
-                <div
-                  onMouseDown={(e) => handleInteractionStart(e, deco.id, 'drag', deco)}
-                  onTouchStart={(e) => handleInteractionStart(e, deco.id, 'drag', deco)}
-                  className="cursor-move active:cursor-grabbing"
-                >
-                  {deco.type === 'emoji' ? (
-                    <span className="text-5xl drop-shadow-lg pointer-events-none select-none">{deco.content}</span>
-                  ) : (
-                    <img src={deco.content} alt="sticker" className="w-20 h-20 object-contain drop-shadow-lg pointer-events-none select-none" draggable={false} />
-                  )}
+                <div onMouseDown={(e) => handleInteractionStart(e, deco.id, 'drag', deco)} onTouchStart={(e) => handleInteractionStart(e, deco.id, 'drag', deco)} className="cursor-move active:cursor-grabbing">
+                  {deco.type === 'emoji' ? <span className="text-5xl drop-shadow-lg pointer-events-none select-none">{deco.content}</span> : <img src={deco.content} alt="sticker" className="w-20 h-20 object-contain drop-shadow-lg pointer-events-none select-none" draggable={false} />}
                 </div>
-                
                 {isSelected && (
                   <>
                     <div className="absolute -inset-3 border-2 border-dashed border-white/80 rounded-xl pointer-events-none animate-pulse opacity-70" />
                     <div className="absolute left-1/2 bottom-full h-8 w-0.5 bg-white/80 -translate-x-1/2 pointer-events-none" />
-                    <div 
-                      className="absolute left-1/2 bottom-[calc(100%+32px)] -translate-x-1/2 w-10 h-10 p-2 bg-white text-pink-500 rounded-full shadow-lg flex items-center justify-center cursor-alias hover:scale-110 active:scale-95 transition-transform z-50 touch-none"
-                      onMouseDown={(e) => handleInteractionStart(e, deco.id, 'rotate', deco)}
-                      onTouchStart={(e) => handleInteractionStart(e, deco.id, 'rotate', deco)}
-                    >
+                    <div className="absolute left-1/2 bottom-[calc(100%+32px)] -translate-x-1/2 w-10 h-10 p-2 bg-white text-pink-500 rounded-full shadow-lg flex items-center justify-center cursor-alias hover:scale-110 active:scale-95 transition-transform z-50 touch-none" onMouseDown={(e) => handleInteractionStart(e, deco.id, 'rotate', deco)} onTouchStart={(e) => handleInteractionStart(e, deco.id, 'rotate', deco)}>
                       <RotateCw size={18} strokeWidth={3} className="pointer-events-none" />
                     </div>
-                    <button
-                      onClick={(e) => handleDelete(e, deco.id)}
-                      onTouchStart={(e) => handleDelete(e, deco.id)}
-                      className="absolute -top-5 -right-5 w-8 h-8 bg-red-500 text-white rounded-full shadow-md flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-50"
-                    >
+                    <button onClick={(e) => handleDelete(e, deco.id)} onTouchStart={(e) => handleDelete(e, deco.id)} className="absolute -top-5 -right-5 w-8 h-8 bg-red-500 text-white rounded-full shadow-md flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-50">
                       <XCircle size={16} />
                     </button>
                   </>
@@ -553,18 +338,9 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
         </div>
       </div>
 
-      {/* 音效控制面板 - 使用可复用组件 */}
-      <AudioControlPanel
-        isPlaying={isPlaying}
-        isMuted={isMuted}
-        onPlayPause={handlePlayPause}
-        onToggleMute={handleToggleMute}
-        enabled={config.enableSound}
-        position="bottom-right"
-        size="sm"
-      />
+      {/* 音效控制面板 */}
+      <AudioControlPanel isPlaying={isPlaying} isMuted={isMuted} onPlayPause={handlePlayPause} onToggleMute={handleToggleMute} enabled={config.enableSound} position="bottom-right" size="sm" />
 
-      {/* 背景音乐（由 Hook 管理） */}
       <audio ref={bgAudioRef} src={config.bgMusicUrl} loop crossOrigin="anonymous" />
       <audio ref={clickAudioRef} src={config.clickSoundUrl} crossOrigin="anonymous" preload="auto" />
 
@@ -577,12 +353,6 @@ export function DisplayUI({ config, decorations: decorationsProp, setDecorations
     </div>
   );
 }
-
-/**
- * ==============================================================================
- * 3. 主页面入口 (Main Page)
- * ==============================================================================
- */
 
 export default function ChristmasTreeCardPage() {
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);

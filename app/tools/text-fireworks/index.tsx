@@ -4,15 +4,16 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
 import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
-import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
-import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
-import type { StandardBgConfig } from '@/types/background';
+import { parseBgValueToConfig } from '@/utils/background-parser';
+import { random } from '@/lib/utils/random';
+import type { AppConfig } from './config';
+import { DEFAULT_CONFIG, textFireworksCardConfigMetadata, textFireworksConfigMetadata } from './config';
+import { textToPoints, generateTextExplosionParams, type Point } from './TextToPoints';
 
 /**
  * ==============================================================================
  * 文字烟花组件 - 浪漫文字烟花系统
- * 参考: 2024 新年快乐 音乐好听321
- * 特点: 
+ * 特点:
  *   - 文字粒子效果 (文字爆炸成粒子形状)
  *   - 闪烁星空背景
  *   - 双层烟花系统 (普通烟花 + 文字烟花)
@@ -20,150 +21,9 @@ import type { StandardBgConfig } from '@/types/background';
  * ==============================================================================
  */
 
-export interface AppConfig {
-    titleText: string;
-    subText: string;
-    greetingText: string;
-    autoLaunch: boolean;
-    launchInterval: number;
-    textInterval: number;
-    starCount: number;
-    bgConfig?: StandardBgConfig;
-    bgValue?: string;
-    bgMusicUrl: string;
-    enableSound: boolean;
-}
-
-export const PRESETS = {
-    backgrounds: GLOBAL_BG_PRESETS.getToolPresets('text-fireworks'),
-    music: [
-        { label: '浪漫新年', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-        { label: '温暖钢琴', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
-        { label: '欢快节日', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-    ],
-};
-
-export const DEFAULT_CONFIG: AppConfig = {
-    titleText: '2026 新年快乐！',
-    subText: '龙年大吉',
-    greetingText: '愿新的一年\n所有美好如期而至\n所有等待都有回应',
-    autoLaunch: true,
-    launchInterval: 200,
-    textInterval: 5000,
-    starCount: 250,
-    bgConfig: createBgConfigWithOverlay(
-        { type: 'color' as const, value: '#000000' },
-        0
-    ),
-    bgValue: '#000000',
-    bgMusicUrl: PRESETS.music[0].value,
-    enableSound: true,
-};
-
-export const textFireworksCardConfigMetadata = {
-    panelTitle: '文字烟花配置',
-    panelSubtitle: '绽放专属你的浪漫祝福',
-    configSchema: {
-        titleText: { category: 'content' as const, type: 'input' as const, label: '主标题', placeholder: '2026 新年快乐！' },
-        subText: { category: 'content' as const, type: 'input' as const, label: '副标题', placeholder: '龙年大吉' },
-        greetingText: { category: 'content' as const, type: 'textarea' as const, label: '祝福语', placeholder: '输入你的祝福...', rows: 4 },
-
-        autoLaunch: { category: 'visual' as const, type: 'switch' as const, label: '自动发射' },
-        launchInterval: { category: 'visual' as const, type: 'slider' as const, label: '发射间隔(ms)', min: 100, max: 500, step: 50 },
-        textInterval: { category: 'visual' as const, type: 'slider' as const, label: '文字间隔(ms)', min: 3000, max: 10000, step: 1000 },
-        starCount: { category: 'visual' as const, type: 'slider' as const, label: '星星数量', min: 100, max: 500, step: 50 },
-
-        bgValue: {
-            category: 'background' as const,
-            type: 'media-grid' as const,
-            label: '背景场景',
-            mediaType: 'background' as const,
-            defaultItems: PRESETS.backgrounds,
-        },
-        enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-        bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
-    },
-    tabs: [
-        { id: 'content' as const, label: '内容', icon: null },
-        { id: 'visual' as const, label: '视觉', icon: null },
-        { id: 'background' as const, label: '背景', icon: null },
-    ],
-    mobileSteps: [
-        { id: 1, label: '祝福内容', icon: null, fields: ['titleText' as const, 'subText' as const, 'greetingText' as const] },
-        { id: 2, label: '烟花设置', icon: null, fields: ['autoLaunch' as const, 'launchInterval' as const, 'textInterval' as const, 'starCount' as const] },
-        { id: 3, label: '背景音乐', icon: null, fields: ['bgValue' as const, 'enableSound' as const, 'bgMusicUrl' as const] },
-    ],
-};
-
-// ============================================================================
-// 常量和工具函数
-// ============================================================================
-const random = (min: number, max: number) => Math.random() * (max - min) + min;
 const GRAVITY = 0.1;
 
-// ============================================================================
-// 文字转点阵函数
-// ============================================================================
-function textToPoints(text: string, textSize: number, font: string): { x: number; y: number }[] {
-    if (typeof window === 'undefined') return [];
-
-    const canvas = document.createElement('canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = textSize * 1.5;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return [];
-
-    ctx.textBaseline = 'middle';
-    ctx.font = `bold ${textSize}px ${font}`;
-    ctx.fillStyle = 'white';
-    ctx.fillText(text, 0, canvas.height / 2);
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-
-    const points: { x: number; y: number }[] = [];
-    const threshold = 50;
-    const step = 2; // 采样步长，减少点数提高性能
-
-    for (let y = 0; y < canvas.height; y += step) {
-        for (let x = 0; x < canvas.width; x += step) {
-            const index = (x + y * canvas.width) * 4;
-            if (data[index + 3] > threshold) {
-                // 边缘检测，只保留边缘点
-                const neighbors = [
-                    [x + step, y],
-                    [x - step, y],
-                    [x, y + step],
-                    [x, y - step]
-                ];
-
-                let isEdge = false;
-                for (const [nx, ny] of neighbors) {
-                    if (nx >= 0 && nx < canvas.width && ny >= 0 && ny < canvas.height) {
-                        const ni = (nx + ny * canvas.width) * 4;
-                        if (data[ni + 3] < threshold) {
-                            isEdge = true;
-                            break;
-                        }
-                    } else {
-                        isEdge = true;
-                        break;
-                    }
-                }
-
-                if (isEdge) {
-                    points.push({ x: x / step, y: y / step });
-                }
-            }
-        }
-    }
-
-    return points;
-}
-
-// ============================================================================
-// 粒子类定义
-// ============================================================================
+// 粒子类型定义
 interface Star {
     x: number;
     y: number;
@@ -206,9 +66,6 @@ interface Particle {
     radius: number;
 }
 
-// ============================================================================
-// 主组件
-// ============================================================================
 interface DisplayUIProps {
     config: AppConfig;
     isPanelOpen?: boolean;
@@ -224,15 +81,10 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
     const fireworksRef = useRef<Firework[]>([]);
     const particlesRef = useRef<Particle[]>([]);
     const titleParticlesRef = useRef<TitleParticle[]>([]);
-    const textPointsRef = useRef<{ x: number; y: number }[]>([]);
+    const textPointsRef = useRef<Point[]>([]);
     const starImageRef = useRef<HTMLImageElement | null>(null);
 
-    // 定时器引用
-    const normalTimerRef = useRef<number>(0);
-    const titleTimerRef = useRef<number>(0);
-
     const [displayText, setDisplayText] = useState('');
-    const [showGreeting, setShowGreeting] = useState(false);
 
     const {
         isPlaying,
@@ -257,7 +109,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
 
     // 生成文字点阵
     useEffect(() => {
-        const points = textToPoints(config.titleText, 20, 'Arial, sans-serif');
+        const points = textToPoints(config.titleText, 20);
         textPointsRef.current = points;
     }, [config.titleText]);
 
@@ -265,9 +117,6 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
 
         // 创建星星
         starsRef.current = [];
@@ -314,14 +163,13 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                 index++;
             } else {
                 clearInterval(timer);
-                setShowGreeting(true);
             }
         }, 100);
 
         return () => clearInterval(timer);
     }, [config.greetingText]);
 
-    // 发射普通烟花
+    // 发射烟花
     const launchFirework = useCallback((isTitle = false) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -350,11 +198,12 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
 
         points.forEach(p => {
+            const { vx: baseVx, vy: baseVy } = generateTextExplosionParams(x, y, p, scale);
             const particle: TitleParticle = {
                 x,
                 y,
-                vx: (p.x - 60) * scale + random(-0.1, 0.1),
-                vy: (p.y - 15) * scale + random(-0.1, 0.1),
+                vx: baseVx + random(-0.1, 0.1),
+                vy: baseVy + random(-0.1, 0.1),
                 ay: 0.15,
                 radius: 3,
                 maxHealth: 180,
@@ -366,7 +215,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
     }, []);
 
     // 创建普通烟花爆炸
-    const createExplosion = useCallback((x: number, y: number, hue: number) => {
+    const createExplosion = useCallback((x: number, y: number) => {
         const color: [number, number, number] = [
             Math.floor(random(100, 256)),
             Math.floor(random(100, 256)),
@@ -398,7 +247,6 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        // 点击位置发射烟花
         const firework: Firework = {
             x: random(canvas.width * 0.3, canvas.width * 0.7),
             y: canvas.height,
@@ -494,7 +342,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                     if (fw.isTitle) {
                         createTitleExplosion(fw.x, fw.y);
                     } else {
-                        createExplosion(fw.x, fw.y, 0);
+                        createExplosion(fw.x, fw.y);
                     }
                     fireworksRef.current.splice(i, 1);
                 }
@@ -622,3 +470,5 @@ export default function TextFireworksPage() {
     const [config] = useState<AppConfig>(DEFAULT_CONFIG);
     return <DisplayUI config={config} />;
 }
+
+export { DEFAULT_CONFIG, textFireworksCardConfigMetadata, textFireworksConfigMetadata };

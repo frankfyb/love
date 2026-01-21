@@ -1,164 +1,120 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+/**
+ * city-fireworks - 重构版本
+ * 使用共享烟花引擎，保留城市剪影和月亮等独特视觉效果
+ */
+
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
 import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
-import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
-import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
-import type { StandardBgConfig } from '@/types/background';
+import { parseBgValueToConfig } from '@/utils/background-parser';
 
-/**
- * ==============================================================================
- * 城市烟花组件 - 唯美城市夜景烟花
- * 参考: 2024newyear 新年快乐烟花
- * 特点: 
- *   - 城市剪影背景 + 月亮光晕
- *   - 标签文字淡入淡出切换
- *   - 闪烁星空背景
- *   - 粒子烟花爆炸效果
- *   - 点击交互发射烟花
- * ==============================================================================
- */
+// 使用共享引擎
+import { FireworksEngine } from '@/engines/fireworks';
 
-export interface AppConfig {
-    greetings: string[];
-    textDisplayTime: number;
-    starCount: number;
-    autoLaunch: boolean;
-    launchInterval: number;
-    showMoon: boolean;
-    showCityline: boolean;
-    bgConfig?: StandardBgConfig;
-    bgValue?: string;
-    bgMusicUrl: string;
-    enableSound: boolean;
-}
+// 导入配置
+import {
+    AppConfig,
+    DEFAULT_CONFIG,
+    PRESETS,
+    cityFireworksCardConfigMetadata,
+} from './config';
 
-export const PRESETS = {
-    backgrounds: GLOBAL_BG_PRESETS.getToolPresets('city-fireworks'),
-    music: [
-        { label: '浪漫新年', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-        { label: '温暖钢琴', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
-        { label: '欢快节日', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-    ],
-    defaultGreetings: [
-        '亲爱的你',
-        '2026 新年快乐',
-        '新的一年也要发光发热',
-        '健健康康，平安喜乐',
-        '万事如意，心想事成',
-    ],
-};
-
-export const DEFAULT_CONFIG: AppConfig = {
-    greetings: PRESETS.defaultGreetings,
-    textDisplayTime: 3500,
-    starCount: 100,
-    autoLaunch: true,
-    launchInterval: 250,
-    showMoon: true,
-    showCityline: true,
-    bgConfig: createBgConfigWithOverlay(
-        { type: 'color' as const, value: 'rgba(0, 5, 24, 1)' },
-        0
-    ),
-    bgValue: 'rgba(0, 5, 24, 1)',
-    bgMusicUrl: PRESETS.music[0].value,
-    enableSound: true,
-};
-
-export const cityFireworksCardConfigMetadata = {
-    panelTitle: '城市烟花配置',
-    panelSubtitle: '点亮城市夜空的浪漫',
-    configSchema: {
-        greetings: { category: 'content' as const, type: 'list' as const, label: '祝福语列表', placeholder: '输入祝福语', description: '每行一句，轮流展示' },
-
-        autoLaunch: { category: 'visual' as const, type: 'switch' as const, label: '自动发射' },
-        launchInterval: { category: 'visual' as const, type: 'slider' as const, label: '发射间隔(ms)', min: 150, max: 500, step: 50 },
-        textDisplayTime: { category: 'visual' as const, type: 'slider' as const, label: '文字展示时间(ms)', min: 2000, max: 6000, step: 500 },
-        starCount: { category: 'visual' as const, type: 'slider' as const, label: '星星数量', min: 50, max: 200, step: 10 },
-        showMoon: { category: 'visual' as const, type: 'switch' as const, label: '显示月亮' },
-        showCityline: { category: 'visual' as const, type: 'switch' as const, label: '显示城市轮廓' },
-
-        bgValue: {
-            category: 'background' as const,
-            type: 'media-grid' as const,
-            label: '背景场景',
-            mediaType: 'background' as const,
-            defaultItems: PRESETS.backgrounds,
-        },
-        enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-        bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
-    },
-    tabs: [
-        { id: 'content' as const, label: '内容', icon: null },
-        { id: 'visual' as const, label: '视觉', icon: null },
-        { id: 'background' as const, label: '背景', icon: null },
-    ],
-    mobileSteps: [
-        { id: 1, label: '祝福内容', icon: null, fields: ['greetings' as const] },
-        { id: 2, label: '烟花设置', icon: null, fields: ['autoLaunch' as const, 'launchInterval' as const, 'textDisplayTime' as const, 'starCount' as const, 'showMoon' as const, 'showCityline' as const] },
-        { id: 3, label: '背景音乐', icon: null, fields: ['bgValue' as const, 'enableSound' as const, 'bgMusicUrl' as const] },
-    ],
-};
+// 重新导出配置
+export type { AppConfig };
+export { DEFAULT_CONFIG, PRESETS, cityFireworksCardConfigMetadata };
 
 // ============================================================================
-// 工具函数
+// 星空背景组件
 // ============================================================================
-const getRandom = (min: number, max: number) => Math.random() * (max - min) + min;
 
-// ============================================================================
-// 粒子类定义
-// ============================================================================
 interface Star {
     x: number;
     y: number;
     r: number;
 }
 
-interface Fragment {
-    x: number;
-    y: number;
-    tx: number;
-    ty: number;
-    centerX: number;
-    centerY: number;
-    radius: number;
-    color: { r: number; g: number; b: number };
-    dead: boolean;
-}
+function StarField({ count, containerRef }: { count: number; containerRef: React.RefObject<HTMLDivElement | null> }) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const starsRef = useRef<Star[]>([]);
 
-interface Boom {
-    x: number;
-    y: number;
-    r: number;
-    boomArea: { x: number; y: number };
-    ba: number;
-    dead: boolean;
-    booms: Fragment[];
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const container = containerRef.current;
+        if (!canvas || !container) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const resize = () => {
+            if (!container) return;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            // 初始化星星
+            starsRef.current = [];
+            for (let i = 0; i < count; i++) {
+                const r = Math.random() * 1.5;
+                starsRef.current.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 2 - canvas.height,
+                    r,
+                });
+            }
+        };
+
+        resize();
+        window.addEventListener('resize', resize);
+
+        let rafId: number;
+        const loop = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 绘制星星
+            starsRef.current.forEach(star => {
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.r})`;
+                ctx.fill();
+                ctx.restore();
+            });
+
+            rafId = requestAnimationFrame(loop);
+        };
+
+        loop();
+
+        return () => {
+            window.removeEventListener('resize', resize);
+            cancelAnimationFrame(rafId);
+        };
+    }, [count, containerRef]);
+
+    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;
 }
 
 // ============================================================================
-// 主组件
+// 主显示组件
 // ============================================================================
+
 interface DisplayUIProps {
     config: AppConfig;
     isPanelOpen?: boolean;
     onConfigChange?: (key: keyof AppConfig, value: unknown) => void;
 }
 
-export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProps) {
+export function DisplayUI({ config }: DisplayUIProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-
-    const starsRef = useRef<Star[]>([]);
-    const bigboomsRef = useRef<Boom[]>([]);
-    const lastTimeRef = useRef<number>(0);
+    const engineRef = useRef<FireworksEngine | null>(null);
 
     const [currentLabel, setCurrentLabel] = useState('');
     const [labelVisible, setLabelVisible] = useState(false);
 
+    // 音频控制
     const {
         isPlaying,
         isMuted,
@@ -170,13 +126,10 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         volume: 0.6,
     });
 
+    // 背景配置
     const effectiveBgConfig = useMemo(() => {
-        if (config.bgValue) {
-            return parseBgValueToConfig(config.bgValue);
-        }
-        if (config.bgConfig) {
-            return config.bgConfig;
-        }
+        if (config.bgValue) return parseBgValueToConfig(config.bgValue);
+        if (config.bgConfig) return config.bgConfig;
         return DEFAULT_CONFIG.bgConfig!;
     }, [config.bgValue, config.bgConfig]);
 
@@ -201,73 +154,46 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         return () => clearInterval(interval);
     }, [config.greetings, config.textDisplayTime]);
 
-    // 创建烟花爆炸
-    const createBoom = useCallback((startX: number, targetX: number, targetY: number): Boom => {
-        const canvas = canvasRef.current;
-        if (!canvas) {
-            return {
-                x: startX,
-                y: 0,
-                r: 2,
-                boomArea: { x: targetX, y: targetY },
-                ba: getRandom(80, 200),
-                dead: false,
-                booms: [],
-            };
-        }
+    // 初始化烟花引擎
+    useEffect(() => {
+        if (!canvasRef.current) return;
 
-        return {
-            x: startX,
-            y: canvas.height + 2,
-            r: 2,
-            boomArea: { x: targetX, y: targetY },
-            ba: getRandom(80, 200),
-            dead: false,
-            booms: [],
+        engineRef.current = new FireworksEngine({
+            canvas: canvasRef.current,
+            shellSize: 2,
+            shellType: 'Random',
+            autoLaunch: config.autoLaunch,
+            autoLaunchInterval: { min: config.launchInterval, max: config.launchInterval + 1000 },
+            enableSound: config.enableSound && !isMuted,
+            soundVolume: 0.5,
+            showSkyLighting: false,
+        });
+
+        engineRef.current.start();
+
+        return () => {
+            engineRef.current?.dispose();
         };
-    }, []);
+    }, [config.autoLaunch, config.launchInterval, config.enableSound, isMuted]);
 
-    // 创建爆炸碎片
-    const createFragments = useCallback((boom: Boom) => {
-        const fragNum = getRandom(100, 300);
-        const style = getRandom(0, 10) >= 5 ? 1 : 2;
-        let baseColor = style === 1 ? {
-            r: Math.floor(getRandom(128, 255)),
-            g: Math.floor(getRandom(128, 255)),
-            b: Math.floor(getRandom(128, 255)),
-        } : null;
+    // 配置同步
+    useEffect(() => {
+        engineRef.current?.setAutoLaunch(config.autoLaunch);
+    }, [config.autoLaunch]);
 
-        const fragments: Fragment[] = [];
-        for (let i = 0; i < fragNum; i++) {
-            const color = style === 2 ? {
-                r: Math.floor(getRandom(128, 255)),
-                g: Math.floor(getRandom(128, 255)),
-                b: Math.floor(getRandom(128, 255)),
-            } : baseColor!;
-
-            const angle = getRandom(-Math.PI, Math.PI);
-            const dist = getRandom(0, fragNum);
-            const tx = dist * Math.cos(angle) + boom.x;
-            const ty = dist * Math.sin(angle) + boom.y;
-
-            fragments.push({
-                x: boom.x,
-                y: boom.y,
-                tx,
-                ty,
-                centerX: boom.x,
-                centerY: boom.y,
-                radius: getRandom(0, 2),
-                color,
-                dead: false,
-            });
+    useEffect(() => {
+        if (engineRef.current) {
+            engineRef.current.setAutoLaunchInterval(config.launchInterval, config.launchInterval + 1000);
         }
+    }, [config.launchInterval]);
 
-        return fragments;
-    }, []);
+    useEffect(() => {
+        engineRef.current?.setSoundEnabled(config.enableSound && !isMuted);
+    }, [config.enableSound, isMuted]);
 
     // 点击发射烟花
-    const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        if (!engineRef.current) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -275,180 +201,8 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
 
-        const startX = getRandom(canvas.width / 3, (canvas.width * 2) / 3);
-        const boom = createBoom(startX, x, y);
-        bigboomsRef.current.push(boom);
-    }, [createBoom]);
-
-    // 主渲染循环
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas || !containerRef.current) return;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        let rafId: number;
-
-        const resize = () => {
-            if (!containerRef.current) return;
-            canvas.width = containerRef.current.clientWidth;
-            canvas.height = containerRef.current.clientHeight;
-        };
-
-        resize();
-        window.addEventListener('resize', resize);
-
-        // 初始化星星
-        starsRef.current = [];
-        for (let i = 0; i < config.starCount; i++) {
-            const r = Math.random() * 1.5;
-            starsRef.current.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height * 2 - canvas.height,
-                r,
-            });
-        }
-
-        const loop = (timestamp: number) => {
-            const width = canvas.width;
-            const height = canvas.height;
-
-            // 清除画布（带拖尾效果）
-            ctx.save();
-            ctx.globalCompositeOperation = 'destination-out';
-            ctx.globalAlpha = 0.1;
-            ctx.fillRect(0, 0, width, height);
-            ctx.restore();
-
-            // 绘制星星
-            starsRef.current.forEach(star => {
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${star.r})`;
-                ctx.fill();
-                ctx.restore();
-            });
-
-            // 绘制月亮
-            if (config.showMoon) {
-                const moonX = width - 200;
-                const moonY = 100;
-                const moonR = 40;
-
-                // 月亮本体
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
-                const moonGradient = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, moonR);
-                moonGradient.addColorStop(0, 'rgba(255, 255, 240, 1)');
-                moonGradient.addColorStop(0.5, 'rgba(255, 245, 200, 0.9)');
-                moonGradient.addColorStop(1, 'rgba(255, 235, 150, 0.7)');
-                ctx.fillStyle = moonGradient;
-                ctx.fill();
-                ctx.restore();
-
-                // 月亮光晕
-                for (let i = 0; i < 10; i++) {
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(moonX, moonY, moonR + i * 3, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(240, 219, 120, 0.015)';
-                    ctx.fill();
-                    ctx.restore();
-                }
-            }
-
-            // 自动发射烟花
-            if (config.autoLaunch) {
-                if (timestamp - lastTimeRef.current > config.launchInterval + (height - 767) / 2) {
-                    const x = getRandom(width / 5, (width * 4) / 5);
-                    const y = getRandom(50, height * 0.3);
-                    const startX = getRandom(width / 3, (width * 2) / 3);
-                    const boom = createBoom(startX, x, y);
-                    bigboomsRef.current.push(boom);
-                    lastTimeRef.current = timestamp;
-                }
-            }
-
-            // 更新和绘制烟花
-            for (let i = bigboomsRef.current.length - 1; i >= 0; i--) {
-                const boom = bigboomsRef.current[i];
-
-                if (!boom.dead) {
-                    // 移动烟花弹
-                    const dx = boom.boomArea.x - boom.x;
-                    const dy = boom.boomArea.y - boom.y;
-                    boom.x += dx * 0.01;
-                    boom.y += dy * 0.01;
-
-                    // 绘制烟花弹
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.arc(boom.x, boom.y, boom.r, 0, Math.PI * 2);
-                    ctx.fillStyle = '#FFF';
-                    ctx.fill();
-                    ctx.restore();
-
-                    // 绘制光晕
-                    ctx.save();
-                    ctx.fillStyle = 'rgba(255, 228, 150, 0.3)';
-                    ctx.beginPath();
-                    ctx.arc(boom.x, boom.y, boom.r + 3 * Math.random() + 1, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-
-                    // 检查是否到达目标
-                    if (Math.abs(dx) <= boom.ba && Math.abs(dy) <= boom.ba) {
-                        boom.dead = true;
-                        boom.booms = createFragments(boom);
-                    }
-                } else {
-                    // 更新碎片
-                    let allDead = true;
-                    for (let j = boom.booms.length - 1; j >= 0; j--) {
-                        const frag = boom.booms[j];
-                        if (!frag.dead) {
-                            allDead = false;
-
-                            // 添加重力
-                            frag.ty += 0.3;
-
-                            // 移动碎片
-                            const fdx = frag.tx - frag.x;
-                            const fdy = frag.ty - frag.y;
-                            frag.x = Math.abs(fdx) < 0.1 ? frag.tx : frag.x + fdx * 0.1;
-                            frag.y = Math.abs(fdy) < 0.1 ? frag.ty : frag.y + fdy * 0.1;
-
-                            // 检查是否消亡
-                            if (fdx === 0 && Math.abs(fdy) <= 80) {
-                                frag.dead = true;
-                            }
-
-                            // 绘制碎片
-                            ctx.fillStyle = `rgba(${frag.color.r}, ${frag.color.g}, ${frag.color.b}, 1)`;
-                            ctx.fillRect(frag.x - frag.radius, frag.y - frag.radius, frag.radius * 2, frag.radius * 2);
-                        }
-                    }
-
-                    // 移除已完成的烟花
-                    if (allDead || boom.booms.length === 0) {
-                        bigboomsRef.current.splice(i, 1);
-                    }
-                }
-            }
-
-            rafId = requestAnimationFrame(loop);
-        };
-
-        rafId = requestAnimationFrame(loop);
-
-        return () => {
-            window.removeEventListener('resize', resize);
-            cancelAnimationFrame(rafId);
-        };
-    }, [config.autoLaunch, config.launchInterval, config.starCount, config.showMoon, createBoom, createFragments]);
+        engineRef.current.launchAt(x, y);
+    };
 
     return (
         <div ref={containerRef} className="fixed inset-0 w-full h-full overflow-hidden select-none" style={{ backgroundColor: 'rgba(0, 5, 24, 1)' }}>
@@ -457,12 +211,49 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                 <BackgroundRenderer config={effectiveBgConfig} />
             </div>
 
+            {/* 星空层 */}
+            <div className="absolute inset-0 z-5">
+                <StarField count={config.starCount} containerRef={containerRef} />
+            </div>
+
+            {/* 月亮层 */}
+            {config.showMoon && (
+                <div className="absolute inset-0 z-8 pointer-events-none">
+                    <svg className="w-full h-full">
+                        <defs>
+                            <radialGradient id="moonGradient">
+                                <stop offset="0%" stopColor="rgba(255, 255, 240, 1)" />
+                                <stop offset="50%" stopColor="rgba(255, 245, 200, 0.9)" />
+                                <stop offset="100%" stopColor="rgba(255, 235, 150, 0.7)" />
+                            </radialGradient>
+                        </defs>
+                        {/* 月亮光晕 */}
+                        {Array.from({ length: 10 }).map((_, i) => (
+                            <circle
+                                key={`halo-${i}`}
+                                cx="calc(100% - 200px)"
+                                cy="100"
+                                r={40 + i * 3}
+                                fill="rgba(240, 219, 120, 0.015)"
+                            />
+                        ))}
+                        {/* 月亮本体 */}
+                        <circle
+                            cx="calc(100% - 200px)"
+                            cy="100"
+                            r="40"
+                            fill="url(#moonGradient)"
+                        />
+                    </svg>
+                </div>
+            )}
+
             {/* 烟花Canvas */}
             <canvas
                 ref={canvasRef}
                 onClick={handleClick}
                 className="absolute inset-0 z-10 block cursor-crosshair"
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: '100%', height: '100%', mixBlendMode: 'lighten' }}
             />
 
             {/* 文字标签层 */}

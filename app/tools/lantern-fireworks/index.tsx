@@ -1,351 +1,52 @@
 'use client';
 
+/**
+ * lantern-fireworks - 重构版本
+ * 使用共享烟花引擎，保留独特的孔明灯漂浮效果
+ */
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
 import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
-import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
-import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
-import type { StandardBgConfig } from '@/types/background';
+import { parseBgValueToConfig } from '@/utils/background-parser';
+import { random } from '@/lib/utils';
 
-/**
- * ==============================================================================
- * 孔明灯与烟花 - 浪漫祈愿之夜
- * 灵感来源：孔明灯漂浮 + 炫彩烟花 + 星空背景
- * ==============================================================================
- */
+// 使用共享烟花引擎
+import { FireworksEngine } from '@/engines/fireworks';
 
-// 类型定义
-export interface WishItem {
-    sender: string;
-    wish: string;
-}
+// 导入配置
+import {
+    WishItem,
+    AppConfig,
+    DEFAULT_CONFIG,
+    DEFAULT_WISHES,
+    PRESETS,
+    lanternFireworksConfigMetadata,
+} from './config';
 
-export interface AppConfig {
-    titleText: string;
-    recipientName: string;
-    wishes: WishItem[];
-    fireworkDensity: number;
-    lanternCount: number;
-    bgConfig?: StandardBgConfig;
-    bgValue?: string;
-    bgMusicUrl: string;
-    enableSound: boolean;
-}
+// 重新导出配置
+export type { WishItem, AppConfig };
+export { DEFAULT_CONFIG, DEFAULT_WISHES, PRESETS, lanternFireworksConfigMetadata };
 
-// 预设配置
-export const PRESETS = {
-    backgrounds: GLOBAL_BG_PRESETS.getToolPresets('lantern-fireworks'),
-    music: [
-        { label: '新年祝福音乐', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-        { label: '传统民乐', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-        { label: '宁静钢琴', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
-    ],
-};
+// ============================================================================
+// 孔明灯接口
+// ============================================================================
 
-// 默认祝愿列表
-const DEFAULT_WISHES: WishItem[] = [
-    { sender: '小明', wish: '愿新的一年，心想事成，万事如意！' },
-    { sender: '小红', wish: '希望家人平安健康，幸福美满~' },
-    { sender: '阿杰', wish: '事业顺利，财源滚滚！' },
-    { sender: '小美', wish: '愿所有的美好都如约而至 ✨' },
-    { sender: '大伟', wish: '新年快乐！希望能找到真爱 ❤️' },
-    { sender: '小琳', wish: '学业进步，考试顺利！加油！' },
-    { sender: '老王', wish: '身体健康，一切顺心如意！' },
-    { sender: '小李', wish: '2025发大财！暴富暴瘦！' },
-];
-
-export const DEFAULT_CONFIG: AppConfig = {
-    titleText: '愿望孔明灯',
-    recipientName: '亲爱的你',
-    wishes: DEFAULT_WISHES,
-    fireworkDensity: 6,
-    lanternCount: 12,
-    bgConfig: createBgConfigWithOverlay({
-        type: 'color' as const,
-        value: '#0a0a1a',
-    }, 0),
-    bgValue: '#0a0a1a',
-    bgMusicUrl: PRESETS.music[0].value,
-    enableSound: true,
-};
-
-// 烟花颜色
-const FIREWORK_COLORS = [
-    '#BDC9E5', '#F5D488', '#F5B488', '#DCBBA3', '#BE88DC',
-    '#FFE2A0', '#C9FFA0', '#A0ECFF', '#A0C0FF', '#FFA0A0',
-    '#FF7EB3', '#FF758C', '#FF7A8A', '#E8518D', '#F44369'
-];
-
-// 音效
-const AUDIO_SOURCES = {
-    burst: [
-        'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/burst1.mp3',
-        'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/burst2.mp3',
-        'https://objectstorageapi.sg-members-1.clawcloudrun.com/cfd6671w-love/love/fireworks/audio/burst-sm-1.mp3',
-    ],
-};
-
-// 工具函数
-const random = (a: number | any[], b?: number): any => {
-    if (Array.isArray(a)) return a[Math.floor(Math.random() * a.length)];
-    if (b === undefined) return Math.random() * a;
-    return Math.random() * (b - a) + a;
-};
-
-/**
- * 音效管理器
- */
-class SoundManager {
-    private pools: HTMLAudioElement[] = [];
-    private cursor = 0;
-    private enabled = true;
-
-    constructor() {
-        if (typeof window === 'undefined') return;
-        for (let i = 0; i < 6; i++) {
-            const url = AUDIO_SOURCES.burst[i % AUDIO_SOURCES.burst.length];
-            const audio = new Audio(url);
-            audio.preload = 'auto';
-            audio.volume = 0.25;
-            this.pools.push(audio);
-        }
-    }
-
-    play() {
-        if (!this.enabled) return;
-        const audio = this.pools[this.cursor];
-        if (!audio) return;
-        audio.volume = random(0.15, 0.35);
-        audio.currentTime = 0;
-        audio.play().catch(() => { });
-        this.cursor = (this.cursor + 1) % this.pools.length;
-    }
-
-    setEnabled(enable: boolean) {
-        this.enabled = enable;
-    }
-}
-
-/**
- * 颜色工具 (简化版 tinycolor)
- */
-const tinycolor = (color: string) => {
-    return {
-        setAlpha: (alpha: number) => {
-            if (color.startsWith('#')) {
-                const r = parseInt(color.slice(1, 3), 16);
-                const g = parseInt(color.slice(3, 5), 16);
-                const b = parseInt(color.slice(5, 7), 16);
-                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-            }
-            return color;
-        }
-    };
-};
-
-/**
- * 烟花粒子
- */
-class FireworkParticle {
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    size: number;
-    color: string;
-    shadowColor: string;
-    gravity = 0.08;
-    power = 0.93;
-    shrink = 0.97;
-    jitter = 1;
-
-    constructor(x: number, y: number, color: string, speed: number = 15, size: number = 15) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.shadowColor = tinycolor(color).setAlpha(0.1);
-        this.size = random(-size / 2, size / 2) + size;
-
-        const angle = random(0, Math.PI * 2);
-        const vel = Math.cos(random(0, Math.PI / 2)) * speed;
-        this.vx = Math.cos(angle) * vel;
-        this.vy = Math.sin(angle) * vel;
-    }
-
-    update() {
-        this.vx *= this.power;
-        this.vy *= this.power;
-        this.vy += this.gravity;
-
-        const jitter = random(-1, 1) * this.jitter;
-        this.x += this.vx + jitter;
-        this.y += this.vy + jitter;
-        this.size *= this.shrink;
-    }
-
-    draw(ctx: CanvasRenderingContext2D) {
-        if (this.size < 1) return;
-        ctx.save();
-
-        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size / 2);
-        gradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.4)');
-        gradient.addColorStop(0.6, this.color);
-        gradient.addColorStop(1, this.shadowColor);
-
-        ctx.fillStyle = gradient;
-        ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
-        ctx.restore();
-    }
-
-    isDead() {
-        return this.size < 1;
-    }
-}
-
-/**
- * 单个烟花
- */
-class Firework {
-    particles: FireworkParticle[] = [];
-    isDead = false;
-
-    constructor(x: number, y: number, color: string, particleCount: number = 80) {
-        for (let i = 0; i < particleCount; i++) {
-            this.particles.push(new FireworkParticle(x, y, color));
-        }
-    }
-
-    update() {
-        this.particles = this.particles.filter(p => !p.isDead());
-        this.particles.forEach(p => p.update());
-        if (this.particles.length === 0) this.isDead = true;
-    }
-
-    draw(ctx: CanvasRenderingContext2D) {
-        this.particles.forEach(p => p.draw(ctx));
-    }
-}
-
-/**
- * 烟花引擎
- */
-class FireworksEngine {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private offScreenCanvas: HTMLCanvasElement;
-    private offScreenCtx: CanvasRenderingContext2D;
-    private fireworks: Firework[] = [];
-    private soundManager: SoundManager;
-    private animationId: number | null = null;
-    private density = 6;
-    private interval = 500;
-    private timer: NodeJS.Timeout | null = null;
-
-    constructor(canvas: HTMLCanvasElement, soundManager: SoundManager) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d')!;
-        this.offScreenCanvas = document.createElement('canvas');
-        this.offScreenCtx = this.offScreenCanvas.getContext('2d')!;
-        this.soundManager = soundManager;
-        this.resize();
-    }
-
-    setDensity(value: number) {
-        this.density = value;
-        this.interval = 3000 / value;
-    }
-
-    resize() {
-        const rect = this.canvas.parentElement?.getBoundingClientRect();
-        if (rect) {
-            this.canvas.width = rect.width;
-            this.canvas.height = rect.height;
-            this.offScreenCanvas.width = rect.width;
-            this.offScreenCanvas.height = rect.height;
-        }
-    }
-
-    createFirework(x?: number, y?: number) {
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-        const finalX = x !== undefined ? x : random(w * 0.1, w * 0.9);
-        const finalY = y !== undefined ? y : random(h * 0.1, h * 0.5);
-        const color = random(FIREWORK_COLORS) as string;
-        const particleCount = Math.floor(random(60, 100));
-
-        this.fireworks.push(new Firework(finalX, finalY, color, particleCount));
-        this.soundManager.play();
-    }
-
-    private loop() {
-        const interval = this.interval * random(0.5, 1.5);
-        this.timer = setTimeout(() => {
-            this.fireworks = this.fireworks.filter(f => !f.isDead);
-            if (this.fireworks.length < this.density) {
-                this.createFirework();
-            }
-            this.loop();
-        }, interval);
-    }
-
-    private render() {
-        const { width, height } = this.canvas;
-
-        // 使用 destination-out 实现透明拖尾效果，让背景显示
-        this.ctx.globalCompositeOperation = 'destination-out';
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-        this.ctx.fillRect(0, 0, width, height);
-
-        // 恢复正常绘制模式
-        this.ctx.globalCompositeOperation = 'source-over';
-
-        this.offScreenCtx.clearRect(0, 0, width, height);
-
-        this.fireworks.forEach(f => {
-            f.update();
-            f.draw(this.offScreenCtx);
-        });
-
-        this.ctx.save();
-        this.ctx.globalCompositeOperation = 'lighter';
-        this.ctx.drawImage(this.offScreenCanvas, 0, 0);
-        this.ctx.restore();
-
-        this.animationId = requestAnimationFrame(() => this.render());
-    }
-
-    start() {
-        this.loop();
-        this.render();
-    }
-
-    stop() {
-        if (this.timer) clearTimeout(this.timer);
-        if (this.animationId) cancelAnimationFrame(this.animationId);
-    }
-}
-
-/**
- * 孔明灯 - 更真实的物理效果
- */
 interface Lantern {
     x: number;
     y: number;
     scale: number;
-    baseSpeed: number;        // 基础上升速度
-    phase: number;            // 摆动相位
-    swayAmplitude: number;    // 摆动幅度
-    swaySpeed: number;        // 摆动速度
-    rotationPhase: number;    // 旋转相位
+    baseSpeed: number;
+    phase: number;
+    swayAmplitude: number;
+    swaySpeed: number;
+    rotationPhase: number;
     wish: WishItem;
     glowPhase: number;
-    birthTime: number;        // 出生时间，用于计算加速
+    birthTime: number;
 }
 
-/**
- * 星星
- */
 interface Star {
     x: number;
     y: number;
@@ -355,21 +56,20 @@ interface Star {
     phase: number;
 }
 
-/**
- * 主显示组件
- */
+// ============================================================================
+// 主显示组件
+// ============================================================================
+
 interface DisplayUIProps {
     config: AppConfig;
     isPanelOpen?: boolean;
     onConfigChange?: (key: keyof AppConfig, value: any) => void;
 }
 
-export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProps) {
+export function DisplayUI({ config }: DisplayUIProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const fireworkCanvasRef = useRef<HTMLCanvasElement>(null);
-    const lanternCanvasRef = useRef<HTMLCanvasElement>(null);
-    const soundManagerRef = useRef<SoundManager | null>(null);
-    const fireworksEngineRef = useRef<FireworksEngine | null>(null);
+    const engineRef = useRef<FireworksEngine | null>(null);
 
     const [lanterns, setLanterns] = useState<Lantern[]>([]);
     const [stars, setStars] = useState<Star[]>([]);
@@ -377,6 +77,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
     const [activeWish, setActiveWish] = useState<WishItem | null>(null);
     const [showWish, setShowWish] = useState(false);
 
+    // 音频控制
     const {
         isPlaying,
         isMuted,
@@ -388,6 +89,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         volume: 0.5,
     });
 
+    // 背景配置
     const effectiveBgConfig = useMemo(() => {
         if (config.bgValue) return parseBgValueToConfig(config.bgValue);
         if (config.bgConfig) return config.bgConfig;
@@ -412,36 +114,45 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
 
     // 初始化烟花引擎
     useEffect(() => {
-        soundManagerRef.current = new SoundManager();
-        soundManagerRef.current.setEnabled(!isMuted);
+        if (!fireworkCanvasRef.current || showWelcome) return;
 
-        if (fireworkCanvasRef.current) {
-            fireworksEngineRef.current = new FireworksEngine(
-                fireworkCanvasRef.current,
-                soundManagerRef.current
-            );
-            fireworksEngineRef.current.setDensity(config.fireworkDensity);
-            fireworksEngineRef.current.start();
-        }
+        const interval = 3000 / config.fireworkDensity;
+
+        engineRef.current = new FireworksEngine({
+            canvas: fireworkCanvasRef.current,
+            shellSize: 2,
+            shellType: 'Random',
+            autoLaunch: true,
+            autoLaunchInterval: { min: interval * 0.5, max: interval * 1.5 },
+            enableSound: config.enableSound && !isMuted,
+            soundVolume: 0.4,
+            showSkyLighting: false,
+        });
+
+        engineRef.current.start();
 
         const handleResize = () => {
-            fireworksEngineRef.current?.resize();
+            engineRef.current?.resize();
         };
         window.addEventListener('resize', handleResize);
 
         return () => {
-            fireworksEngineRef.current?.stop();
+            engineRef.current?.dispose();
             window.removeEventListener('resize', handleResize);
         };
-    }, []);
+    }, [showWelcome, config.fireworkDensity, config.enableSound, isMuted]);
 
+    // 配置同步
     useEffect(() => {
-        soundManagerRef.current?.setEnabled(!isMuted);
-    }, [isMuted]);
-
-    useEffect(() => {
-        fireworksEngineRef.current?.setDensity(config.fireworkDensity);
+        if (engineRef.current) {
+            const interval = 3000 / config.fireworkDensity;
+            engineRef.current.setAutoLaunchInterval(interval * 0.5, interval * 1.5);
+        }
     }, [config.fireworkDensity]);
+
+    useEffect(() => {
+        engineRef.current?.setSoundEnabled(config.enableSound && !isMuted);
+    }, [config.enableSound, isMuted]);
 
     // 初始化孔明灯
     const initLanterns = useCallback(() => {
@@ -469,7 +180,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         }
     }, [config.wishes, config.lanternCount]);
 
-    // 更新孔明灯位置 - 更真实的物理效果
+    // 更新孔明灯位置
     useEffect(() => {
         if (lanterns.length === 0) return;
 
@@ -479,38 +190,24 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
             setLanterns(prev => prev.map(lantern => {
                 let { x, y, scale, baseSpeed, phase, swayAmplitude, swaySpeed, rotationPhase, glowPhase, birthTime } = lantern;
 
-                // 计算飞行时间（秒）
                 const flightTime = (now - birthTime) / 1000;
-
-                // 上升速度：初始较慢，然后加速，最后稳定
-                const speedMultiplier = Math.min(1, flightTime / 3); // 前3秒加速
+                const speedMultiplier = Math.min(1, flightTime / 3);
                 const currentSpeed = baseSpeed * (0.5 + speedMultiplier * 0.5);
 
-                // 上升
                 y -= currentSpeed;
-
-                // 正弦波摆动（模拟风的影响）
                 phase += swaySpeed;
                 const sway = Math.sin(phase) * swayAmplitude;
                 x += sway * 0.1;
-
-                // 轻微的水平飘移（模拟微风）
                 x += Math.sin(phase * 0.3) * 0.02;
-
-                // 旋转/摇晃相位
                 rotationPhase += 0.02;
-
-                // 发光相位
                 glowPhase += 0.03;
 
-                // 透视缩放：随着上升逐渐缩小
                 if (y < 80) {
                     const distanceFactor = (80 - y) / 80;
                     scale = lantern.scale * (1 - distanceFactor * 0.4);
                     scale = Math.max(0.3, scale);
                 }
 
-                // 重置飞出屏幕的孔明灯
                 if (y < -15 || x < 5 || x > 95) {
                     return {
                         ...lantern,
@@ -530,7 +227,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         return () => clearInterval(interval);
     }, [lanterns.length]);
 
-    // 星星闪烁动画
+    // 星星闪烁
     useEffect(() => {
         const interval = setInterval(() => {
             setStars(prev => prev.map(star => ({
@@ -556,10 +253,11 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
 
     // 点击画布创建烟花
     const handleCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+        if (!engineRef.current) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        fireworksEngineRef.current?.createFirework(x, y);
+        engineRef.current.launchAt(x, y);
     }, []);
 
     return (
@@ -567,7 +265,6 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
             {/* 1. 背景层 */}
             <div className="absolute inset-0 z-0">
                 <BackgroundRenderer config={effectiveBgConfig} />
-                {/* 深色覆盖层使星星更明显 */}
                 <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a2e]/80 via-[#0a0a1a]/60 to-[#0a0a1a]/90" />
             </div>
 
@@ -591,16 +288,18 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
             </div>
 
             {/* 3. 烟花 Canvas */}
-            <canvas
-                ref={fireworkCanvasRef}
-                className="absolute inset-0 z-10 w-full h-full cursor-crosshair"
-                onClick={handleCanvasClick}
-            />
+            {!showWelcome && (
+                <canvas
+                    ref={fireworkCanvasRef}
+                    className="absolute inset-0 z-10 w-full h-full cursor-crosshair"
+                    style={{ mixBlendMode: 'lighten' }}
+                    onClick={handleCanvasClick}
+                />
+            )}
 
             {/* 4. 孔明灯层 */}
             <div className="absolute inset-0 z-20 pointer-events-none">
                 {lanterns.map((lantern, i) => {
-                    // 计算自然的摇摆角度
                     const swayAngle = Math.sin(lantern.rotationPhase) * 3;
 
                     return (
@@ -615,7 +314,6 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                             }}
                             onClick={() => handleLanternClick(lantern.wish)}
                         >
-                            {/* 孔明灯SVG */}
                             <svg width="60" height="70" viewBox="0 0 62 70" className="drop-shadow-lg">
                                 <defs>
                                     <radialGradient id={`lanternGrad${i}`} cx="50%" cy="90%" r="90%">
@@ -655,14 +353,12 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                                         <stop offset="100%" stopColor="#290e09" />
                                     </radialGradient>
                                 </defs>
-                                {/* 灯体 */}
                                 <path
                                     fill={`url(#lanternGrad${i})`}
                                     d="M47.7,61.6c0,2.6-6.3,5.6-14.7,5.6s-14.7-2.9-14.7-5.6c0-2.6,6.3-5.6,14.7-5.6S47.7,58.9,47.7,61.6z
                    M26.4,0C19.2,0-1.5,15.1,0.1,21.4C1.6,27.7,15.4,62,15.4,62s0.1,0.1,0.2,0.3c-0.1-0.3-0.1-0.5-0.1-0.8
                    c0-4.7,7.5-8.3,17.4-8.3c9.9,0,17.4,3.6,17.4,8.3c0,0.1,0,0.2,0,0.2c2-3.6,10.9-33.1,11.9-42.7C63.3,9.3,34.2,0,26.4,0z"
                                 />
-                                {/* 发光效果 */}
                                 <ellipse
                                     cx="31"
                                     cy="35"
@@ -758,72 +454,6 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         </div>
     );
 }
-
-// 配置面板元数据
-export const lanternFireworksConfigMetadata = {
-    panelTitle: '孔明灯与烟花配置',
-    panelSubtitle: 'Lanterns & Fireworks',
-    configSchema: {
-        recipientName: {
-            category: 'content' as const,
-            type: 'input' as const,
-            label: '送给谁',
-            placeholder: '例如：亲爱的小曾'
-        },
-        titleText: {
-            category: 'content' as const,
-            type: 'input' as const,
-            label: '标题',
-            placeholder: '愿望孔明灯'
-        },
-        lanternCount: {
-            category: 'visual' as const,
-            type: 'slider' as const,
-            label: '孔明灯数量',
-            min: 4,
-            max: 20,
-            step: 1
-        },
-        fireworkDensity: {
-            category: 'visual' as const,
-            type: 'slider' as const,
-            label: '烟花密度',
-            min: 2,
-            max: 12,
-            step: 1
-        },
-        bgValue: {
-            category: 'background' as const,
-            type: 'media-grid' as const,
-            label: '背景场景',
-            mediaType: 'background' as const,
-            defaultItems: PRESETS.backgrounds,
-            description: '推荐使用深色背景'
-        },
-        enableSound: {
-            category: 'background' as const,
-            type: 'switch' as const,
-            label: '启用音效'
-        },
-        bgMusicUrl: {
-            category: 'background' as const,
-            type: 'media-picker' as const,
-            label: '背景音乐',
-            mediaType: 'music' as const,
-            defaultItems: PRESETS.music
-        },
-    },
-    tabs: [
-        { id: 'content' as const, label: '定制', icon: null },
-        { id: 'background' as const, label: '背景', icon: null },
-        { id: 'visual' as const, label: '视觉', icon: null },
-    ],
-    mobileSteps: [
-        { id: 1, label: '专属定制', icon: null, fields: ['recipientName', 'titleText'] },
-        { id: 2, label: '视觉效果', icon: null, fields: ['lanternCount', 'fireworkDensity'] },
-        { id: 3, label: '背景音乐', icon: null, fields: ['bgValue', 'bgMusicUrl', 'enableSound'] },
-    ],
-};
 
 export default function LanternFireworksPage() {
     const [config] = useState<AppConfig>(DEFAULT_CONFIG);

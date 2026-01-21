@@ -4,142 +4,34 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
 import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
-import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
-import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
-import type { StandardBgConfig } from '@/types/background';
+import { parseBgValueToConfig } from '@/utils/background-parser';
 import { Heart, Stars, Handshake, Sparkles } from 'lucide-react';
 
-/**
- * ==============================================================================
- * 情侣协议书 - 浪漫甜蜜的爱情约定
- * 特点:
- *   - 完美适配移动端/PC端
- *   - 自定义协议透明度
- *   - 浪漫的视觉效果（飘落爱心、光晕效果）
- *   - 可自定义条款内容
- * ==============================================================================
- */
+// 导入配置和工具函数
+import {
+    AppConfig,
+    DEFAULT_CONFIG,
+    PRESETS,
+    FloatingHeart,
+    generateFloatingHearts,
+} from './config';
 
-export interface AppConfig {
-    titleText: string;
-    partyAName: string;
-    partyBName: string;
-    clauses: string[];
-    signatureDate: string;
-    bgConfig?: StandardBgConfig;
-    bgValue?: string;
-    bgMusicUrl: string;
-    enableSound: boolean;
-    themeColor: string;
-    paperOpacity: number; // 新增：协议透明度
-    showFloatingHearts: boolean; // 新增：飘落爱心开关
-}
-
-export const PRESETS = {
-    backgrounds: GLOBAL_BG_PRESETS.getToolPresets('newyear-countdown'),
-    music: [
-        { label: '浪漫钢琴', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
-        { label: '温柔情歌', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-        { label: '甜蜜原声', value: 'https://cdn.pixabay.com/audio/2020/09/14/audio_l_06f14066c0.mp3' },
-        { label: '梦幻夜曲', value: 'https://cdn.pixabay.com/audio/2023/06/15/audio_c6a2d98b88.mp3' },
-    ],
-    defaultClauses: [
-        '要有共同的人生目标，未来是你',
-        '可以有异性朋友，但要保持分寸',
-        '彼此信任坦诚，不可以欺骗',
-        '不生隔夜气，当天事情当天解决',
-        '生气时，绝不可以放狠话，会伤感情',
-        '不要冷战，有问题及时沟通',
-        '答应对方的事情要说到做到',
-    ]
-};
-
-export const DEFAULT_CONFIG: AppConfig = {
-    titleText: '情侣协议书',
-    partyAName: '小张',
-    partyBName: '小美',
-    clauses: PRESETS.defaultClauses,
-    signatureDate: new Date().toISOString().split('T')[0],
-    bgConfig: createBgConfigWithOverlay(
-        {
-            type: 'color' as const,
-            value: '#1a1a2e',
-        },
-        0.1
-    ),
-    bgValue: '#1a1a2e',
-    bgMusicUrl: PRESETS.music[0].value,
-    enableSound: true,
-    themeColor: '#ff6b9d',
-    paperOpacity: 0.92,
-    showFloatingHearts: true,
-};
-
-export const couplesAgreementConfigMetadata = {
-    panelTitle: '情侣协议专属定制',
-    panelSubtitle: 'Create Your Love Agreement',
-    configSchema: {
-        partyAName: { category: 'content' as const, type: 'input' as const, label: '💕 甲方姓名', placeholder: '例如：小张' },
-        partyBName: { category: 'content' as const, type: 'input' as const, label: '💕 乙方姓名', placeholder: '例如：小美' },
-        titleText: { category: 'content' as const, type: 'input' as const, label: '协议标题', placeholder: '情侣协议书' },
-        signatureDate: { category: 'content' as const, type: 'datetime' as const, label: '签署日期', timeType: 'date' as const },
-        clauses: { category: 'content' as const, type: 'list' as const, label: '💌 协议条款', placeholder: '输入条款内容', description: '每一行代表一条约定' },
-
-        themeColor: { category: 'visual' as const, type: 'color' as const, label: '💗 主题颜色', description: '协议书的主色调' },
-        paperOpacity: { category: 'visual' as const, type: 'slider' as const, label: '📄 协议透明度', min: 0.3, max: 1, step: 0.05, description: '调整协议纸张的透明度' },
-        showFloatingHearts: { category: 'visual' as const, type: 'switch' as const, label: '💕 飘落爱心' },
-
-        bgValue: {
-            category: 'background' as const,
-            type: 'media-grid' as const,
-            label: '背景风格',
-            mediaType: 'background' as const,
-            defaultItems: PRESETS.backgrounds,
-            description: '选择浪漫的背景氛围'
-        },
-        enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-        bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
-    },
-    tabs: [
-        { id: 'content' as const, label: '💌 内容', icon: null },
-        { id: 'visual' as const, label: '✨ 视觉', icon: null },
-        { id: 'background' as const, label: '🎵 背景', icon: null },
-    ],
-    mobileSteps: [
-        { id: 1, label: '签署人', icon: null, fields: ['partyAName' as const, 'partyBName' as const, 'signatureDate' as const] },
-        { id: 2, label: '约定条款', icon: null, fields: ['clauses' as const, 'titleText' as const] },
-        { id: 3, label: '视觉效果', icon: null, fields: ['themeColor' as const, 'paperOpacity' as const, 'showFloatingHearts' as const] },
-        { id: 4, label: '背景音乐', icon: null, fields: ['bgValue' as const, 'bgMusicUrl' as const] },
-    ],
-};
+// 重新导出配置供外部使用
+export type { AppConfig };
+export { DEFAULT_CONFIG, PRESETS };
+export { couplesAgreementConfigMetadata } from './config';
 
 /**
  * ==============================================================================
  * 飘落爱心组件
  * ==============================================================================
  */
-interface FloatingHeart {
-    id: number;
-    x: number;
-    size: number;
-    duration: number;
-    delay: number;
-    opacity: number;
-}
 
 function FloatingHearts({ themeColor }: { themeColor: string }) {
     const [hearts, setHearts] = useState<FloatingHeart[]>([]);
 
     useEffect(() => {
-        const newHearts: FloatingHeart[] = Array.from({ length: 15 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100,
-            size: 12 + Math.random() * 16,
-            duration: 8 + Math.random() * 8,
-            delay: Math.random() * 5,
-            opacity: 0.3 + Math.random() * 0.4,
-        }));
-        setHearts(newHearts);
+        setHearts(generateFloatingHearts(15));
     }, []);
 
     return (
@@ -208,7 +100,6 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         return PRESETS.defaultClauses;
     }, [config.clauses]);
 
-    // 计算协议透明度相关样式
     const paperOpacity = config.paperOpacity ?? 0.92;
 
     return (
@@ -308,13 +199,9 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                     {/* Signatures Section */}
                     <div className="mt-10 sm:mt-12 md:mt-16 pt-6 sm:pt-8 md:pt-10 border-t-2 border-dashed" style={{ borderColor: `${config.themeColor}30` }}>
                         <div className="grid grid-cols-2 gap-4 sm:gap-6 md:gap-12 lg:gap-16">
-
                             {/* Party A */}
                             <div className="flex flex-col items-center space-y-2 sm:space-y-3 md:space-y-4 group cursor-pointer">
-                                <div
-                                    className="text-[10px] sm:text-xs md:text-sm tracking-wider sm:tracking-widest uppercase opacity-60 mb-0.5 sm:mb-1"
-                                    style={{ color: config.themeColor }}
-                                >
+                                <div className="text-[10px] sm:text-xs md:text-sm tracking-wider sm:tracking-widest uppercase opacity-60 mb-0.5 sm:mb-1" style={{ color: config.themeColor }}>
                                     ❤️ 爱我的人
                                 </div>
                                 <div className="relative">
@@ -324,13 +211,8 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                                     >
                                         {config.partyAName || "__________"}
                                     </div>
-                                    <div
-                                        className="absolute -right-4 sm:-right-5 md:-right-6 -top-4 sm:-top-5 md:-top-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform rotate-12 scale-90 group-hover:scale-100"
-                                    >
-                                        <span
-                                            className="text-[10px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded shadow-lg"
-                                            style={{ background: `linear-gradient(135deg, ${config.themeColor}, ${config.themeColor}dd)` }}
-                                        >
+                                    <div className="absolute -right-4 sm:-right-5 md:-right-6 -top-4 sm:-top-5 md:-top-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform rotate-12 scale-90 group-hover:scale-100">
+                                        <span className="text-[10px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded shadow-lg" style={{ background: `linear-gradient(135deg, ${config.themeColor}, ${config.themeColor}dd)` }}>
                                             ✓ Signed
                                         </span>
                                     </div>
@@ -340,10 +222,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
 
                             {/* Party B */}
                             <div className="flex flex-col items-center space-y-2 sm:space-y-3 md:space-y-4 group cursor-pointer">
-                                <div
-                                    className="text-[10px] sm:text-xs md:text-sm tracking-wider sm:tracking-widest uppercase opacity-60 mb-0.5 sm:mb-1"
-                                    style={{ color: config.themeColor }}
-                                >
+                                <div className="text-[10px] sm:text-xs md:text-sm tracking-wider sm:tracking-widest uppercase opacity-60 mb-0.5 sm:mb-1" style={{ color: config.themeColor }}>
                                     💕 我爱的人
                                 </div>
                                 <div className="relative">
@@ -353,38 +232,27 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                                     >
                                         {config.partyBName || "__________"}
                                     </div>
-                                    <div
-                                        className="absolute -right-4 sm:-right-5 md:-right-6 -top-4 sm:-top-5 md:-top-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform rotate-12 scale-90 group-hover:scale-100"
-                                    >
-                                        <span
-                                            className="text-[10px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded shadow-lg"
-                                            style={{ background: `linear-gradient(135deg, ${config.themeColor}, ${config.themeColor}dd)` }}
-                                        >
+                                    <div className="absolute -right-4 sm:-right-5 md:-right-6 -top-4 sm:-top-5 md:-top-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform rotate-12 scale-90 group-hover:scale-100">
+                                        <span className="text-[10px] sm:text-xs text-white px-1.5 sm:px-2 py-0.5 rounded shadow-lg" style={{ background: `linear-gradient(135deg, ${config.themeColor}, ${config.themeColor}dd)` }}>
                                             ✓ Signed
                                         </span>
                                     </div>
                                 </div>
                                 <div className="text-[10px] sm:text-xs md:text-sm font-medium text-gray-500">乙方 (Party B)</div>
                             </div>
-
                         </div>
 
                         {/* Date */}
                         <div className="flex justify-center mt-8 sm:mt-10 md:mt-12 text-gray-500 font-serif italic text-sm sm:text-base">
                             <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: `${config.themeColor}10` }}>
                                 <span className="opacity-70">签署日期:</span>
-                                <span className="font-medium text-gray-700">
-                                    {config.signatureDate}
-                                </span>
+                                <span className="font-medium text-gray-700">{config.signatureDate}</span>
                             </div>
                         </div>
 
                         {/* Love Declaration */}
                         <div className="text-center mt-6 sm:mt-8">
-                            <p
-                                className="text-xs sm:text-sm md:text-base italic opacity-60"
-                                style={{ color: config.themeColor }}
-                            >
+                            <p className="text-xs sm:text-sm md:text-base italic opacity-60" style={{ color: config.themeColor }}>
                                 "从此以后，只想和你一起，慢慢变老"
                             </p>
                         </div>
@@ -394,7 +262,6 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
                     <div className="absolute bottom-3 sm:bottom-4 left-0 right-0 text-center opacity-15 pointer-events-none">
                         <Handshake className="inline-block" size={36} color={config.themeColor} />
                     </div>
-
                 </div>
             </div>
 

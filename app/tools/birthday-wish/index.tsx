@@ -1,399 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
 import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
-import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
-import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
-import type { StandardBgConfig } from '@/types/background';
+import { parseBgValueToConfig } from '@/utils/background-parser';
 
-/**
- * ==============================================================================
- * 生日祝福组件 - 浪漫生日惊喜体验
- * 特点:
- *   - 四种浪漫效果模式（烟花文字/气球派对/聚光舞台/爱心祝福）
- *   - 响应式设计（移动端/PC端完美适配）
- *   - 浪漫飘落爱心与星光效果
- *   - 自定义倒计时惊喜揭晓
- *   - 多彩渐变气球动画
- * ==============================================================================
- */
+// 导入配置和模块
+import {
+    AppConfig,
+    DEFAULT_CONFIG,
+    PRESETS,
+    BALLOON_GRADIENTS,
+    Balloon,
+    generateBalloons,
+} from './config';
 
-export interface AppConfig {
-    recipientName: string;
-    birthdayMessage: string;
-    effectMode: 'fireworks-text' | 'balloon-party' | 'spotlight' | 'heart-blessing';
-    textColor: string;
-    balloonColors: string[];
-    enableCountdown: boolean;
-    countdownSeconds: number;
-    showFloatingHearts: boolean;
-    showSparkles: boolean;
-    bgConfig?: StandardBgConfig;
-    bgValue?: string;
-    bgMusicUrl: string;
-    enableSound: boolean;
-}
+import { Firework, FireworkParticle, HeartCanvas } from './ParticleSystem';
+import { FloatingHeartsLayer, SparklesLayer } from './EffectLayers';
 
-// 渐变色气球颜色配置 - 更浪漫的色彩
-const BALLOON_GRADIENTS = [
-    ['#ff69b4', '#ff1493'], // 粉红
-    ['#ff6b9d', '#e91e63'], // 玫瑰
-    ['#f472b6', '#ec4899'], // 浪漫粉
-    ['#a78bfa', '#7c3aed'], // 紫罗兰
-    ['#60a5fa', '#3b82f6'], // 天空蓝
-    ['#fbbf24', '#f59e0b'], // 金色
-    ['#34d399', '#10b981'], // 薄荷绿
-    ['#f472b6', '#8b5cf6'], // 粉紫
-    ['#fb7185', '#f43f5e'], // 珊瑚红
-    ['#c084fc', '#a855f7'], // 梦幻紫
-];
-
-export const PRESETS = {
-    backgrounds: GLOBAL_BG_PRESETS.getToolPresets('birthday-wish'),
-    music: [
-        { label: '🎂 温馨生日歌', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
-        { label: '🎉 欢乐派对', value: 'https://cdn.pixabay.com/audio/2022/08/02/audio_884fe92c21.mp3' },
-        { label: '💕 浪漫钢琴', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-        { label: '✨ 梦幻祝福', value: 'https://cdn.pixabay.com/audio/2023/06/15/audio_c6a2d98b88.mp3' },
-    ],
-    effectModes: [
-        { label: '🎆 烟花文字', value: 'fireworks-text' },
-        { label: '🎈 气球派对', value: 'balloon-party' },
-        { label: '🔦 聚光舞台', value: 'spotlight' },
-        { label: '💗 爱心祝福', value: 'heart-blessing' },
-    ],
-};
-
-export const DEFAULT_CONFIG: AppConfig = {
-    recipientName: '亲爱的你',
-    birthdayMessage: '生日快乐',
-    effectMode: 'balloon-party',
-    textColor: '#ff69b4',
-    balloonColors: BALLOON_GRADIENTS.flat(),
-    enableCountdown: true,
-    countdownSeconds: 5,
-    showFloatingHearts: true,
-    showSparkles: true,
-    bgConfig: createBgConfigWithOverlay(
-        { type: 'color' as const, value: '#000000' },
-        0
-    ),
-    bgValue: '#000000',
-    bgMusicUrl: PRESETS.music[0].value,
-    enableSound: true,
-};
-
-// 配置面板元数据
-export const birthdayWishConfigMetadata = {
-    panelTitle: '生日祝福配置',
-    panelSubtitle: 'Birthday Wish Romantic Settings',
-    configSchema: {
-        recipientName: { category: 'content' as const, type: 'input' as const, label: '寿星姓名 💕', placeholder: '例如：亲爱的宝贝' },
-        birthdayMessage: { category: 'content' as const, type: 'input' as const, label: '祝福语 🎂', placeholder: '生日快乐' },
-
-        effectMode: {
-            category: 'visual' as const,
-            type: 'select' as const,
-            label: '效果模式',
-            options: PRESETS.effectModes
-        },
-        textColor: { category: 'visual' as const, type: 'color' as const, label: '文字颜色' },
-        enableCountdown: { category: 'visual' as const, type: 'switch' as const, label: '惊喜倒计时' },
-        countdownSeconds: { category: 'visual' as const, type: 'slider' as const, label: '倒计时秒数', min: 3, max: 10, step: 1 },
-        showFloatingHearts: { category: 'visual' as const, type: 'switch' as const, label: '飘落爱心 💕' },
-        showSparkles: { category: 'visual' as const, type: 'switch' as const, label: '璀璨星光 ✨' },
-
-        bgValue: {
-            category: 'background' as const,
-            type: 'media-grid' as const,
-            label: '背景场景',
-            mediaType: 'background' as const,
-            defaultItems: PRESETS.backgrounds,
-            description: '选择你最喜爱的背景氛围'
-        },
-        enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-        bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
-    },
-    tabs: [
-        { id: 'content' as const, label: '💌 定制', icon: null },
-        { id: 'visual' as const, label: '✨ 效果', icon: null },
-        { id: 'background' as const, label: '🎵 背景', icon: null },
-    ],
-    mobileSteps: [
-        { id: 1, label: '寿星定制', icon: null, fields: ['recipientName' as const, 'birthdayMessage' as const] },
-        { id: 2, label: '视觉效果', icon: null, fields: ['effectMode' as const, 'textColor' as const, 'enableCountdown' as const, 'countdownSeconds' as const, 'showFloatingHearts' as const, 'showSparkles' as const] },
-        { id: 3, label: '背景氛围', icon: null, fields: ['bgValue' as const, 'enableSound' as const, 'bgMusicUrl' as const] },
-    ],
-};
-
-/**
- * ==============================================================================
- * 飘落爱心组件
- * ==============================================================================
- */
-interface FloatingHeart {
-    id: number;
-    x: number;
-    y: number;
-    size: number;
-    opacity: number;
-    rotation: number;
-    speed: number;
-    swaySpeed: number;
-    color: string;
-}
-
-function FloatingHeartsLayer({ enabled, color }: { enabled: boolean; color: string }) {
-    const [hearts, setHearts] = useState<FloatingHeart[]>([]);
-    const animationRef = useRef<number | undefined>(undefined);
-    const heartId = useRef(0);
-
-    const heartColors = useMemo(() => [
-        color,
-        '#ff69b4',
-        '#ff1493',
-        '#ffb6c1',
-        '#ffc0cb',
-        '#ff6b9d',
-    ], [color]);
-
-    useEffect(() => {
-        if (!enabled) {
-            setHearts([]);
-            return;
-        }
-
-        const createHeart = (): FloatingHeart => ({
-            id: heartId.current++,
-            x: Math.random() * 100,
-            y: -10,
-            size: Math.random() * 14 + 10,
-            opacity: Math.random() * 0.5 + 0.3,
-            rotation: Math.random() * 360,
-            speed: Math.random() * 0.6 + 0.2,
-            swaySpeed: Math.random() * 0.02 + 0.01,
-            color: heartColors[Math.floor(Math.random() * heartColors.length)],
-        });
-
-        const initialHearts = Array.from({ length: 6 }, createHeart).map((h) => ({
-            ...h,
-            y: Math.random() * 100,
-        }));
-        setHearts(initialHearts);
-
-        let time = 0;
-        const animate = () => {
-            time += 1;
-
-            setHearts(prev => {
-                let newHearts = prev
-                    .map(heart => ({
-                        ...heart,
-                        y: heart.y + heart.speed,
-                        x: heart.x + Math.sin(time * heart.swaySpeed) * 0.25,
-                        rotation: heart.rotation + 0.4,
-                    }))
-                    .filter(heart => heart.y < 110);
-
-                if (Math.random() < 0.025 && newHearts.length < 12) {
-                    newHearts = [...newHearts, createHeart()];
-                }
-
-                return newHearts;
-            });
-
-            animationRef.current = requestAnimationFrame(animate);
-        };
-
-        animationRef.current = requestAnimationFrame(animate);
-
-        return () => {
-            if (animationRef.current) {
-                cancelAnimationFrame(animationRef.current);
-            }
-        };
-    }, [heartColors, enabled]);
-
-    if (!enabled) return null;
-
-    return (
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-5">
-            {hearts.map(heart => (
-                <div
-                    key={heart.id}
-                    className="absolute"
-                    style={{
-                        left: `${heart.x}%`,
-                        top: `${heart.y}%`,
-                        fontSize: `${heart.size}px`,
-                        opacity: heart.opacity,
-                        transform: `rotate(${heart.rotation}deg)`,
-                        color: heart.color,
-                        textShadow: `0 0 10px ${heart.color}`,
-                    }}
-                >
-                    ❤
-                </div>
-            ))}
-        </div>
-    );
-}
-
-/**
- * ==============================================================================
- * 星光闪烁组件
- * ==============================================================================
- */
-function SparklesLayer({ enabled }: { enabled: boolean }) {
-    const [sparkles, setSparkles] = useState<Array<{ id: number; x: number; y: number; size: number; delay: number }>>([]);
-
-    useEffect(() => {
-        if (!enabled) {
-            setSparkles([]);
-            return;
-        }
-
-        const count = typeof window !== 'undefined' && window.innerWidth < 768 ? 30 : 50;
-        const newSparkles = Array.from({ length: count }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-            size: Math.random() * 3 + 1,
-            delay: Math.random() * 3,
-        }));
-        setSparkles(newSparkles);
-    }, [enabled]);
-
-    if (!enabled) return null;
-
-    return (
-        <div className="absolute inset-0 pointer-events-none z-5">
-            {sparkles.map(sparkle => (
-                <div
-                    key={sparkle.id}
-                    className="absolute"
-                    style={{
-                        left: `${sparkle.x}%`,
-                        top: `${sparkle.y}%`,
-                        fontSize: `${sparkle.size + 8}px`,
-                        animation: `sparkle-twinkle 2s ease-in-out ${sparkle.delay}s infinite`,
-                        opacity: 0.7,
-                    }}
-                >
-                    ✨
-                </div>
-            ))}
-        </div>
-    );
-}
-
-/**
- * ==============================================================================
- * 粒子与动画类
- * ==============================================================================
- */
-
-class FireworkParticle {
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    color: string;
-    age: number;
-    maxAge: number;
-    size: number;
-
-    constructor(x: number, y: number, color: string, isMobile: boolean) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.vx = (0.5 - Math.random()) * (isMobile ? 80 : 100);
-        this.vy = (0.5 - Math.random()) * (isMobile ? 80 : 100);
-        this.age = Math.random() * 100 | 0;
-        this.maxAge = this.age;
-        this.size = isMobile ? 1.5 : 2;
-    }
-
-    update() {
-        this.x += this.vx / 20;
-        this.y += this.vy / 20;
-        this.vy += 1;
-        this.age--;
-    }
-
-    draw(ctx: CanvasRenderingContext2D) {
-        ctx.globalAlpha = Math.max(0, this.age / this.maxAge);
-        ctx.beginPath();
-        ctx.fillStyle = this.color;
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    isAlive(): boolean {
-        return this.age > 0;
-    }
-}
-
-class Firework {
-    x: number;
-    y: number;
-    targetY: number;
-    vel: number;
-    color: string;
-    exploded: boolean;
-    isMobile: boolean;
-
-    constructor(canvasWidth: number, canvasHeight: number, isMobile: boolean) {
-        this.x = Math.random() * canvasWidth;
-        this.y = canvasHeight;
-        this.targetY = canvasHeight * 0.3 + Math.random() * canvasHeight * 0.3;
-        this.vel = -(Math.random() * Math.sqrt(canvasHeight) / 3 + Math.sqrt(4 * canvasHeight) / 2) / 5;
-        this.color = `hsl(${Math.random() * 360 | 0}, 100%, 60%)`;
-        this.exploded = false;
-        this.isMobile = isMobile;
-    }
-
-    update(): FireworkParticle[] {
-        const particles: FireworkParticle[] = [];
-        this.y += this.vel;
-        this.vel += 0.04;
-
-        if (this.vel >= 0 && !this.exploded) {
-            this.exploded = true;
-            const particleCount = this.isMobile ? 120 : 200;
-            for (let i = 0; i < particleCount; i++) {
-                particles.push(new FireworkParticle(this.x, this.y, this.color, this.isMobile));
-            }
-        }
-
-        return particles;
-    }
-
-    draw(ctx: CanvasRenderingContext2D) {
-        if (!this.exploded) {
-            ctx.globalAlpha = 1;
-            ctx.beginPath();
-            ctx.fillStyle = this.color;
-            ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
-    isAlive(): boolean {
-        return !this.exploded;
-    }
-}
-
-interface Balloon {
-    id: number;
-    width: number;
-    delay: number;
-    left: string;
-    gradientStart: string;
-    gradientEnd: string;
-}
+// 重新导出配置供外部使用
+export type { AppConfig };
+export { DEFAULT_CONFIG, PRESETS };
+export { birthdayWishConfigMetadata } from './config';
 
 /**
  * ==============================================================================
@@ -450,23 +79,8 @@ export function DisplayUI({ config }: DisplayUIProps) {
         return DEFAULT_CONFIG.bgConfig!;
     }, [config.bgValue, config.bgConfig]);
 
-    // 生成气球数据 - 响应式数量
-    const balloons = useMemo((): Balloon[] => {
-        const result: Balloon[] = [];
-        const count = isMobile ? 30 : 50;
-        for (let i = 0; i < count; i++) {
-            const gradient = BALLOON_GRADIENTS[i % BALLOON_GRADIENTS.length];
-            result.push({
-                id: i,
-                width: isMobile ? 60 + Math.random() * 50 : 100 + Math.random() * 90,
-                delay: Math.random() * 100,
-                left: `${Math.random() * 100}%`,
-                gradientStart: gradient[0],
-                gradientEnd: gradient[1],
-            });
-        }
-        return result;
-    }, [isMobile]);
+    // 生成气球数据
+    const balloons = useMemo((): Balloon[] => generateBalloons(isMobile), [isMobile]);
 
     // 倒计时效果
     useEffect(() => {
@@ -548,7 +162,7 @@ export function DisplayUI({ config }: DisplayUIProps) {
         resize();
         window.addEventListener('resize', resize);
 
-        // 初始化烟花 - 响应式数量
+        // 初始化烟花
         const initFireworks = () => {
             const count = isMobile ? 2 : Math.max(3, Math.floor(canvas.width / 200));
             for (let i = 0; i < count; i++) {
@@ -558,7 +172,6 @@ export function DisplayUI({ config }: DisplayUIProps) {
         initFireworks();
 
         const loop = () => {
-            // 使用透明淡出效果，让背景可见
             ctx.globalCompositeOperation = 'destination-out';
             ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -754,9 +367,7 @@ export function DisplayUI({ config }: DisplayUIProps) {
                                         border: '1px solid rgba(255,255,255,0.1)',
                                     }}
                                 >
-                                    <h1
-                                        className="text-2xl sm:text-3xl md:text-5xl font-light text-pink-200 tracking-wider mb-2 sm:mb-4"
-                                    >
+                                    <h1 className="text-2xl sm:text-3xl md:text-5xl font-light text-pink-200 tracking-wider mb-2 sm:mb-4">
                                         💕 {config.recipientName} 💕
                                     </h1>
                                     <h2
@@ -890,99 +501,6 @@ export function DisplayUI({ config }: DisplayUIProps) {
                     -webkit-overflow-scrolling: auto;
                 }
             `}</style>
-        </div>
-    );
-}
-
-/**
- * ==============================================================================
- * 爱心Canvas组件
- * ==============================================================================
- */
-
-function HeartCanvas({ color, isMobile }: { color: string; isMobile: boolean }) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas || !containerRef.current) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        let animationId: number;
-
-        const resize = () => {
-            const size = isMobile ? 400 : 600;
-            canvas.width = size;
-            canvas.height = size;
-            canvas.style.maxWidth = '100%';
-            canvas.style.maxHeight = isMobile ? '50vh' : '60vh';
-        };
-        resize();
-
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.scale(1, -1);
-        ctx.fillStyle = color;
-
-        let ws = 18;
-        let hs = 16;
-        let wsSpeed = 0.15;
-        let hsSpeed = 0.15;
-        const speed = 0.2;
-
-        // 创建粒子数据 - 响应式数量
-        const particles: Array<{ trans: number; rs: number; index: number }> = [];
-        const layerConfigs = isMobile
-            ? [[9, 2.5, 1.5, 300], [7, 5, 2, 200], [11, 2, 2.5, 400], [0, 2.7, 2, 300]]
-            : [[9, 2.5, 2, 500], [7, 5, 2.5, 300], [11, 2, 3.5, 600], [0, 2.7, 2.5, 500]];
-
-        for (let layer = 0; layer < 4; layer++) {
-            const [transBase, transRange, rsMax, count] = layerConfigs[layer];
-
-            for (let j = 0; j < count; j += speed) {
-                particles.push({
-                    trans: transBase + Math.random() * transRange,
-                    rs: Math.random() * rsMax,
-                    index: j,
-                });
-            }
-        }
-
-        const loop = () => {
-            ctx.clearRect(-canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
-
-            ws += wsSpeed;
-            if (ws < 16) wsSpeed *= -1;
-            else if (ws > 18) wsSpeed *= -1;
-
-            hs += hsSpeed;
-            if (hs < 14) hsSpeed *= -1;
-            else if (hs > 16) hsSpeed *= -1;
-
-            particles.forEach(p => {
-                const x = p.trans * ws * Math.pow(Math.sin(p.index), 3);
-                const y = p.trans * (hs * Math.cos(p.index) - 5 * Math.cos(2 * p.index) - 2 * Math.cos(3 * p.index) - Math.cos(4 * p.index));
-                ctx.beginPath();
-                ctx.arc(x, y, p.rs, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.closePath();
-            });
-
-            animationId = requestAnimationFrame(loop);
-        };
-
-        const intervalId = setInterval(loop, 100);
-
-        return () => {
-            clearInterval(intervalId);
-            cancelAnimationFrame(animationId);
-        };
-    }, [color, isMobile]);
-
-    return (
-        <div ref={containerRef} className="absolute inset-0 z-10 flex items-center justify-center">
-            <canvas ref={canvasRef} />
         </div>
     );
 }

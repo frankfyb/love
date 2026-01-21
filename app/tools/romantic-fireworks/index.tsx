@@ -4,15 +4,22 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useAudioControl } from '@/hooks/useAudioControl';
 import AudioControlPanel from '@/components/common/AudioControlPanel';
 import { BackgroundRenderer } from '@/components/common/BackgroundRenderer';
-import { parseBgValueToConfig, createBgConfigWithOverlay } from '@/utils/background-parser';
-import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
-import type { StandardBgConfig } from '@/types/background';
+import { parseBgValueToConfig } from '@/utils/background-parser';
+import { random } from '@/lib/utils/random';
+import type { AppConfig } from './config';
+import { DEFAULT_CONFIG, romanticFireworksCardConfigMetadata, romanticFireworksConfigMetadata } from './config';
+import {
+    PI_2, PI_HALF, INVISIBLE,
+    COLOR, COLOR_CODES, COLOR_CODES_W_INVIS, COLOR_TUPLES,
+    type StarInstance, type SparkInstance, type BurstFlashInstance, type ShellOptions,
+    getShellOptions, createParticleCollection, createSparkCollection
+} from './ParticleShells';
 
 /**
  * ==============================================================================
  * 浪漫烟花组件 - 高级烟花系统 V2.0
  * 参考: 2024 跨年快乐 烟花带声音
- * 特点: 
+ * 特点:
  *   - 多种烟花类型 (菊花、环形、棕榈、柳树、爆裂等)
  *   - 高级粒子系统 (对象池、颜色分组)
  *   - 天空照明效果
@@ -23,410 +30,8 @@ import type { StandardBgConfig } from '@/types/background';
  * ==============================================================================
  */
 
-export interface AppConfig {
-    titleText: string;
-    recipientName: string;
-    greetingText: string;
-    autoLaunch: boolean;
-    shellSize: number;
-    shellType: 'random' | 'crysanthemum' | 'ring' | 'palm' | 'willow' | 'crackle' | 'strobe';
-    quality: number;
-    skyLighting: number;
-    finaleMode: boolean;
-    bgConfig?: StandardBgConfig;
-    bgValue?: string;
-    bgMusicUrl: string;
-    enableSound: boolean;
-}
+const GRAVITY = 0.9;  // Physics constant for particle gravity
 
-export const PRESETS = {
-    backgrounds: GLOBAL_BG_PRESETS.getToolPresets('romantic-fireworks'),
-    music: [
-        { label: '浪漫钢琴', value: 'https://cdn.pixabay.com/audio/2022/10/25/audio_55a299103f.mp3' },
-        { label: '新年快乐', value: 'https://cdn.pixabay.com/audio/2022/12/22/audio_fb4198257e.mp3' },
-        { label: '欢快节日', value: 'https://cdn.pixabay.com/audio/2022/01/18/audio_d0a13f69d2.mp3' },
-    ],
-};
-
-export const DEFAULT_CONFIG: AppConfig = {
-    titleText: '2026 新年快乐',
-    recipientName: '致我最爱的你',
-    greetingText: '愿新的一年\\n所有的美好如期而至\\n所有的等待都有回应\\n愿你平安喜乐\\n万事胜意',
-    autoLaunch: true,
-    shellSize: 3,
-    shellType: 'random',
-    quality: 2,
-    skyLighting: 2,
-    finaleMode: false,
-    bgConfig: createBgConfigWithOverlay(
-        { type: 'color' as const, value: '#000000' },
-        0
-    ),
-    bgValue: '#000000',
-    bgMusicUrl: PRESETS.music[0].value,
-    enableSound: true,
-};
-
-export const romanticFireworksCardConfigMetadata = {
-    panelTitle: '浪漫烟花配置',
-    panelSubtitle: '打造专属你的烟花盛宴',
-    configSchema: {
-        recipientName: { category: 'content' as const, type: 'input' as const, label: '接收人姓名', placeholder: '例如：亲爱的你' },
-        titleText: { category: 'content' as const, type: 'input' as const, label: '标题文字', placeholder: '2026 新年快乐' },
-        greetingText: { category: 'content' as const, type: 'textarea' as const, label: '祝福语', placeholder: '输入你的祝福...', rows: 5 },
-
-        autoLaunch: { category: 'visual' as const, type: 'switch' as const, label: '自动发射' },
-        finaleMode: { category: 'visual' as const, type: 'switch' as const, label: '终极模式' },
-        shellType: {
-            category: 'visual' as const, type: 'select' as const, label: '烟花类型', options: [
-                { label: '随机', value: 'random' },
-                { label: '菊花', value: 'crysanthemum' },
-                { label: '环形', value: 'ring' },
-                { label: '棕榈', value: 'palm' },
-                { label: '柳树', value: 'willow' },
-                { label: '爆裂', value: 'crackle' },
-                { label: '闪烁', value: 'strobe' },
-            ]
-        },
-        shellSize: { category: 'visual' as const, type: 'slider' as const, label: '烟花大小', min: 1, max: 5, step: 1 },
-        quality: {
-            category: 'visual' as const, type: 'select' as const, label: '画质', options: [
-                { label: '低', value: 1 },
-                { label: '正常', value: 2 },
-                { label: '高', value: 3 },
-            ]
-        },
-        skyLighting: {
-            category: 'visual' as const, type: 'select' as const, label: '天空照明', options: [
-                { label: '无', value: 0 },
-                { label: '暗淡', value: 1 },
-                { label: '正常', value: 2 },
-            ]
-        },
-
-        bgValue: {
-            category: 'background' as const,
-            type: 'media-grid' as const,
-            label: '背景场景',
-            mediaType: 'background' as const,
-            defaultItems: PRESETS.backgrounds,
-        },
-        enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-        bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
-    },
-    tabs: [
-        { id: 'content' as const, label: '内容', icon: null },
-        { id: 'visual' as const, label: '视觉', icon: null },
-        { id: 'background' as const, label: '背景', icon: null },
-    ],
-    mobileSteps: [
-        { id: 1, label: '祝福内容', icon: null, fields: ['recipientName' as const, 'titleText' as const, 'greetingText' as const] },
-        { id: 2, label: '烟花设置', icon: null, fields: ['autoLaunch' as const, 'finaleMode' as const, 'shellType' as const, 'shellSize' as const, 'quality' as const, 'skyLighting' as const] },
-        { id: 3, label: '背景音乐', icon: null, fields: ['bgValue' as const, 'enableSound' as const, 'bgMusicUrl' as const] },
-    ],
-};
-
-// ============================================================================
-// 常量和工具函数
-// ============================================================================
-const PI_2 = Math.PI * 2;
-const PI_HALF = Math.PI * 0.5;
-const GRAVITY = 0.9;
-const INVISIBLE = '_INVISIBLE_';
-
-const random = (min: number, max: number) => Math.random() * (max - min) + min;
-const randomInt = (min: number, max: number) => ((Math.random() * (max - min + 1)) | 0) + min;
-
-// 烟花颜色
-const COLOR: Record<string, string> = {
-    Red: '#ff0043',
-    Green: '#14fc56',
-    Blue: '#1e7fff',
-    Purple: '#e60aff',
-    Gold: '#ffbf36',
-    White: '#ffffff',
-    Pink: '#ff69b4',
-    Cyan: '#00ffff',
-};
-
-const COLOR_CODES = Object.values(COLOR);
-const COLOR_CODES_W_INVIS = [...COLOR_CODES, INVISIBLE];
-
-// 颜色元组用于天空照明
-const COLOR_TUPLES: Record<string, { r: number; g: number; b: number }> = {};
-COLOR_CODES.forEach(hex => {
-    COLOR_TUPLES[hex] = {
-        r: parseInt(hex.substr(1, 2), 16),
-        g: parseInt(hex.substr(3, 2), 16),
-        b: parseInt(hex.substr(5, 2), 16),
-    };
-});
-
-function randomColor(options?: { notSame?: boolean; notColor?: string; limitWhite?: boolean }) {
-    let color = COLOR_CODES[Math.floor(Math.random() * COLOR_CODES.length)];
-
-    // 限制白色出现频率
-    if (options?.limitWhite && color === COLOR.White && Math.random() < 0.6) {
-        color = COLOR_CODES[Math.floor(Math.random() * COLOR_CODES.length)];
-    }
-
-    if (options?.notColor) {
-        while (color === options.notColor) {
-            color = COLOR_CODES[Math.floor(Math.random() * COLOR_CODES.length)];
-        }
-    }
-
-    return color;
-}
-
-function whiteOrGold() {
-    return Math.random() < 0.5 ? COLOR.Gold : COLOR.White;
-}
-
-function makePistilColor(shellColor: string) {
-    return (shellColor === COLOR.White || shellColor === COLOR.Gold)
-        ? randomColor({ notColor: shellColor })
-        : whiteOrGold();
-}
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : { r: 255, g: 255, b: 255 };
-}
-
-// ============================================================================
-// 粒子接口定义
-// ============================================================================
-interface StarInstance {
-    visible: boolean;
-    heavy: boolean;
-    x: number;
-    y: number;
-    prevX: number;
-    prevY: number;
-    color: string;
-    speedX: number;
-    speedY: number;
-    life: number;
-    fullLife: number;
-    spinAngle: number;
-    spinSpeed: number;
-    spinRadius: number;
-    sparkFreq: number;
-    sparkSpeed: number;
-    sparkTimer: number;
-    sparkColor: string;
-    sparkLife: number;
-    sparkLifeVariation: number;
-    strobe: boolean;
-    strobeFreq: number;
-    secondColor: string | null;
-    transitionTime: number;
-    colorChanged: boolean;
-    onDeath: ((star: StarInstance) => void) | null;
-    updateFrame: number;
-}
-
-interface SparkInstance {
-    x: number;
-    y: number;
-    prevX: number;
-    prevY: number;
-    color: string;
-    speedX: number;
-    speedY: number;
-    life: number;
-}
-
-interface BurstFlashInstance {
-    x: number;
-    y: number;
-    radius: number;
-}
-
-interface ShellOptions {
-    shellSize: number;
-    spreadSize: number;
-    starLife: number;
-    starLifeVariation?: number;
-    starDensity?: number;
-    starCount?: number;
-    color: string | string[];
-    secondColor?: string | null;
-    glitter?: string;
-    glitterColor?: string;
-    pistil?: boolean;
-    pistilColor?: string;
-    streamers?: boolean;
-    ring?: boolean;
-    crossette?: boolean;
-    floral?: boolean;
-    fallingLeaves?: boolean;
-    crackle?: boolean;
-    horsetail?: boolean;
-    strobe?: boolean;
-    strobeColor?: string | null;
-}
-
-// ============================================================================
-// 烟花类型生成器
-// ============================================================================
-function crysanthemumShell(size: number, quality: number): ShellOptions {
-    const glitter = Math.random() < 0.25;
-    const singleColor = Math.random() < 0.72;
-    const color = singleColor ? randomColor({ limitWhite: true }) : [randomColor(), randomColor({ notSame: true })];
-    const pistil = singleColor && Math.random() < 0.42;
-    const pistilColor = pistil ? makePistilColor(color as string) : undefined;
-    const secondColor = singleColor && (Math.random() < 0.2 || color === COLOR.White)
-        ? (pistilColor || randomColor({ notColor: color as string, limitWhite: true }))
-        : null;
-    const streamers = !pistil && color !== COLOR.White && Math.random() < 0.42;
-
-    let starDensity = glitter ? 1.1 : 1.25;
-    if (quality === 1) starDensity *= 0.8;
-    if (quality === 3) starDensity = 1.2;
-
-    return {
-        shellSize: size,
-        spreadSize: 300 + size * 100,
-        starLife: 900 + size * 200,
-        starDensity,
-        color,
-        secondColor,
-        glitter: glitter ? 'light' : '',
-        glitterColor: whiteOrGold(),
-        pistil,
-        pistilColor,
-        streamers
-    };
-}
-
-function ringShell(size: number): ShellOptions {
-    const color = randomColor();
-    const pistil = Math.random() < 0.75;
-    return {
-        shellSize: size,
-        ring: true,
-        color,
-        spreadSize: 300 + size * 100,
-        starLife: 900 + size * 200,
-        starCount: 2.2 * PI_2 * (size + 1),
-        pistil,
-        pistilColor: makePistilColor(color),
-        glitter: !pistil ? 'light' : '',
-        glitterColor: color === COLOR.Gold ? COLOR.Gold : COLOR.White,
-        streamers: Math.random() < 0.3
-    };
-}
-
-function palmShell(size: number): ShellOptions {
-    const color = randomColor();
-    const thick = Math.random() < 0.5;
-    return {
-        shellSize: size,
-        color,
-        spreadSize: 250 + size * 75,
-        starDensity: thick ? 0.15 : 0.4,
-        starLife: 1800 + size * 200,
-        glitter: thick ? 'thick' : 'heavy'
-    };
-}
-
-function willowShell(size: number): ShellOptions {
-    return {
-        shellSize: size,
-        spreadSize: 300 + size * 100,
-        starDensity: 0.6,
-        starLife: 3000 + size * 300,
-        glitter: 'willow',
-        glitterColor: COLOR.Gold,
-        color: INVISIBLE
-    };
-}
-
-function crackleShell(size: number, quality: number): ShellOptions {
-    const color = Math.random() < 0.75 ? COLOR.Gold : randomColor();
-    return {
-        shellSize: size,
-        spreadSize: 380 + size * 75,
-        starDensity: quality === 1 ? 0.65 : 1,
-        starLife: 600 + size * 100,
-        starLifeVariation: 0.32,
-        glitter: 'light',
-        glitterColor: COLOR.Gold,
-        color,
-        crackle: true,
-        pistil: Math.random() < 0.65,
-        pistilColor: makePistilColor(color)
-    };
-}
-
-function strobeShell(size: number): ShellOptions {
-    const color = randomColor({ limitWhite: true });
-    return {
-        shellSize: size,
-        spreadSize: 280 + size * 92,
-        starLife: 1100 + size * 200,
-        starLifeVariation: 0.40,
-        starDensity: 1.1,
-        color,
-        glitter: 'light',
-        glitterColor: COLOR.White,
-        strobe: true,
-        strobeColor: Math.random() < 0.5 ? COLOR.White : null,
-        pistil: Math.random() < 0.5,
-        pistilColor: makePistilColor(color)
-    };
-}
-
-function getShellOptions(type: string, size: number, quality: number): ShellOptions {
-    switch (type) {
-        case 'crysanthemum':
-            return crysanthemumShell(size, quality);
-        case 'ring':
-            return ringShell(size);
-        case 'palm':
-            return palmShell(size);
-        case 'willow':
-            return willowShell(size);
-        case 'crackle':
-            return crackleShell(size, quality);
-        case 'strobe':
-            return strobeShell(size);
-        case 'random':
-        default:
-            const types = ['crysanthemum', 'ring', 'palm', 'crackle', 'strobe'];
-            const randomType = types[Math.floor(Math.random() * types.length)];
-            return getShellOptions(randomType, size, quality);
-    }
-}
-
-// ============================================================================
-// 粒子管理器
-// ============================================================================
-function createParticleCollection(): Record<string, StarInstance[]> {
-    const collection: Record<string, StarInstance[]> = {};
-    COLOR_CODES_W_INVIS.forEach(color => {
-        collection[color] = [];
-    });
-    return collection;
-}
-
-function createSparkCollection(): Record<string, SparkInstance[]> {
-    const collection: Record<string, SparkInstance[]> = {};
-    COLOR_CODES_W_INVIS.forEach(color => {
-        collection[color] = [];
-    });
-    return collection;
-}
-
-// ============================================================================
-// 主组件
-// ============================================================================
 interface DisplayUIProps {
     config: AppConfig;
     isPanelOpen?: boolean;
@@ -655,7 +260,7 @@ export function DisplayUI({ config, isPanelOpen, onConfigChange }: DisplayUIProp
         const starFactory = (angle: number, speedMult: number) => {
             const standardInitialSpeed = options.spreadSize / 1800;
             const color = typeof options.color === 'string'
-                ? (options.color === 'random' ? randomColor() : options.color)
+                ? (options.color === 'random' ? COLOR_CODES[Math.floor(Math.random() * COLOR_CODES.length)] : options.color)
                 : (Math.random() < 0.5 ? options.color[0] : options.color[1]);
 
             const star = addStar(
@@ -1191,3 +796,5 @@ export default function RomanticFireworksPage() {
     const [config] = useState<AppConfig>(DEFAULT_CONFIG);
     return <DisplayUI config={config} />;
 }
+
+export { DEFAULT_CONFIG, romanticFireworksCardConfigMetadata, romanticFireworksConfigMetadata };
