@@ -32,11 +32,13 @@ export class TextBurnParticle {
     baseX: number = 0;
     baseY: number = 0;
     noiseOffset: number = Math.random() * 100;
+    burnTime: number = 0; // 燃烧持续时间
 
     // 颜色控制
     hue: number = 0;
     colorType: "inner" | "outer" = "inner";
     trail: { x: number; y: number }[] = [];
+
 
     constructor(w: number, h: number) {
         this.reset(w, h);
@@ -138,17 +140,16 @@ export function generateTextPoints(
         ctx.strokeText(text, width / 2, centerY);
     }
 
-    // 4. 自适应采样
+    // 4. 自适应采样 - 更密集的采样让文字更清晰
     const imageData = ctx.getImageData(0, 0, width, height).data;
     const points: Point[] = [];
 
-    const estimatedArea = fontSize * text.length * fontSize * 0.6;
-    let gap = Math.floor(Math.sqrt(estimatedArea / (isMobile ? 1200 : 3500)));
-
-    // 强制限制
-    const minGap = isMobile ? 3 : 2;
-    const maxGap = isMobile ? 6 : 4;
+    // 更小的间隔 = 更多的粒子 = 更清晰的文字
+    const minGap = isMobile ? 2 : 1.5;
+    const maxGap = isMobile ? 4 : 3;
+    let gap = Math.floor(Math.sqrt(fontSize * text.length * fontSize * 0.5 / (isMobile ? 2000 : 5000)));
     gap = Math.max(minGap, Math.min(gap, maxGap));
+
 
     for (let y = 0; y < height; y += gap) {
         for (let x = 0; x < width; x += gap) {

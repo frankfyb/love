@@ -8,6 +8,7 @@
 import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
 import { createBgConfigWithOverlay } from '@/utils/background-parser';
 import type { StandardBgConfig } from '@/types/background';
+import type { CategoryType, ToolConfigMetadata } from '@/types/genericConfig';
 
 // ============================================================================
 // 配置类型定义
@@ -45,39 +46,42 @@ export const DEFAULT_CONFIG: RomanticHeart3DConfig = {
 // 配置面板元数据
 // ============================================================================
 
-export const romanticHeart3DConfigMetadata = {
+export const romanticHeart3DConfigMetadata: ToolConfigMetadata<RomanticHeart3DConfig> = {
     panelTitle: '3D 爱心配置',
     panelSubtitle: 'Romantic Heart Settings',
     tabs: [
-        { id: 'content', label: '内容', icon: null },
-        { id: 'background', label: '背景', icon: null },
-        { id: 'music', label: '音乐', icon: null },
+        { id: 'content' as CategoryType, label: '内容', icon: null },
+        { id: 'background' as CategoryType, label: '背景', icon: null },
+        { id: 'music' as CategoryType, label: '音乐', icon: null },
     ],
     configSchema: {
         texts: {
-            category: 'content' as const,
+            category: 'content' as CategoryType,
             type: 'list' as const,
             label: '表白文字',
             description: '输入你想说的话，将会逐行显示',
             placeholder: '输入文字...'
         },
         bgValue: {
-            category: 'background' as const,
+            category: 'background' as CategoryType,
             type: 'media-grid' as const,
             label: '背景场景',
             mediaType: 'background' as const,
             defaultItems: GLOBAL_BG_PRESETS.getToolPresets('romantic-heart-3d'),
             description: '选择浪漫背景'
         },
+        bgConfig: { category: 'background' as CategoryType, type: 'readonly' as const, label: '背景配置' },
+        heartObjUrl: { category: 'visual' as CategoryType, type: 'readonly' as const, label: '模型地址' },
         bgMusicUrl: {
-            category: 'music' as const,
+            category: 'music' as CategoryType,
             type: 'media-picker' as const,
             label: '背景音乐',
             description: '选择或输入背景音乐链接',
             mediaType: 'music' as const,
+            defaultItems: []
         },
         enableSound: {
-            category: 'music' as const,
+            category: 'music' as CategoryType,
             type: 'switch' as const,
             label: '启用音效'
         }

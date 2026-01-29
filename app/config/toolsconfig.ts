@@ -57,12 +57,12 @@ export const TOOL_METADATA: ToolMetadata[] = [
   },
   {
     id: 'rain-snow-ripple',
-    toolName: '雨雪波纹特效',
+    toolName: '思念之境 · 雨雪涟漪',
     isActive: true,
-    description: '添加浪漫的雨雪波纹背景，适配节日氛围，营造温馨浪漫的视觉效果',
-    tag: ['热门', '视觉特效'],
+    description: '送给远方的TA一场浪漫雨雪：飘落的爱心、柔美的涟漪、轻柔的音乐，用这份专属的浪漫告诉TA"我在想你"',
+    tag: ['热门', '雨雪效果', '专属效果', '表白专属'],
     sort: 2,
-    cover: 'https://images.unsplash.com/photo-1518006336073-55b36a3d8b95?w=400&h=300&fit=crop',
+    cover: '🌧️',
   },
   {
     id: 'warm-text-card',
@@ -83,12 +83,12 @@ export const TOOL_METADATA: ToolMetadata[] = [
   },
   {
     id: 'newyear-fireworks',
-    toolName: '流光新年烟花',
+    toolName: '烟火告白 · 文字烟花',
     isActive: true,
-    description: '绚丽的新年烟花秀，迎接新年的到来，共同许下新年愿望',
-    tag: ['节日专属', '视觉特效'],
+    description: '送给TA一场专属烟花秀：璀璨烟花绽放后，火焰粒子会汇聚成你写的祝福语，用最浪漫的方式说出心里话',
+    tag: ['节日专属', '表白专属', '视觉特效'],
     sort: 12,
-    cover: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=300&fit=crop',
+    cover: '🎆',
   },
   {
     id: 'galaxy-weaver',
@@ -339,6 +339,25 @@ export const TOOL_METADATA: ToolMetadata[] = [
     sort: 43,
     cover: 'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&h=300&fit=crop',
   },
+  // ====================== 统一爱心工具 ======================
+  {
+    id: 'unified-hearts',
+    toolName: '统一爱心工具',
+    isActive: true,
+    description: '4合1爱心特效：粒子双心、浪漫爱心、3D爱心、心形文字，一站式浪漫表白神器',
+    tag: ['热门', '表白专属', '视觉特效'],
+    sort: 44,
+    cover: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=300&fit=crop',
+  },
+  {
+    id: 'time-record-3d',
+    toolName: '2025时光记录',
+    isActive: true,
+    description: '3D立体可旋转时光轴，记录2025年的美好瞬间，双人专属时光纪念',
+    tag: ['记录', '节日专属', '视觉特效'],
+    sort: 45,
+    cover: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=400&h=300&fit=crop',
+  },
 ];
 
 /** 分类-工具关联配置 */
@@ -409,6 +428,14 @@ export const TOOL_CATEGORY_RELATIONS: ToolCategory[] = [
   // 星球滚动相册工具关联
   { id: 'rel70', toolId: 'photo-planet', categoryId: 'confession' },
   { id: 'rel71', toolId: 'photo-planet', categoryId: 'memory' },
+
+  // 统一爱心工具关联
+  { id: 'rel72', toolId: 'unified-hearts', categoryId: 'confession' },
+  { id: 'rel73', toolId: 'unified-hearts', categoryId: 'memory' },
+
+  // 2025时光记录工具关联
+  { id: 'rel74', toolId: 'time-record-3d', categoryId: 'memory' },
+  { id: 'rel75', toolId: 'time-record-3d', categoryId: 'confession' },
 ];
 
 // ====================== 3. 辅助函数（适配数组标签） ======================

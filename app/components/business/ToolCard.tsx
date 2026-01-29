@@ -23,10 +23,10 @@ const ToolCard = ({ tool, isHome = false, onClick }: ToolCardProps) => {
   const tags = Array.isArray(tool.tags)
     ? tool.tags
     : Array.isArray(tool.tag)
-    ? tool.tag
-    : tool.tag
-    ? [tool.tag]
-    : [];
+      ? tool.tag
+      : tool.tag
+        ? [tool.tag]
+        : [];
   const primaryTag = tags[0];
 
   if (isHome) {
@@ -59,9 +59,9 @@ const ToolCard = ({ tool, isHome = false, onClick }: ToolCardProps) => {
         <div className="p-3 rounded-2xl bg-pink-50 text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors duration-300 flex-shrink-0">
           {tool.icon}
         </div>
-        
+
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-bold text-slate-700 mb-2 leading-tight truncate">{tool.title}</h3>
+          <h3 className="text-base font-bold text-slate-700 mb-2 leading-snug">{tool.title}</h3>
           <div className="flex gap-1.5 flex-wrap">
             {tags.map((tag, index) => (
               <Badge key={index} colorClass="bg-yellow-50 text-yellow-600">{tag}</Badge>
@@ -71,7 +71,7 @@ const ToolCard = ({ tool, isHome = false, onClick }: ToolCardProps) => {
       </div>
 
       <p className="text-sm text-slate-500 mb-6 flex-grow leading-relaxed">{tool.desc}</p>
-      
+
       <div className="mt-auto">
         <Button variant="secondary" className="w-full text-sm py-2" onClick={onClick}>立即制作</Button>
       </div>

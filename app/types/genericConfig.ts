@@ -5,29 +5,32 @@
 /**
  * 通用控件类型
  */
-export type GenericControlType = 
-  | 'select' 
+export type GenericControlType =
+  | 'select'
   | 'select-input'
-  | 'radio' 
-  | 'switch' 
-  | 'color' 
+  | 'radio'
+  | 'switch'
+  | 'color'
   | 'datetime'
-  | 'slider' 
-  | 'input' 
-  | 'textarea' 
-  | 'file' 
-  | 'list' 
+  | 'slider'
+  | 'input'
+  | 'textarea'
+  | 'file'
+  | 'list'
   | 'sticker-grid'
   | 'sticker-picker'
   | 'multi-select'
   | 'media-grid'
   | 'media-picker'
+  | 'card-select'
+  | 'wishes'
+  | 'image-picker'
   | 'readonly';
 
 /**
  * 分类类型
  */
-export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base' | 'background' | 'audio' | 'music' | 'decoration';
+export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base' | 'background' | 'audio' | 'music' | 'decoration' | 'mode';
 
 /**
  * 通用配置项元数据接口
@@ -54,7 +57,7 @@ export interface GenericConfigItemMetadata<T> {
   /** 条件显示函数 */
   condition?: (config: T) => boolean;
   /** 媒体类型（用于media-grid, media-picker） */
-  mediaType?: 'background' | 'music';
+  mediaType?: 'background' | 'music' | 'image';
   /** 默认项目（用于media-grid, media-picker） */
   defaultItems?: any[];
   /** 日期时间类型（用于datetime控件） 'datetime' | 'date' | 'time' */

@@ -135,11 +135,19 @@ const FestiveProjectionDiyDisplayUI = dynamic(() => import('@/tools/festive-proj
 import { DEFAULT_CONFIG as photoPlanetDefault, photoPlanetConfigMetadata as photoPlanetMetadata } from '@/tools/photo-planet/index';
 const PhotoPlanetDisplayUI = dynamic(() => import('@/tools/photo-planet').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
 
+// 统一爱心工具 (合并: 粒子爱心/浪漫爱心/3D爱心/心形文字)
+import { DEFAULT_CONFIG as unifiedHeartsDefault, unifiedHeartsConfigMetadata as unifiedHeartsMetadata } from '@/tools/unified-hearts/index';
+const UnifiedHeartsDisplayUI = dynamic(() => import('@/tools/unified-hearts').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
+// 2025时光记录
+import { DEFAULT_CONFIG as timeRecord3dDefault, timeRecordConfigMetadata as timeRecord3dMetadata } from '@/tools/time-record-3d/index';
+const TimeRecord3dDisplayUI = dynamic(() => import('@/tools/time-record-3d').then(mod => mod.DisplayUI), { loading: () => <Loading /> });
+
 // ========================== 2. 类型定义（扩展，新增configMetadata）==========================
 /**
  * 工具基础配置项类型（扩展：新增configMetadata）
  */
-type ToolKey = 'warm-text-card' | 'rain-snow-ripple' | 'newyear-fireworks' | 'galaxy-weaver' | 'christmas-tree-card' | 'newyear-countdown' | 'neon-wish-bubbles' | 'money-swirl' | 'romantic-heart-3d' | 'spring-festival' | 'lantern-fireworks' | 'brilliant-fireworks' | 'tsparticles-fireworks' | 'countdown-3d-fireworks' | 'romantic-fireworks' | 'text-fireworks' | 'city-fireworks' | 'aurora-fireworks' | 'firework-show-3d' | 'custom-fireworks' | 'romantic-hearts' | 'particle-hearts' | 'birthday-wish' | 'time-tunnel' | 'couples-agreement' | 'princess-welcome' | 'love-clock-diy' | 'reasons-to-love' | 'traffic-light-birthday' | 'festive-projection-diy' | 'wishing-jar' | 'photo-planet';
+type ToolKey = 'warm-text-card' | 'rain-snow-ripple' | 'newyear-fireworks' | 'galaxy-weaver' | 'christmas-tree-card' | 'newyear-countdown' | 'neon-wish-bubbles' | 'money-swirl' | 'romantic-heart-3d' | 'spring-festival' | 'lantern-fireworks' | 'brilliant-fireworks' | 'tsparticles-fireworks' | 'countdown-3d-fireworks' | 'romantic-fireworks' | 'text-fireworks' | 'city-fireworks' | 'aurora-fireworks' | 'firework-show-3d' | 'custom-fireworks' | 'romantic-hearts' | 'particle-hearts' | 'birthday-wish' | 'time-tunnel' | 'couples-agreement' | 'princess-welcome' | 'love-clock-diy' | 'reasons-to-love' | 'traffic-light-birthday' | 'festive-projection-diy' | 'photo-planet' | 'unified-hearts' | 'time-record-3d';
 
 interface ToolBasicConfig<T = any> {
   // 原有字段
@@ -342,6 +350,18 @@ const toolRegistry: Record<ToolKey, ToolBasicConfig> = {
     DisplayUI: PhotoPlanetDisplayUI,
     defaultConfig: photoPlanetDefault,
     configMetadata: photoPlanetMetadata,
+  },
+  'unified-hearts': {
+    name: '统一爱心工具',
+    DisplayUI: UnifiedHeartsDisplayUI,
+    defaultConfig: unifiedHeartsDefault,
+    configMetadata: unifiedHeartsMetadata,
+  },
+  'time-record-3d': {
+    name: '2025时光记录',
+    DisplayUI: TimeRecord3dDisplayUI,
+    defaultConfig: timeRecord3dDefault,
+    configMetadata: timeRecord3dMetadata,
   },
 };
 

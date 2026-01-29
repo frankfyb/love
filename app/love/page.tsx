@@ -38,12 +38,12 @@ export default function ToolsPage() {
   const filteredTools = useMemo(() => {
     // 1. 基础筛选（搜索+分类）
     let tools = q ? searchTools(q) : getToolsByCategoryId(activeCategory);
-    
+
     // 2. 标签筛选（数组匹配）
     if (activeTag) {
       tools = tools.filter(tool => tool.tag?.includes(activeTag));
     }
-    
+
     return tools;
   }, [q, activeCategory, activeTag]);
 
@@ -77,7 +77,7 @@ export default function ToolsPage() {
   };
 
   // 搜索/键盘事件
-  const handleSearch = () => {};
+  const handleSearch = () => { };
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSearch();
   };
@@ -134,11 +134,10 @@ export default function ToolsPage() {
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`p-2 rounded-full ${
-            currentPage === 1 
-              ? 'text-gray-300 cursor-not-allowed' 
+          className={`p-2 rounded-full ${currentPage === 1
+              ? 'text-gray-300 cursor-not-allowed'
               : 'text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -148,13 +147,12 @@ export default function ToolsPage() {
             key={index}
             onClick={() => typeof page === 'number' && goToPage(page)}
             disabled={page === '...'}
-            className={`w-10 h-10 flex items-center justify-center rounded-full text-sm ${
-              page === currentPage
+            className={`w-10 h-10 flex items-center justify-center rounded-full text-sm ${page === currentPage
                 ? 'bg-rose-500 text-white'
                 : page === '...'
-                ? 'text-gray-400 cursor-default'
-                : 'text-gray-600 hover:bg-gray-100'
-            }`}
+                  ? 'text-gray-400 cursor-default'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
           >
             {page}
           </button>
@@ -163,11 +161,10 @@ export default function ToolsPage() {
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`p-2 rounded-full ${
-            currentPage === totalPages 
-              ? 'text-gray-300 cursor-not-allowed' 
+          className={`p-2 rounded-full ${currentPage === totalPages
+              ? 'text-gray-300 cursor-not-allowed'
               : 'text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -182,9 +179,8 @@ export default function ToolsPage() {
         <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
           <button
             onClick={() => setActiveCategory('')}
-            className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-              !activeCategory ? 'bg-rose-400 text-white shadow-md shadow-rose-200' : 'bg-white text-slate-500 hover:bg-pink-50'
-            }`}
+            className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${!activeCategory ? 'bg-rose-400 text-white shadow-md shadow-rose-200' : 'bg-white text-slate-500 hover:bg-pink-50'
+              }`}
           >
             全部
           </button>
@@ -194,9 +190,8 @@ export default function ToolsPage() {
               <button
                 key={c.id}
                 onClick={() => setActiveCategory(c.id)}
-                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex items-center gap-1.5 ${
-                  activeCategory === c.id ? 'bg-rose-400 text-white shadow-md shadow-rose-200' : 'bg-white text-slate-500 hover:bg-pink-50'
-                }`}
+                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors flex items-center gap-1.5 ${activeCategory === c.id ? 'bg-rose-400 text-white shadow-md shadow-rose-200' : 'bg-white text-slate-500 hover:bg-pink-50'
+                  }`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 {c.name}
@@ -232,8 +227,8 @@ export default function ToolsPage() {
             onClick={() => setActiveTag('')}
             className={`
               shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all duration-300 snap-start
-              ${!activeTag 
-                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 scale-105' 
+              ${!activeTag
+                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 scale-105'
                 : 'bg-white text-slate-600 hover:bg-pink-50 hover:text-rose-500 border border-slate-200'
               }
             `}
@@ -246,8 +241,8 @@ export default function ToolsPage() {
               onClick={() => setActiveTag(tag)}
               className={`
                 shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-all duration-300 snap-start whitespace-nowrap
-                ${activeTag === tag 
-                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 scale-105' 
+                ${activeTag === tag
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 scale-105'
                   : 'bg-white text-slate-600 hover:bg-pink-50 hover:text-rose-500 border border-slate-200'
                 }
               `}
@@ -256,7 +251,7 @@ export default function ToolsPage() {
             </button>
           ))}
         </div>
-        
+
         {/* 移动端滚动提示 */}
         <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none md:hidden" />
       </div>
@@ -280,6 +275,19 @@ export default function ToolsPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {currentTools.map((tool: ToolMetadata) => {
+              // 根据cover类型渲染图标
+              const renderIcon = () => {
+                if (!tool.cover) {
+                  return <Heart className="w-6 h-6 text-rose-400" />;
+                }
+                // 如果是URL（图片），渲染为图片
+                if (tool.cover.startsWith('http')) {
+                  return <img src={tool.cover} alt={tool.toolName} className="w-10 h-10 rounded-lg object-cover" />;
+                }
+                // 否则当作emoji渲染
+                return <span className="text-2xl">{tool.cover}</span>;
+              };
+
               return (
                 <ToolCard
                   key={tool.id}
@@ -287,15 +295,15 @@ export default function ToolsPage() {
                     id: iHash(tool.id),
                     title: tool.toolName,
                     desc: tool.description || '',
-                    icon: <Heart className="w-6 h-6 text-rose-400" />,
-                    tags: tool.tag, // 传递完整标签数组给Card组件（可选）
+                    icon: renderIcon(),
+                    tags: tool.tag,
                   }}
                   onClick={() => router.push(`/love/${tool.id}`)}
                 />
               );
             })}
           </div>
-          
+
           {/* 4. 分页控件 */}
           {renderPagination()}
         </>

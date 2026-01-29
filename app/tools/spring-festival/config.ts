@@ -8,6 +8,7 @@
 import { GLOBAL_BG_PRESETS } from '@/constants/bg-presets';
 import { createBgConfigWithOverlay } from '@/utils/background-parser';
 import type { StandardBgConfig } from '@/types/background';
+import type { CategoryType, ToolConfigMetadata } from '@/types/genericConfig';
 
 // ============================================================================
 // 配置类型定义
@@ -57,7 +58,7 @@ export const DEFAULT_CONFIG: AppConfig = {
 // 配置面板元数据
 // ============================================================================
 
-export const springFestivalConfigMetadata = {
+export const springFestivalConfigMetadata: ToolConfigMetadata<AppConfig> = {
     panelTitle: '新春快乐 配置',
     panelSubtitle: 'Spring Festival Celebration',
     configSchema: {
@@ -87,12 +88,13 @@ export const springFestivalConfigMetadata = {
             mediaType: 'background' as const,
             defaultItems: PRESETS.backgrounds,
         },
-        enableSound: { category: 'background' as const, type: 'switch' as const, label: '启用音效' },
-        bgMusicUrl: { category: 'background' as const, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
+        enableSound: { category: 'background' as CategoryType, type: 'switch' as const, label: '启用音效' },
+        bgMusicUrl: { category: 'background' as CategoryType, type: 'media-picker' as const, label: '背景音乐', mediaType: 'music' as const, defaultItems: PRESETS.music },
+        bgConfig: { category: 'background' as CategoryType, type: 'readonly' as const, label: '背景配置' },
     },
     tabs: [
-        { id: 'content' as const, label: '内容', icon: null },
-        { id: 'background' as const, label: '背景', icon: null },
+        { id: 'content' as CategoryType, label: '内容', icon: null },
+        { id: 'background' as CategoryType, label: '背景', icon: null },
     ],
     mobileSteps: [
         { id: 1, label: '祝福语', icon: null, fields: ['recipientName' as const, 'titleText' as const] },

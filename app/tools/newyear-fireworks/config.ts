@@ -70,16 +70,16 @@ export const DEFAULT_CONFIG: AppConfig = {
     bgTheme: "midnight",
     bgValue: PRESETS.backgrounds[1].value,
     bgType: "color",
-    particleTheme: "rainbow",
-    fireworkScale: 3,
-    particleCount: 7500,
-    explosionForce: 25,
-    textString: "2026-快乐",
-    textColor: "#ffaa00",
-    textOuterColor: "#ff4d00",
-    textScale: 0.5,
-    burnIntensity: 1.2,
-    gravity: 0.15,
+    particleTheme: "classic", // 经典烈焰更浪漫
+    fireworkScale: 2.2, // 适中的爆炸范围
+    particleCount: 8000, // 更多粒子让文字更清晰
+    explosionForce: 20,
+    textString: "新年快乐",
+    textColor: "#FFD700", // 金色焰心
+    textOuterColor: "#FF6B6B", // 浪漫粉红外焰
+    textScale: 0.7, // 更大的文字
+    burnIntensity: 0.8, // 更柔和的燃烧抖动
+    gravity: 0.12, // 更慢的下落
     autoLaunch: true,
     volume: 0.5,
     bgMusicUrl: PRESETS.music[0].value,

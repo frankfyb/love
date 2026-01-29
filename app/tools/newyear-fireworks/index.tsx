@@ -107,8 +107,9 @@ export function DisplayUI({ config }: DisplayUIProps) {
 
     if (launchTimerRef.current) clearInterval(launchTimerRef.current);
     if (config.autoLaunch) {
-      launchTimerRef.current = setInterval(launchFirework, 7000);
-      setTimeout(launchFirework, 800);
+      // 增加发射间隔，让文字有足够时间展示
+      launchTimerRef.current = setInterval(launchFirework, 12000);
+      setTimeout(launchFirework, 1000);
     }
 
     let time = 0;
@@ -117,8 +118,9 @@ export function DisplayUI({ config }: DisplayUIProps) {
       time += 0.05;
 
       const isMobile = window.innerWidth < 768;
+      // 减慢画布淡出速度，让文字燃烧效果更持久
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.fillStyle = `rgba(0, 0, 0, ${isMobile ? 0.25 : 0.15})`;
+      ctx.fillStyle = `rgba(0, 0, 0, ${isMobile ? 0.08 : 0.05})`;
       ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
       ctx.globalCompositeOperation = 'source-over';
@@ -179,50 +181,123 @@ export function DisplayUI({ config }: DisplayUIProps) {
         if (p.alpha <= 0.01 && p.state === "FALL") continue;
 
         if (p.state === "EXPLODE") {
-          p.x += p.vx; p.y += p.vy; p.vx *= 0.92; p.vy *= 0.92; p.vy += 0.05; p.alpha -= 0.005;
-          if (Math.abs(p.vx) < 1 && Math.abs(p.vy) < 1) {
-            p.state = "FALL"; p.vy = Math.random() * 2; p.vx = (Math.random() - 0.5) * 0.5;
+          // 更丝滑的爆炸物理：使用渐进衰减
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.96; // 更慢的衰减，让轨迹更长
+          p.vy *= 0.96;
+          p.vy += 0.03; // 更轻柔的重力
+          p.alpha -= 0.003; // 更慢的淡出
+
+          // 平滑过渡到FALL状态
+          if (Math.abs(p.vx) < 0.8 && Math.abs(p.vy) < 0.8) {
+            p.state = "FALL";
+            p.vy = Math.random() * 1.5 + 0.5;
+            p.vx = (Math.random() - 0.5) * 0.3;
           }
         } else if (p.state === "FALL") {
-          p.x += p.vx; p.y += p.vy; p.vy += config.gravity;
-          if (p.vy > 8) p.vy = 8;
-          if (Math.random() < 0.05) p.alpha = Math.random() * 0.5 + 0.5;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += config.gravity * 0.8; // 更轻柔的下落
+          if (p.vy > 6) p.vy = 6;
+
+          // 柔和的闪烁效果
+          if (Math.random() < 0.03) p.alpha = Math.random() * 0.3 + 0.7;
 
           if (textPoints.length > 0 && p.y > logicalH * 0.15) {
             const targetIndex = i % textPoints.length;
             const target = textPoints[targetIndex];
-            const rangeY = isMobile ? 300 : 500;
-            if (p.y < target.y + 150 && p.y > target.y - rangeY && Math.abs(p.x - target.x) < rangeY) {
+            const rangeY = isMobile ? 350 : 550;
+            if (p.y < target.y + 180 && p.y > target.y - rangeY && Math.abs(p.x - target.x) < rangeY) {
               p.targetX = target.x; p.targetY = target.y; p.baseX = target.x; p.baseY = target.y; p.state = "ASSEMBLE";
             }
           }
           if (p.y > logicalH) p.alpha = 0;
         } else if (p.state === "ASSEMBLE") {
-          const dx = p.targetX - p.x; const dy = p.targetY - p.y;
-          p.x += dx * 0.15; p.y += dy * 0.15; p.alpha = Math.min(p.alpha + 0.1, 1);
-          if (Math.abs(dx) < 20 && Math.random() < 0.0005) { soundEngine.playCrackle(); }
-          if (Math.abs(dx) < 1.5 && Math.abs(dy) < 1.5) { p.state = "BURN"; }
+          // 使用缓动函数让汇聚更丝滑
+          const dx = p.targetX - p.x;
+          const dy = p.targetY - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          // 距离越近速度越慢（缓出效果）
+          const easeSpeed = Math.max(0.08, Math.min(0.2, dist * 0.002));
+          p.x += dx * easeSpeed;
+          p.y += dy * easeSpeed;
+          p.alpha = Math.min(p.alpha + 0.05, 1);
+
+          if (Math.abs(dx) < 25 && Math.random() < 0.0003) { soundEngine.playCrackle(); }
+          if (dist < 2) { p.state = "BURN"; p.burnTime = 0; }
         } else if (p.state === "BURN") {
-          p.noiseOffset += 0.1;
-          const turbulenceX = Math.sin(p.noiseOffset) * config.burnIntensity * 2;
-          const lift = Math.random() * config.burnIntensity * 4;
-          p.x = p.baseX + turbulenceX; p.y = p.baseY - lift; p.alpha = 0.6 + Math.random() * 0.4;
-          if (Math.random() < 0.2) p.y = p.baseY;
-          const baseSize = isMobile ? 2.5 : 1.5;
-          p.size = (Math.sin(time * 5 + i) * 0.5 + 1.5) * baseSize;
+          p.burnTime = (p.burnTime || 0) + 1;
+
+          // 文字稳定显示 - 只有微小的呼吸脉动
+          const breathe = Math.sin(time * 1.5 + i * 0.02) * 0.3;
+          p.x = p.baseX + breathe;
+          p.y = p.baseY + breathe * 0.5;
+
+          // 稳定高亮度
+          p.alpha = 0.95;
+
+          // 稳定的粒子大小，只有微小脉动
+          const baseSize = isMobile ? 3.5 : 2.8;
+          p.size = baseSize + Math.sin(time * 2 + i * 0.01) * 0.3;
         }
 
         if (p.alpha > 0) {
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          if (p.state === "BURN" && config.particleTheme !== "custom") {
-            ctx.fillStyle = Math.random() > 0.8 ? "#FFFFFF" : p.color;
-          } else { ctx.fillStyle = p.color; }
-          if (p.state === "BURN" && config.particleTheme === "custom") {
-            if (p.colorType === "inner") {
-              ctx.fillStyle = Math.random() > 0.7 ? "#FFFFFF" : config.textColor;
-            } else { ctx.fillStyle = config.textOuterColor; }
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+
+          if (p.state === "BURN") {
+            // ========== 清晰稳定的文字效果 ==========
+            // 柔和光晕
+            ctx.shadowBlur = 12;
+
+            // 根据主题选择颜色 - 使用稳定的颜色，不闪烁
+            let burnColor: string;
+            let glowColor: string;
+
+            if (config.particleTheme === "classic") {
+              // 经典金色 - 温暖浪漫
+              burnColor = "#FFD700";
+              glowColor = "#FFA500";
+            } else if (config.particleTheme === "rainbow") {
+              // 彩虹 - 稳定的色相
+              burnColor = `hsl(${p.hue}, 85%, 60%)`;
+              glowColor = `hsl(${p.hue}, 100%, 50%)`;
+            } else if (config.particleTheme === "neon") {
+              // 霓虹 - 高饱和稳定色
+              burnColor = p.color;
+              glowColor = p.color;
+              ctx.shadowBlur = 18;
+            } else if (config.particleTheme === "custom") {
+              // 自定义双色
+              burnColor = p.colorType === "inner" ? config.textColor : config.textOuterColor;
+              glowColor = config.textColor;
+            } else {
+              burnColor = p.color;
+              glowColor = p.color;
+            }
+
+            ctx.shadowColor = glowColor;
+            ctx.fillStyle = burnColor;
+            ctx.globalAlpha = p.alpha;
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+          } else if (p.state === "EXPLODE") {
+            // 爆炸粒子
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = p.color;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          } else {
+            // 其他状态
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha;
+            ctx.fill();
           }
-          ctx.globalAlpha = p.alpha; ctx.fill();
         }
       }
       ctx.globalAlpha = 1.0;
