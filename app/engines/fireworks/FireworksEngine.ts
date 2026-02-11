@@ -206,7 +206,7 @@ export class FireworksEngine {
         const launchDistance = launchY - burstY;
         const launchVelocity = Math.pow(launchDistance * 0.04, 0.64);
 
-        // 创建彗星（上升的烟花弹）
+        // 创建彗星（上升的烟花弹）- 增强版螺旋上升效果
         const cometColor = typeof shellConfig.color === 'string' && shellConfig.color !== INVISIBLE
             ? shellConfig.color
             : FIREWORK_COLORS.White;
@@ -216,12 +216,37 @@ export class FireworksEngine {
             Math.PI, launchVelocity,
             launchVelocity * 400
         );
+
+        // 基础属性
         comet.heavy = true;
-        comet.sparkFreq = 16;
+        comet.visible = true;
+
+        // 螺旋旋转轨迹 - 使上升效果更生动
+        comet.spinAngle = Math.random() * PI_2;
+        comet.spinSpeed = 0.8;
+        comet.spinRadius = random(0.32, 0.85);
+
+        // 动态火花发射参数
+        comet.sparkFreq = 32;
         comet.sparkSpeed = 0.5;
-        comet.sparkLife = 300;
+        comet.sparkLife = 320;
+        comet.sparkLifeVariation = 3;
         comet.sparkColor = cometColor;
         comet.sparkTimer = 0;
+
+        // 根据烟花效果类型调整火花参数
+        if (shellConfig.glitter === 'willow') {
+            comet.sparkFreq = 20;
+            comet.sparkSpeed = 0.5;
+            comet.sparkLife = 500;
+        }
+
+        // 颜色过渡效果：部分彗星"燃尽"变透明
+        if (Math.random() > 0.4) {
+            comet.secondColor = INVISIBLE;
+            comet.transitionTime = Math.pow(Math.random(), 1.5) * 700 + 500;
+            comet.colorChanged = false;
+        }
 
         comet.onDeath = () => {
             this.burst(x, burstY, shellConfig);
@@ -419,6 +444,10 @@ export class FireworksEngine {
                     if (star.onDeath) star.onDeath(star);
                     stars.splice(i, 1);
                 } else {
+                    // 计算燃烧率（用于动态火花效果）
+                    const burnRate = Math.pow(star.life / (star.maxLife || star.life), 0.5);
+                    const burnRateInverse = 1 - burnRate;
+
                     star.prevX = star.x;
                     star.prevY = star.y;
                     star.x += star.speedX * speed;
@@ -433,21 +462,50 @@ export class FireworksEngine {
                     }
                     star.speedY += gAcc;
 
-                    // 火花生成
+                    // 螺旋旋转效果（上升时的螺旋轨迹）
+                    if (star.spinRadius) {
+                        star.spinAngle = (star.spinAngle || 0) + (star.spinSpeed || 0.8) * speed;
+                        star.x += Math.sin(star.spinAngle) * star.spinRadius * speed;
+                        star.y += Math.cos(star.spinAngle) * star.spinRadius * speed;
+                    }
+
+                    // 动态火花生成（随燃烧状态变化）
                     if (star.sparkFreq) {
                         star.sparkTimer = (star.sparkTimer || 0) - timeStep;
                         while (star.sparkTimer! < 0) {
-                            star.sparkTimer! += star.sparkFreq;
+                            // 动态调整火花频率：越接近燃尽，火花越稀疏
+                            const dynamicFreq = star.sparkFreq * 0.75 + star.sparkFreq * burnRateInverse * 4;
+                            star.sparkTimer! += dynamicFreq;
+
+                            const sparkLifeVariation = star.sparkLifeVariation || 0.25;
                             const spark = createSpark(
                                 star.x, star.y,
                                 star.sparkColor || star.color,
                                 Math.random() * PI_2,
-                                Math.random() * (star.sparkSpeed || 0.5),
-                                (star.sparkLife || 500) * (0.8 + Math.random() * 0.4)
+                                Math.random() * (star.sparkSpeed || 0.5) * burnRate,
+                                (star.sparkLife || 500) * (0.8 + Math.random() * sparkLifeVariation)
                             );
                             const colorSparks = this.sparks.get(spark.color) || [];
                             colorSparks.push(spark);
                             this.sparks.set(spark.color, colorSparks);
+                        }
+                    }
+
+                    // 颜色过渡效果（彗星燃尽变透明）
+                    if (star.transitionTime && star.life < star.transitionTime) {
+                        if (star.secondColor && !star.colorChanged) {
+                            star.colorChanged = true;
+                            const newColor = star.secondColor;
+                            star.color = newColor;
+                            stars.splice(i, 1);
+                            const newColorStars = this.stars.get(newColor) || [];
+                            newColorStars.push(star);
+                            this.stars.set(newColor, newColorStars);
+
+                            // 如果变透明，停止发射火花
+                            if (newColor === INVISIBLE) {
+                                star.sparkFreq = 0;
+                            }
                         }
                     }
                 }

@@ -30,7 +30,7 @@ export type GenericControlType =
 /**
  * 分类类型
  */
-export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base' | 'background' | 'audio' | 'music' | 'decoration' | 'mode';
+export type CategoryType = 'scene' | 'content' | 'visual' | 'physics' | 'gameplay' | 'base' | 'background' | 'audio' | 'music' | 'decoration' | 'decor' | 'mode';
 
 /**
  * 通用配置项元数据接口

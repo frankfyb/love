@@ -42,17 +42,36 @@ export interface BaseParticle {
 
 export interface StarParticle extends BaseParticle {
     heavy?: boolean;
+    visible?: boolean;
+
+    // 螺旋旋转效果（上升时的螺旋轨迹）
+    spinAngle?: number;
+    spinSpeed?: number;
+    spinRadius?: number;
+
+    // 火花发射
     sparkFreq?: number;
     sparkTimer?: number;
     sparkSpeed?: number;
     sparkLife?: number;
+    sparkLifeVariation?: number;
     sparkColor?: string;
+
+    // 闪烁效果
     strobe?: boolean;
     strobeFreq?: number;
     glitter?: boolean;
     glitterSize?: number;
+
+    // 颜色过渡
+    secondColor?: string | null;
+    transitionTime?: number;
+    colorChanged?: boolean;
+
+    // 拖尾
     trail?: Vector2D[];
     trailLength?: number;
+
     onDeath?: (star: StarParticle) => void;
 }
 
