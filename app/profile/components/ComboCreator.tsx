@@ -5,8 +5,8 @@ import {
     GripVertical, Eye, Settings, Sparkles, Clock, Music, Heart, Film,
     ListMusic, ArrowUp, ArrowDown, Save, Share2, Check, Copy, ExternalLink
 } from 'lucide-react';
-import Button from '@/components/common/Button';
-import Modal from '@/components/common/Modal';
+import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import { UserWorkItem, ComboData, ComboItemData } from '@/types';
 import { getToolUI } from '@/config/toolsRegistry';
 import { saveCombo as saveComboToStorage } from '@/services/storage';

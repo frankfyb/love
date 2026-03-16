@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { Search, Heart, Calendar, BookMarked, Brain, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import ToolCard from '@/components/business/ToolCard';
+import ToolCard from '@/components/features/ToolCard';
 import {
   CATEGORIES,
   getToolsByCategoryId,

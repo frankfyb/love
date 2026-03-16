@@ -2,9 +2,9 @@
 import { useRouter } from 'next/navigation';
 import { Sparkles, ChevronRight, ArrowRight } from 'lucide-react';
 import { SCENARIOS_DATA, TOOLS_DATA } from '@/constants/mock-data';
-import Button from '@/components/common/Button';
-import ScenarioCard from '@/components/business/ScenarioCard';
-import ToolCard from '@/components/business/ToolCard';
+import Button from '@/components/ui/Button';
+import ScenarioCard from '@/components/features/ScenarioCard';
+import ToolCard from '@/components/features/ToolCard';
 import type { PageKey } from '@/types';
 
 interface HomePageProps {
